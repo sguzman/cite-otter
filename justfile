@@ -45,7 +45,7 @@ build:
 fmt:
 	cargo fmt
 	taplo fmt
-	biome format --write .
+	biome check --write .
 
 # Validate
 typos:
@@ -59,5 +59,38 @@ validate:
 test:
 	cargo test
 
-# Everything
+# Lint
+clippy:
+	cargo clippy -- -D warnings
+
+# CI-style format check (no writes)
+fmt-check:
+	cargo fmt --check
+	taplo fmt --check
+	biome check .
+
+# Docs (optional but useful)
+doc:
+	cargo doc --no-deps
+
+# Security (Rust)
+audit:
+	cargo audit
+
+deny:
+	cargo deny check
+
+# Coverage (Rust)
+# (Requires cargo-llvm-cov installed)
+coverage:
+	cargo llvm-cov --workspace --all-features --lcov --output-path target/coverage.lcov
+
+coverage-html:
+	cargo llvm-cov --workspace --all-features --open
+
+# "CI local" = what you'd run before pushing
+ci: fmt-check typos links validate clippy test doc build
+
+# Your existing "all" is fine; consider swapping to ci if you want strict checks by default
 all: fmt typos links validate test build
+
