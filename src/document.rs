@@ -2,6 +2,12 @@ pub struct Document;
 
 pub struct Page;
 
+impl Default for Document {
+  fn default() -> Self {
+    Self
+  }
+}
+
 impl Document {
   pub fn new() -> Self {
     Self

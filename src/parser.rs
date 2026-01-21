@@ -22,6 +22,12 @@ pub struct Reference(
 #[derive(Debug, Clone)]
 pub struct Parser;
 
+impl Default for Parser {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 #[derive(Debug, Clone)]
 pub struct ParsedDataset(
   pub Vec<Vec<String>>

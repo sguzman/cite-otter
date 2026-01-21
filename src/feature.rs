@@ -9,6 +9,12 @@ pub mod number {
   #[derive(Debug)]
   pub struct Feature;
 
+  impl Default for Feature {
+    fn default() -> Self {
+      Self
+    }
+  }
+
   impl Feature {
     pub fn new() -> Self {
       Self
