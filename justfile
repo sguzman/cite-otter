@@ -7,8 +7,11 @@ default:
 tokei:
 	tokei --exclude vendor --exclude tmp --files --sort lines
 
-llvm-lines:
+llvm-cov:
 	cargo llvm-cov
+
+llvm-lines:
+	cargo llvm-lines
 
 # Context
 context:
