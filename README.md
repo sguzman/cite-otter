@@ -1,19 +1,20 @@
 ![Cite-Otter](branding/cite-otter-primary.png)
 
 <div align="center">
-  <a href="https://github.com/cite-otter/cite-otter/issues">
-    <img src="https://img.shields.io/github/issues/cite-otter/cite-otter?color=%23EF4F10&labelColor=%23023A7C&style=for-the-badge" alt="issues">
+  <a href="https://github.com/sguzman/cite-otter/issues">
+    <img src="https://img.shields.io/github/issues/sguzman/cite-otter?color=EF4F10&labelColor=023A7C&style=for-the-badge" alt="issues">
   </a>
-  <a href="https://github.com/cite-otter/cite-otter/stargazers">
-    <img src="https://img.shields.io/github/stars/cite-otter/cite-otter?color=%23EF4F10&labelColor=%23023A7C&style=for-the-badge" alt="stars">
+  <a href="https://github.com/sguzman/cite-otter/stargazers">
+    <img src="https://img.shields.io/github/stars/sguzman/cite-otter?color=EF4F10&labelColor=023A7C&style=for-the-badge" alt="stars">
   </a>
-  <a href="https://github.com/cite-otter/cite-otter">
-    <img src="https://img.shields.io/github/repo-size/cite-otter/cite-otter?color=%23EF4F10&labelColor=%23023A7C&style=for-the-badge" alt="repo size">
+  <a href="https://github.com/sguzman/cite-otter">
+    <img src="https://img.shields.io/github/repo-size/sguzman/cite-otter?color=EF4F10&labelColor=023A7C&style=for-the-badge" alt="repo size">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=ffffff&colorA=023a7c&colorB=ef4f10" alt="license">
   </a>
 </div>
+
 
 # Cite-Otter
 
