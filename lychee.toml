@@ -10,7 +10,7 @@ cache = true
 exclude = [
   "^http://127.0.0.1",
   "^http://localhost",
+  "^https://github.com/sguzman/",
   "^https://img.shields.io/",
   "^mailto:",
-  "^https://github.com/sguzman/"
 ]
