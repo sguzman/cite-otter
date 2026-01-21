@@ -4,7 +4,10 @@ use std::collections::{
 };
 
 use cite_otter::format::ParseFormat;
-use cite_otter::parser::FieldValue;
+use cite_otter::parser::{
+  FieldValue,
+  Parser
+};
 
 const PREPARED_LINES: [&str; 2] = [
   "Hello, hello Lu P H He , o, \
@@ -97,9 +100,11 @@ fn parse_returns_metadata_map() {
 
   let reference = &references[0].0;
   assert!(
-    expected_fields.keys().all(|key| {
-      reference.contains_key(key)
-    }),
+    expected_fields.keys().all(
+      |key: &String| {
+        reference.contains_key(key)
+      }
+    ),
     "Expected parser.parse to \
      populate the documented fields"
   );
@@ -138,10 +143,10 @@ fn label_outputs_all_expected_segment_types()
     .collect();
 
   let unique_labels: Vec<_> = found
-        .into_iter()
-        .collect::<std::collections::BTreeSet<_>>()
-        .into_iter()
-        .collect();
+    .into_iter()
+    .collect::<BTreeSet<_>>()
+    .into_iter()
+    .collect();
 
   let expected_labels = [
     "author",

@@ -6,7 +6,6 @@ use cite_otter::dictionary::{
 #[test]
 #[ignore = "pending adapter \
             implementations"]
-#[cfg(feature = "redis")]
 fn redis_adapter_exists() {
   let dict = Dictionary::create(
     DictionaryAdapter::Redis
@@ -17,7 +16,6 @@ fn redis_adapter_exists() {
 #[test]
 #[ignore = "pending adapter \
             implementations"]
-#[cfg(feature = "lmdb")]
 fn lmdb_adapter_exists() {
   let dict = Dictionary::create(
     DictionaryAdapter::Lmdb
@@ -28,7 +26,6 @@ fn lmdb_adapter_exists() {
 #[test]
 #[ignore = "pending adapter \
             implementations"]
-#[cfg(feature = "gdbm")]
 fn gdbm_adapter_exists() {
   let dict = Dictionary::create(
     DictionaryAdapter::Gdbm

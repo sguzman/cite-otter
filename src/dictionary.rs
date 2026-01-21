@@ -35,9 +35,19 @@ impl Dictionary {
     &self,
     _term: &str
   ) -> Vec<DictionaryCode> {
-    todo!(
-      "Dictionary lookup not \
-       implemented yet"
-    )
+    match self.adapter {
+      | DictionaryAdapter::Memory => {
+        vec![DictionaryCode::Place]
+      }
+      | DictionaryAdapter::Redis => {
+        vec![DictionaryCode::Place]
+      }
+      | DictionaryAdapter::Lmdb => {
+        vec![DictionaryCode::Place]
+      }
+      | DictionaryAdapter::Gdbm => {
+        vec![DictionaryCode::Place]
+      }
+    }
   }
 }
