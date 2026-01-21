@@ -13,6 +13,7 @@ context-by-file:
 	files-to-prompt --ignore target/ --ignore .git/ --markdown --line-numbers --extension toml . > ~/Downloads/toml.txt
 	files-to-prompt --ignore target/ --ignore .git/ --markdown --line-numbers --extension yaml --extension yml . > ~/Downloads/yaml.txt
 
+# Release
 major:
 	cargo release major --verbose --workspace --execute --no-publish --no-push --no-confirm
 	git push
@@ -39,39 +40,39 @@ template dir:
 
 # Build
 build:
-	cargo build
+	cargo build --workspace
 
-# Format
+# Format (write/fix)
 fmt:
 	cargo fmt
 	taplo fmt
 	biome check --write .
 
-# Validate
-typos:
-	typos --config typos.toml
-links:
-	lychee --config lychee.toml .
+# Validate (configs)
 validate:
 	taplo validate
 
-# Test
-test:
-	cargo test
+# Spellcheck / Links
+typos:
+	typos --config typos.toml
+
+links:
+	lychee --config lychee.toml .
 
 # Lint
 clippy:
-	cargo clippy -- -D warnings
+	cargo clippy --workspace --all-targets -- -D warnings
 
-# CI-style format check (no writes)
-fmt-check:
-	cargo fmt --check
-	taplo fmt --check
+biome:
 	biome check .
 
-# Docs (optional but useful)
+# Test
+test:
+	cargo test --workspace --all-features
+
+# Docs
 doc:
-	cargo doc --no-deps
+	cargo doc --workspace --no-deps
 
 # Security (Rust)
 audit:
@@ -88,9 +89,14 @@ coverage:
 coverage-html:
 	cargo llvm-cov --workspace --all-features --open
 
+# CI-style checks (no writes)
+fmt-check:
+	cargo fmt --check
+	taplo fmt --check
+	biome check .
+
 # "CI local" = what you'd run before pushing
-ci: fmt-check typos links validate clippy test doc build
+ci: fmt-check validate typos links biome clippy test doc build
 
-# Your existing "all" is fine; consider swapping to ci if you want strict checks by default
-all: fmt typos links validate test build
-
+# "All" = auto-fix + run the suite
+all: fmt validate typos links biome clippy test doc build
