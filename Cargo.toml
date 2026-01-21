@@ -5,6 +5,10 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.3", features = ["derive"] }
-serde = { version = "1.0", features = ["derive"] }
+clap = { features = [
+  "derive",
+], version = "4.3" }
+serde = { features = [
+  "derive",
+], version = "1.0" }
 serde_json = "1.0"
