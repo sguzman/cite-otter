@@ -1,5 +1,18 @@
 ![Cite-Otter](branding/cite-otter-primary.png)
 
+- <a href="https://github.com/cite-otter/cite-otter/issues">
+    <img src="https://img.shields.io/github/issues/cite-otter/cite-otter?color=ef4f10&labelColor=023a7c&style=for-the-badge" alt="issues">
+  </a>
+  <a href="https://github.com/cite-otter/cite-otter/stargazers">
+    <img src="https://img.shields.io/github/stars/cite-otter/cite-otter?color=ef4f10&labelColor=023a7c&style=for-the-badge" alt="stars">
+  </a>
+  <a href="https://github.com/cite-otter/cite-otter">
+    <img src="https://img.shields.io/github/repo-size/cite-otter/cite-otter?color=ef4f10&labelColor=023a7c&style=for-the-badge" alt="repo size">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=ffffff&colorA=023a7c&colorB=ef4f10" alt="license">
+  </a>
+
 # Cite-Otter
 
 Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](tmp/anystyle) reference parser. The project retraces AnyStyle’s parser/finder/training workflows while embracing Rust idioms for parsing, modeling, and CLI tooling.
