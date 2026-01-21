@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use serde::Serialize;
+
 use crate::format::ParseFormat;
 
 #[derive(Debug, Clone)]
@@ -8,13 +10,14 @@ pub struct TaggedToken {
   pub label: String
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum FieldValue {
   Single(String),
   List(Vec<String>)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(transparent)]
 pub struct Reference(
   pub BTreeMap<String, FieldValue>
 );
@@ -62,6 +65,10 @@ pub struct ParsedDataset(
 impl Parser {
   pub fn new() -> Self {
     Self
+  }
+
+  pub fn default_instance() -> Self {
+    Self::new()
   }
 
   pub fn prepare(
