@@ -86,11 +86,7 @@ impl Parser {
           .split_whitespace()
           .map(|token| {
             if expand {
-              format!(
-                "{} {}",
-                token,
-                token.len()
-              )
+              expand_token(token)
             } else {
               token.to_string()
             }
@@ -116,7 +112,7 @@ impl Parser {
           .map(|token| {
             TaggedToken {
               token: token.clone(),
-              label: "unknown".into()
+              label: tag_token(token)
             }
           })
           .collect::<Vec<_>>()
@@ -209,5 +205,114 @@ fn resolve_type(
     "article".into()
   } else {
     "book".into()
+  }
+}
+
+fn expand_token(token: &str) -> String {
+  let normalized =
+    normalize_token(token);
+  let casing = casing_flag(token);
+  let punctuation =
+    punctuation_flag(token);
+  let script = script_flag(token);
+  let digits = digit_flag(token);
+  let length = token.chars().count();
+
+  format!(
+    "{token} {normalized} {casing} \
+     {punctuation} {script} {digits} \
+     len={length}"
+  )
+}
+
+fn normalize_token(
+  token: &str
+) -> String {
+  token
+    .chars()
+    .filter(|c| {
+      c.is_ascii_alphanumeric()
+    })
+    .collect::<String>()
+    .to_lowercase()
+}
+
+fn casing_flag(
+  token: &str
+) -> &'static str {
+  let letters: Vec<_> = token
+    .chars()
+    .filter(|c| c.is_alphabetic())
+    .collect();
+  if letters.is_empty() {
+    "none"
+  } else if letters
+    .iter()
+    .all(|c| c.is_uppercase())
+  {
+    "upper"
+  } else if letters
+    .iter()
+    .all(|c| c.is_lowercase())
+  {
+    "lower"
+  } else {
+    "mixed"
+  }
+}
+
+fn punctuation_flag(
+  token: &str
+) -> &'static str {
+  if token
+    .chars()
+    .any(|c| c.is_ascii_punctuation())
+  {
+    "punct"
+  } else {
+    "clean"
+  }
+}
+
+fn script_flag(
+  _token: &str
+) -> &'static str {
+  "latin"
+}
+
+fn digit_flag(token: &str) -> String {
+  let count = token
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .count();
+  if count == 0 {
+    "digits=0".into()
+  } else {
+    format!("digits={count}")
+  }
+}
+
+fn tag_token(token: &str) -> String {
+  let original = token
+    .split_whitespace()
+    .next()
+    .unwrap_or(token);
+  let lower = original.to_lowercase();
+
+  if lower.contains(',') {
+    "author".into()
+  } else if lower.contains("p.")
+    || lower.contains("pp.")
+  {
+    "pages".into()
+  } else if original
+    .chars()
+    .any(|c| c.is_ascii_digit())
+  {
+    "date".into()
+  } else if original.ends_with('.') {
+    "title".into()
+  } else {
+    "unknown".into()
   }
 }
