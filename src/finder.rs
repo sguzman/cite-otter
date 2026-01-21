@@ -16,11 +16,12 @@ impl Finder {
 
   pub fn label(
     &self,
-    _input: &str
+    input: &str
   ) -> Vec<Document> {
-    todo!(
-      "Finder labeling is pending \
-       implementation"
-    )
+    if input.trim().is_empty() {
+      return Vec::new();
+    }
+
+    vec![Document::from_text(input)]
   }
 }

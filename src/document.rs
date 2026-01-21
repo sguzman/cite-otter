@@ -1,33 +1,67 @@
-pub struct Document;
+use std::fs;
+use std::path::Path;
 
-pub struct Page;
+#[derive(Debug, Clone, Default)]
+pub struct Document {
+  pages: Vec<Page>
+}
 
-impl Default for Document {
-  fn default() -> Self {
-    Self
+#[derive(Debug, Clone)]
+pub struct Page {
+  text: String
+}
+
+impl Page {
+  pub fn text(&self) -> &str {
+    &self.text
   }
 }
 
 impl Document {
   pub fn new() -> Self {
-    Self
+    Self::default()
   }
 
-  pub fn open<
-    P: AsRef<std::path::Path>
-  >(
-    _path: P
+  pub fn from_text(text: &str) -> Self {
+    let pages = text
+      .split('\u{000C}')
+      .filter(|segment| {
+        !segment.trim().is_empty()
+      })
+      .map(|segment| {
+        Page {
+          text: segment
+            .trim()
+            .to_string()
+        }
+      })
+      .collect::<Vec<_>>();
+
+    if pages.is_empty() {
+      Self::default()
+    } else {
+      Self {
+        pages
+      }
+    }
+  }
+
+  pub fn open<P: AsRef<Path>>(
+    path: P
   ) -> Self {
-    todo!(
-      "Document opening is pending \
-       implementation"
-    )
+    let data = fs::read_to_string(path)
+      .unwrap_or_default();
+    Self::from_text(&data)
   }
 
   pub fn pages(&self) -> Vec<Page> {
-    todo!(
-      "Document page extraction is \
-       pending implementation"
-    )
+    self.pages.clone()
+  }
+
+  pub fn add_page(
+    &mut self,
+    page: Page
+  ) {
+    self.pages.push(page);
   }
 }
