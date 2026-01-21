@@ -3,6 +3,13 @@ set shell := ["bash", "-uc"]
 default:
 	@just --list
 
+
+tokei:
+	tokei --exclude vendor --exclude tmp --files --sort lines
+
+llvm-lines:
+	cargo llvm-cov
+
 # Context
 context:
 	files-to-prompt --ignore target/ --ignore .git/ --markdown --line-numbers --extension yaml --extension yml --extension rs --extension toml --extension md . > ~/Downloads/all.txt
@@ -15,17 +22,17 @@ context-by-file:
 
 # Release
 major:
-	cargo release major --verbose --workspace --execute --no-publish --no-push --no-confirm
+	cargo release major --verbose --execute --no-publish --no-push --no-confirm
 	git push
 	git push --tags
 
 minor:
-	cargo release minor --verbose --workspace --execute --no-publish --no-push --no-confirm
+	cargo release minor --verbose --execute --no-publish --no-push --no-confirm
 	git push
 	git push --tags
 
 patch:
-	cargo release patch --verbose --workspace --execute --no-publish --no-push --no-confirm
+	cargo release patch --verbose --execute --no-publish --no-push --no-confirm
 	git push
 	git push --tags
 
@@ -40,7 +47,7 @@ template dir:
 
 # Build
 build:
-	cargo build --workspace
+	cargo build 
 
 # Format (write/fix)
 fmt:
@@ -61,18 +68,18 @@ links:
 
 # Lint
 clippy:
-	cargo clippy --workspace --all-targets -- -D warnings
+	cargo clippy --all-targets -- -D warnings
 
 biome:
 	biome check .
 
 # Test
 test:
-	cargo test --workspace --all-features
+	cargo test --all-features
 
 # Docs
 doc:
-	cargo doc --workspace --no-deps
+	cargo doc --no-deps
 
 # Security (Rust)
 audit:
@@ -84,10 +91,10 @@ deny:
 # Coverage (Rust)
 # (Requires cargo-llvm-cov installed)
 coverage:
-	cargo llvm-cov --workspace --all-features --lcov --output-path target/coverage.lcov
+	cargo llvm-cov --all-features --lcov --output-path target/coverage.lcov
 
 coverage-html:
-	cargo llvm-cov --workspace --all-features --open
+	cargo llvm-cov --all-features --open
 
 # CI-style checks (no writes)
 fmt-check:
