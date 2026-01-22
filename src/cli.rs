@@ -20,6 +20,10 @@ use crate::format::{
   Format,
   ParseFormat
 };
+use crate::model::{
+  FinderModel,
+  ParserModel
+};
 use crate::parser::Parser;
 
 #[derive(ClapParser, Debug)]
@@ -58,8 +62,9 @@ enum Command {
 
 const REPORT_DIR: &str =
   "target/reports";
+const MODEL_DIR: &str = "target/models";
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct DatasetStat {
   path:      String,
   sequences: usize,
@@ -77,11 +82,12 @@ struct ValidationReport {
   parser: Vec<DatasetStat>
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 struct DeltaEntry {
   path:     String,
   prepared: usize,
   labeled:  usize,
+  stored:   usize,
   delta:    isize
 }
 
@@ -155,18 +161,52 @@ fn run_training() -> anyhow::Result<()>
     "tmp/anystyle/res/finder/*.ttx"
   )?;
 
-  let parser_stats =
+  let parser_pairs =
     gather_parser_stats(&parser_files)?;
-  let finder_stats =
+  let finder_pairs =
     gather_finder_stats(&finder_files)?;
 
   persist_report(
     Path::new(REPORT_DIR)
       .join("training-report.json"),
     &TrainingReport {
-      parser: parser_stats,
-      finder: finder_stats
+      parser: parser_pairs
+        .iter()
+        .map(|(_, stat)| stat.clone())
+        .collect(),
+      finder: finder_pairs
+        .iter()
+        .map(|(_, stat)| stat.clone())
+        .collect()
     }
+  )?;
+
+  let mut parser_model =
+    ParserModel::load(
+      Path::new(MODEL_DIR)
+        .join("parser-model.json")
+    )?;
+  for (path, stat) in &parser_pairs {
+    parser_model
+      .record(path, stat.sequences);
+  }
+  parser_model.save(
+    Path::new(MODEL_DIR)
+      .join("parser-model.json")
+  )?;
+
+  let mut finder_model =
+    FinderModel::load(
+      Path::new(MODEL_DIR)
+        .join("finder-model.json")
+    )?;
+  for (path, stat) in &finder_pairs {
+    finder_model
+      .record(path, stat.sequences);
+  }
+  finder_model.save(
+    Path::new(MODEL_DIR)
+      .join("finder-model.json")
   )?;
 
   println!(
@@ -185,12 +225,35 @@ fn run_validation() -> anyhow::Result<()>
   )?;
   let parser_stats =
     gather_parser_stats(&parser_files)?;
+  let mut parser_model =
+    ParserModel::load(
+      Path::new(MODEL_DIR)
+        .join("parser-model.json")
+    )?;
+  for (path, stat) in &parser_stats {
+    if let Some(stored) =
+      parser_model.sequences(path)
+    {
+      if stored != stat.sequences {
+        println!(
+          "  validation mismatch {}: \
+           stored {} vs current {}",
+          path.display(),
+          stored,
+          stat.sequences
+        );
+      }
+    }
+  }
 
   persist_report(
     Path::new(REPORT_DIR)
       .join("validation-report.json"),
     &ValidationReport {
       parser: parser_stats
+        .iter()
+        .map(|(_, stat)| stat.clone())
+        .collect()
     }
   )?;
 
@@ -216,20 +279,23 @@ fn run_delta() -> anyhow::Result<()> {
           Parser::new().prepare(&content, true);
         let labeled =
           Parser::new().label(&content);
-        let delta = if prepared.0.len()
-          == labeled.len()
-        {
-          0
-        } else {
-          (prepared.0.len() as isize
-            - labeled.len() as isize)
-            .abs()
-        };
+        let prepared_seq = prepared.0.len();
+        let stored = ParserModel::load(
+          Path::new(MODEL_DIR)
+            .join("parser-model.json"),
+        )?
+        .sequences(path)
+        .unwrap_or(0);
+        let delta =
+          (prepared_seq as isize
+            - stored as isize)
+            .abs();
 
         Ok(DeltaEntry {
           path: path.display().to_string(),
-          prepared: prepared.0.len(),
+          prepared: prepared_seq,
           labeled: labeled.len(),
+          stored,
           delta,
         })
       })
@@ -254,7 +320,9 @@ fn run_delta() -> anyhow::Result<()> {
 
 fn gather_parser_stats(
   paths: &[PathBuf]
-) -> anyhow::Result<Vec<DatasetStat>> {
+) -> anyhow::Result<
+  Vec<(PathBuf, DatasetStat)>
+> {
   paths
     .iter()
     .map(|path| {
@@ -267,20 +335,22 @@ fn gather_parser_stats(
         .iter()
         .map(|sequence| sequence.len())
         .sum();
-      Ok(DatasetStat {
+      Ok((path.clone(), DatasetStat {
         path: path
           .display()
           .to_string(),
         sequences: prepared.0.len(),
         tokens
-      })
+      }))
     })
     .collect()
 }
 
 fn gather_finder_stats(
   paths: &[PathBuf]
-) -> anyhow::Result<Vec<DatasetStat>> {
+) -> anyhow::Result<
+  Vec<(PathBuf, DatasetStat)>
+> {
   paths
     .iter()
     .map(|path| {
@@ -289,13 +359,13 @@ fn gather_finder_stats(
       let sequences = Parser::new()
         .label(&content)
         .len();
-      Ok(DatasetStat {
+      Ok((path.clone(), DatasetStat {
         path: path
           .display()
           .to_string(),
         sequences,
         tokens: 0
-      })
+      }))
     })
     .collect()
 }
