@@ -181,33 +181,23 @@ fn run_training() -> anyhow::Result<()>
     }
   )?;
 
+  let parser_model_path = model_path("parser-model.json");
   let mut parser_model =
-    ParserModel::load(
-      Path::new(MODEL_DIR)
-        .join("parser-model.json")
-    )?;
+    ParserModel::load(&parser_model_path)?;
   for (path, stat) in &parser_pairs {
     parser_model
       .record(path, stat.sequences);
   }
-  parser_model.save(
-    Path::new(MODEL_DIR)
-      .join("parser-model.json")
-  )?;
+  parser_model.save(&parser_model_path)?;
 
+  let finder_model_path = model_path("finder-model.json");
   let mut finder_model =
-    FinderModel::load(
-      Path::new(MODEL_DIR)
-        .join("finder-model.json")
-    )?;
+    FinderModel::load(&finder_model_path)?;
   for (path, stat) in &finder_pairs {
     finder_model
       .record(path, stat.sequences);
   }
-  finder_model.save(
-    Path::new(MODEL_DIR)
-      .join("finder-model.json")
-  )?;
+  finder_model.save(&finder_model_path)?;
 
   println!(
     "training report written (parser \
@@ -225,24 +215,21 @@ fn run_validation() -> anyhow::Result<()>
   )?;
   let parser_stats =
     gather_parser_stats(&parser_files)?;
-  let mut parser_model =
-    ParserModel::load(
-      Path::new(MODEL_DIR)
-        .join("parser-model.json")
-    )?;
+  let parser_model_path = model_path("parser-model.json");
+  let parser_model =
+    ParserModel::load(&parser_model_path)?;
   for (path, stat) in &parser_stats {
     if let Some(stored) =
       parser_model.sequences(path)
+      && stored != stat.sequences
     {
-      if stored != stat.sequences {
-        println!(
-          "  validation mismatch {}: \
-           stored {} vs current {}",
-          path.display(),
-          stored,
-          stat.sequences
-        );
-      }
+      println!(
+        "  validation mismatch {}: \
+         stored {} vs current {}",
+        path.display(),
+        stored,
+        stat.sequences
+      );
     }
   }
 
@@ -269,6 +256,7 @@ fn run_delta() -> anyhow::Result<()> {
   let parser_files = collect_files(
     "tmp/anystyle/res/parser/*.xml"
   )?;
+  let parser_model_path = model_path("parser-model.json");
   let delta_entries =
     parser_files
       .iter()
@@ -281,8 +269,7 @@ fn run_delta() -> anyhow::Result<()> {
           Parser::new().label(&content);
         let prepared_seq = prepared.0.len();
         let stored = ParserModel::load(
-          Path::new(MODEL_DIR)
-            .join("parser-model.json"),
+          &parser_model_path,
         )?
         .sequences(path)
         .unwrap_or(0);
@@ -388,4 +375,8 @@ fn collect_files(
       .flat_map(Result::ok)
       .collect()
   )
+}
+
+fn model_path(filename: &str) -> PathBuf {
+  Path::new(MODEL_DIR).join(filename)
 }
