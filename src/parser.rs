@@ -1,4 +1,7 @@
-use std::collections::BTreeMap;
+use std::collections::{
+  BTreeMap,
+  BTreeSet
+};
 
 use serde::Serialize;
 
@@ -54,6 +57,79 @@ impl Default for Reference {
   fn default() -> Self {
     Self::new()
   }
+}
+
+#[derive(Debug, Clone, Default)]
+struct FieldTokens {
+  author:    BTreeSet<String>,
+  title:     BTreeSet<String>,
+  location:  BTreeSet<String>,
+  publisher: BTreeSet<String>,
+  date:      BTreeSet<String>,
+  pages:     BTreeSet<String>
+}
+
+impl FieldTokens {
+  fn from_reference(
+    reference: &str
+  ) -> Self {
+    let year = extract_year(reference);
+    Self {
+      author:    tokens_from_segment(
+        extract_author_segment(
+          reference
+        )
+      ),
+      title:     tokens_from_segment(
+        &extract_title(reference)
+      ),
+      location:  tokens_from_segment(
+        &extract_location(reference)
+      ),
+      publisher: tokens_from_segment(
+        &extract_publisher(reference)
+      ),
+      date:      tokens_from_segment(
+        year
+          .unwrap_or_default()
+          .as_str()
+      ),
+      pages:     tokens_from_segment(
+        &extract_pages(reference)
+      )
+    }
+  }
+}
+
+fn split_references(
+  input: &str
+) -> Vec<String> {
+  input
+    .lines()
+    .map(str::trim)
+    .filter(|line| !line.is_empty())
+    .map(|line| line.to_string())
+    .collect()
+}
+
+fn tokens_from_segment(
+  segment: &str
+) -> BTreeSet<String> {
+  segment
+    .split_whitespace()
+    .map(normalize_token)
+    .filter(|token| !token.is_empty())
+    .collect()
+}
+
+fn matches_field(
+  normalized: &str,
+  values: &BTreeSet<String>
+) -> bool {
+  values.iter().any(|value| {
+    !value.is_empty()
+      && normalized.contains(value)
+  })
 }
 
 #[derive(Debug, Clone)]
@@ -122,17 +198,37 @@ impl Parser {
     &self,
     input: &str
   ) -> Vec<Vec<TaggedToken>> {
+    let references =
+      split_references(input);
+    let contexts: Vec<FieldTokens> =
+      references
+        .iter()
+        .map(|reference| {
+          FieldTokens::from_reference(
+            reference
+          )
+        })
+        .collect();
+    let default_context =
+      FieldTokens::default();
+
     self
       .prepare(input, true)
       .0
       .iter()
-      .map(|sequence| {
+      .enumerate()
+      .map(|(idx, sequence)| {
+        let context = contexts
+          .get(idx)
+          .unwrap_or(&default_context);
         sequence
           .iter()
           .map(|token| {
             TaggedToken {
               token: token.clone(),
-              label: tag_token(token)
+              label: tag_token(
+                token, context
+              )
             }
           })
           .collect::<Vec<_>>()
@@ -150,6 +246,12 @@ impl Parser {
       .map(|reference| {
         let mut mapped =
           Reference::new();
+        mapped.insert(
+          "author",
+          FieldValue::List(vec![
+            extract_author(reference),
+          ])
+        );
         mapped.insert(
           "title",
           FieldValue::List(vec![
@@ -225,6 +327,24 @@ fn extract_title(
     .unwrap_or("")
     .trim()
     .to_string()
+}
+
+fn extract_author(
+  reference: &str
+) -> String {
+  extract_author_segment(reference)
+    .trim()
+    .to_string()
+}
+
+fn extract_author_segment(
+  reference: &str
+) -> &str {
+  reference
+    .split('.')
+    .next()
+    .unwrap_or(reference)
+    .trim()
 }
 
 fn extract_year(
@@ -398,14 +518,49 @@ fn digit_flag(token: &str) -> String {
   }
 }
 
-fn tag_token(token: &str) -> String {
+fn tag_token(
+  token: &str,
+  context: &FieldTokens
+) -> String {
   let original = token
     .split_whitespace()
     .next()
     .unwrap_or(token);
   let lower = original.to_lowercase();
+  let normalized =
+    normalize_token(original);
 
-  if lower.contains("press") {
+  if matches_field(
+    &normalized,
+    &context.author
+  ) {
+    "author".into()
+  } else if matches_field(
+    &normalized,
+    &context.title
+  ) {
+    "title".into()
+  } else if matches_field(
+    &normalized,
+    &context.location
+  ) {
+    "location".into()
+  } else if matches_field(
+    &normalized,
+    &context.publisher
+  ) {
+    "publisher".into()
+  } else if matches_field(
+    &normalized,
+    &context.date
+  ) {
+    "date".into()
+  } else if matches_field(
+    &normalized,
+    &context.pages
+  ) {
+    "pages".into()
+  } else if lower.contains("press") {
     "publisher".into()
   } else if lower.contains(',') {
     "author".into()
@@ -415,7 +570,7 @@ fn tag_token(token: &str) -> String {
     "pages".into()
   } else if lower.contains("london") {
     "location".into()
-  } else if original
+  } else if normalized
     .chars()
     .any(|c| c.is_ascii_digit())
   {
