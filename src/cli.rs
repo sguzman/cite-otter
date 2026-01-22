@@ -1,10 +1,14 @@
 use std::fs;
-use std::path::Path;
+use std::path::{
+  Path,
+  PathBuf
+};
 
 use clap::{
   Parser as ClapParser,
   Subcommand
 };
+use glob::glob;
 
 use crate::finder::Finder;
 use crate::format::{
@@ -105,31 +109,121 @@ fn load_input(
 
 fn run_training() -> anyhow::Result<()>
 {
+  let parser_files = collect_files(
+    "tmp/anystyle/res/parser/*.xml"
+  )?;
+  let finder_files = collect_files(
+    "tmp/anystyle/res/finder/*.ttx"
+  )?;
+
   println!(
-    "training stub: will load configs \
-     at docs/migration/structure.md \
-     and datasets from \
-     tmp/anystyle/res"
+    "training stub: parser datasets \
+     {} files, finder sources {} files",
+    parser_files.len(),
+    finder_files.len()
   );
+
+  for path in parser_files {
+    let content =
+      fs::read_to_string(&path)?;
+    let sequences = Parser::new()
+      .prepare(&content, true)
+      .0
+      .len();
+    println!(
+      "  parser dataset {} has {} \
+       sequences",
+      path.display(),
+      sequences
+    );
+  }
+
+  for path in finder_files {
+    let content =
+      fs::read_to_string(&path)?;
+    let sequences = Parser::new()
+      .label(&content)
+      .len();
+    println!(
+      "  finder dataset {} yields {} \
+       sequences",
+      path.display(),
+      sequences
+    );
+  }
 
   Ok(())
 }
 
 fn run_validation() -> anyhow::Result<()>
 {
+  let parser_files = collect_files(
+    "tmp/anystyle/res/parser/*.xml"
+  )?;
   println!(
-    "validation stub: will run schema \
-     checks like AnyStyle's `rake \
-     check`"
+    "validation stub: running on {} \
+     parser datasets",
+    parser_files.len()
   );
+
+  for path in parser_files {
+    let content =
+      fs::read_to_string(&path)?;
+    let labeled =
+      Parser::new().label(&content);
+    println!(
+      "  {} -> {} sequences labeled",
+      path.display(),
+      labeled.len()
+    );
+  }
+
   Ok(())
 }
 
 fn run_delta() -> anyhow::Result<()> {
+  let parser_files = collect_files(
+    "tmp/anystyle/res/parser/*.xml"
+  )?;
   println!(
-    "delta stub: will compare parser \
-     labels to `res/parser/*.xml` \
-     gold data just like `rake delta`"
+    "delta stub: comparing {} \
+     datasets against new labels",
+    parser_files.len()
   );
+
+  for path in parser_files {
+    let content =
+      fs::read_to_string(&path)?;
+    let prepared = Parser::new()
+      .prepare(&content, true);
+    let labeled =
+      Parser::new().label(&content);
+    let delta = if prepared.0.len()
+      == labeled.len()
+    {
+      0
+    } else {
+      (prepared.0.len() as isize
+        - labeled.len() as isize)
+        .abs()
+    };
+
+    println!(
+      "  {} -> delta {} sequences",
+      path.display(),
+      delta
+    );
+  }
+
   Ok(())
+}
+
+fn collect_files(
+  pattern: &str
+) -> anyhow::Result<Vec<PathBuf>> {
+  Ok(
+    glob(pattern)?
+      .flat_map(Result::ok)
+      .collect()
+  )
 }
