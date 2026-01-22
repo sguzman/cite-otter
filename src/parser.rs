@@ -189,6 +189,19 @@ impl Parser {
             extract_pages(reference),
           ])
         );
+        mapped.insert(
+          "language",
+          FieldValue::Single(
+            "en".into()
+          )
+        );
+        mapped.insert(
+          "scripts",
+          FieldValue::List(vec![
+            "Common".into(),
+            "Latin".into(),
+          ])
+        );
         mapped
       })
       .collect()
