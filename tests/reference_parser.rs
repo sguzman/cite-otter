@@ -23,8 +23,6 @@ const PEREC_REF: &str =
    The Harvill Press, 1995. p.108.";
 
 #[test]
-#[ignore = "pending parser \
-            implementation"]
 fn prepare_returns_expanded_dataset() {
   let parser = Parser::new();
   let dataset = parser
@@ -46,8 +44,6 @@ fn prepare_returns_expanded_dataset() {
 }
 
 #[test]
-#[ignore = "pending parser \
-            implementation"]
 fn parse_returns_metadata_map() {
   let parser = Parser::new();
   let references = parser.parse(
@@ -111,8 +107,6 @@ fn parse_returns_metadata_map() {
 }
 
 #[test]
-#[ignore = "pending parser \
-            implementation"]
 fn label_handles_empty_lines() {
   let parser = Parser::new();
   assert!(parser.label("").is_empty());
@@ -125,8 +119,6 @@ fn label_handles_empty_lines() {
 }
 
 #[test]
-#[ignore = "pending parser \
-            implementation"]
 fn label_outputs_all_expected_segment_types()
  {
   let parser = Parser::new();
@@ -168,8 +160,6 @@ fn label_outputs_all_expected_segment_types()
 }
 
 #[test]
-#[ignore = "pending parser \
-            implementation"]
 fn label_handles_unrecognizable_input()
 {
   let parser = Parser::new();

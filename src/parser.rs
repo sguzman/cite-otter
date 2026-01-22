@@ -405,14 +405,14 @@ fn tag_token(token: &str) -> String {
     .unwrap_or(token);
   let lower = original.to_lowercase();
 
-  if lower.contains(',') {
+  if lower.contains("press") {
+    "publisher".into()
+  } else if lower.contains(',') {
     "author".into()
   } else if lower.contains("p.")
     || lower.contains("pp.")
   {
     "pages".into()
-  } else if lower.contains("press") {
-    "publisher".into()
   } else if lower.contains("london") {
     "location".into()
   } else if original
