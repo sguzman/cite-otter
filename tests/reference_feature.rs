@@ -9,8 +9,6 @@ const YEAR_TOKENS: [&str; 5] = [
 ];
 
 #[test]
-#[ignore = "pending feature \
-            implementation"]
 fn number_feature_detects_years() {
   let feature = Feature::new();
 

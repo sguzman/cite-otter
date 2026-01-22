@@ -3,7 +3,8 @@ pub mod number {
     Debug, Clone, Copy, PartialEq, Eq,
   )]
   pub enum Observation {
-    Year
+    Year,
+    Unknown
   }
 
   #[derive(Debug)]
@@ -22,12 +23,27 @@ pub mod number {
 
     pub fn observe(
       &self,
-      _token: &str
+      token: &str
     ) -> Observation {
-      todo!(
-        "Number feature observation \
-         is pending implementation"
-      )
+      if token
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .count()
+        >= 4
+      {
+        return Observation::Year;
+      }
+
+      let digits = token
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .count();
+
+      if digits >= 3 {
+        Observation::Year
+      } else {
+        Observation::Unknown
+      }
     }
   }
 }

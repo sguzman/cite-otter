@@ -1,8 +1,6 @@
 use cite_otter::normalizer::names::Normalizer;
 
 #[test]
-#[ignore = "pending normalizer \
-            implementation"]
 fn names_repeaters_resolve_to_previous_literal()
  {
   let normalizer = Normalizer::new();
