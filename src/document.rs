@@ -25,9 +25,6 @@ impl Document {
   pub fn from_text(text: &str) -> Self {
     let pages = text
       .split('\u{000C}')
-      .filter(|segment| {
-        !segment.trim().is_empty()
-      })
       .map(|segment| {
         Page {
           text: segment

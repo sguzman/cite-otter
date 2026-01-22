@@ -18,10 +18,35 @@ impl Finder {
     &self,
     input: &str
   ) -> Vec<Document> {
-    if input.trim().is_empty() {
-      return Vec::new();
+    let candidates =
+      split_into_references(input);
+    if candidates.is_empty() {
+      return vec![Document::from_text(
+        input
+      )];
     }
 
-    vec![Document::from_text(input)]
+    candidates
+      .into_iter()
+      .map(|segment| {
+        Document::from_text(segment)
+      })
+      .collect()
   }
+}
+
+fn split_into_references(
+  input: &str
+) -> Vec<&str> {
+  input
+    .split("\n\n")
+    .map(str::trim)
+    .filter(|seg| {
+      !seg.is_empty()
+        && seg
+          .chars()
+          .any(|c| c.is_ascii_digit())
+        && seg.len() > 20
+    })
+    .collect::<Vec<_>>()
 }

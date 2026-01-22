@@ -4,8 +4,6 @@ use cite_otter::document::Document;
 use support::fixture_path;
 
 #[test]
-#[ignore = "pending document \
-            implementation"]
 fn document_counts_pages_from_fixture()
 {
   let doc = Document::open(

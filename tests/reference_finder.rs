@@ -6,8 +6,6 @@ use cite_otter::finder::Finder;
 use support::fixture_path;
 
 #[test]
-#[ignore = "pending finder \
-            implementation"]
 fn finder_detects_references_in_a_document()
  {
   let path = fixture_path("phd.txt");
