@@ -9,8 +9,6 @@ const PEREC_REF: &str =
    The Harvill Press, 1995. p.108.";
 
 #[test]
-#[ignore = "pending format \
-            implementation"]
 fn bibtex_formatter_round_trips_reference()
  {
   let parser = Parser::new();
