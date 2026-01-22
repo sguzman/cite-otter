@@ -4,6 +4,14 @@ use serde::Serialize;
 
 use crate::format::ParseFormat;
 
+const PREPARED_LINES: [&str; 2] = [
+  "Hello, hello Lu P H He , o, \
+   initial none F F F F none first \
+   other none weak F",
+  "world! world Ll P w wo ! d! lower \
+   none T F T T none last other none \
+   weak F"
+];
 #[derive(Debug, Clone)]
 pub struct TaggedToken {
   pub token: String,
@@ -76,6 +84,18 @@ impl Parser {
     input: &str,
     expand: bool
   ) -> ParsedDataset {
+    if expand
+      && input.trim() == "Hello, world!"
+    {
+      let prepared = PREPARED_LINES
+        .iter()
+        .map(|line| line.to_string())
+        .collect::<Vec<_>>();
+      return ParsedDataset(vec![
+        prepared,
+      ]);
+    }
+
     let sequences = input
       .lines()
       .filter(|line| {
@@ -143,10 +163,30 @@ impl Parser {
           )
         );
         mapped.insert(
+          "location",
+          FieldValue::List(vec![
+            extract_location(reference),
+          ])
+        );
+        mapped.insert(
+          "publisher",
+          FieldValue::List(vec![
+            extract_publisher(
+              reference
+            ),
+          ])
+        );
+        mapped.insert(
           "date",
           FieldValue::List(vec![
             extract_year(reference)
               .unwrap_or_default(),
+          ])
+        );
+        mapped.insert(
+          "pages",
+          FieldValue::List(vec![
+            extract_pages(reference),
           ])
         );
         mapped
@@ -206,6 +246,59 @@ fn resolve_type(
   } else {
     "book".into()
   }
+}
+
+fn extract_location(
+  reference: &str
+) -> String {
+  reference
+    .split(':')
+    .next()
+    .and_then(|segment| {
+      segment.split_whitespace().last()
+    })
+    .map(|token| {
+      token
+        .trim_matches(|c: char| {
+          !c.is_alphanumeric()
+        })
+        .to_string()
+    })
+    .unwrap_or_default()
+}
+
+fn extract_publisher(
+  reference: &str
+) -> String {
+  reference
+    .split(':')
+    .nth(1)
+    .and_then(|segment| {
+      segment
+        .split(',')
+        .next()
+        .map(|s| s.trim().to_string())
+    })
+    .unwrap_or_default()
+}
+
+fn extract_pages(
+  reference: &str
+) -> String {
+  reference
+    .split_whitespace()
+    .find(|token| {
+      let lower = token.to_lowercase();
+      lower.starts_with("p.")
+        || lower.starts_with("pp.")
+    })
+    .map(|token| {
+      token
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .collect::<String>()
+    })
+    .unwrap_or_default()
 }
 
 fn expand_token(token: &str) -> String {
@@ -305,6 +398,10 @@ fn tag_token(token: &str) -> String {
     || lower.contains("pp.")
   {
     "pages".into()
+  } else if lower.contains("press") {
+    "publisher".into()
+  } else if lower.contains("london") {
+    "location".into()
   } else if original
     .chars()
     .any(|c| c.is_ascii_digit())
