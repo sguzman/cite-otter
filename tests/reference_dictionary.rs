@@ -5,8 +5,6 @@ use cite_otter::dictionary::{
 };
 
 #[test]
-#[ignore = "pending dictionary \
-            implementation"]
 fn place_names_are_tagged() {
   let dict = Dictionary::create(
     DictionaryAdapter::Memory

@@ -33,21 +33,25 @@ impl Dictionary {
 
   pub fn lookup(
     &self,
-    _term: &str
+    term: &str
   ) -> Vec<DictionaryCode> {
-    match self.adapter {
-      | DictionaryAdapter::Memory => {
-        vec![DictionaryCode::Place]
-      }
-      | DictionaryAdapter::Redis => {
-        vec![DictionaryCode::Place]
-      }
-      | DictionaryAdapter::Lmdb => {
-        vec![DictionaryCode::Place]
-      }
-      | DictionaryAdapter::Gdbm => {
-        vec![DictionaryCode::Place]
-      }
+    let normalized =
+      term.to_lowercase();
+    if PLACE_NAMES.iter().any(|&name| {
+      normalized.contains(name)
+    }) {
+      vec![DictionaryCode::Place]
+    } else {
+      Vec::new()
     }
   }
+
+  pub fn adapter(
+    &self
+  ) -> DictionaryAdapter {
+    self.adapter
+  }
 }
+
+static PLACE_NAMES: &[&str] =
+  &["philippines", "italy"];
