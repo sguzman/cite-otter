@@ -79,21 +79,13 @@ pub fn run() -> anyhow::Result<()> {
       );
     }
     | Command::Train => {
-      println!(
-        "training not implemented yet"
-      );
+      run_training()?;
     }
     | Command::Check => {
-      println!(
-        "validation not implemented \
-         yet"
-      );
+      run_validation()?;
     }
     | Command::Delta => {
-      println!(
-        "delta reporting not \
-         implemented yet"
-      );
+      run_delta()?;
     }
   }
 
@@ -109,4 +101,35 @@ fn load_input(
   } else {
     Ok(input.to_string())
   }
+}
+
+fn run_training() -> anyhow::Result<()>
+{
+  println!(
+    "training stub: will load configs \
+     at docs/migration/structure.md \
+     and datasets from \
+     tmp/anystyle/res"
+  );
+
+  Ok(())
+}
+
+fn run_validation() -> anyhow::Result<()>
+{
+  println!(
+    "validation stub: will run schema \
+     checks like AnyStyle's `rake \
+     check`"
+  );
+  Ok(())
+}
+
+fn run_delta() -> anyhow::Result<()> {
+  println!(
+    "delta stub: will compare parser \
+     labels to `res/parser/*.xml` \
+     gold data just like `rake delta`"
+  );
+  Ok(())
 }
