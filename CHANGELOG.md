@@ -1,6 +1,19 @@
 # Changelog
 ## [Unreleased]
 
+### 🐛 Bug Fixes
+- **(semver)**: Broken semver ([0071d5f](https://github.com/sguzman/cite-otter/commit/0071d5f78047013da4470d5a8657aa226b6572f0))
+
+### 🚀 Features
+- **(core)**: Parse and cli ([7e58e22](https://github.com/sguzman/cite-otter/commit/7e58e22ea7b0e2a7a9476e7d25091f6cc2be66e3))
+- **(parser)**: Imp ([4c8fddf](https://github.com/sguzman/cite-otter/commit/4c8fddfaa2a2d5c72da7d0fa727412cd3bccc3d8))
+- **(parser)**: Extended ([31430d2](https://github.com/sguzman/cite-otter/commit/31430d20527483d1e575e9b100bb7a00b05adf61))
+- **(parser)**: Prepare ([c8e9e1f](https://github.com/sguzman/cite-otter/commit/c8e9e1f4db0caf2e375394f2b070bfc35b7187e7))
+- **(parser)**: Align tokens/metadata with reference suite ([181b427](https://github.com/sguzman/cite-otter/commit/181b42781cb5fdf900ed3fde48d73687764ee4f8))
+
+### 🚜 Refactor
+- **(fmt)**: Toml ([b9de022](https://github.com/sguzman/cite-otter/commit/b9de02232410228aeff780af5b8fb0518e6301ca))## [0.2.0] - 2026-01-21
+
 ### ⚙️ Miscellaneous
 - Initial commit ([f3f577a](https://github.com/sguzman/cite-otter/commit/f3f577a6ff50e1a8bd48fb13f12abc9fbb6f22db))
 - **(template)**: Init ([375aa29](https://github.com/sguzman/cite-otter/commit/375aa29973365cf4c3d4e65619b9babf9d65916a))
