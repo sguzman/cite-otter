@@ -40,7 +40,7 @@ enum Command {
   Parse {
     /// Plain reference text or file
     /// path
-    input:  String,
+    input:         String,
     #[arg(
       short,
       long,
@@ -119,14 +119,14 @@ pub fn run() -> anyhow::Result<()> {
         output_format
       );
       let output = match output_format {
-        ParseFormat::Json => {
+        | ParseFormat::Json => {
           formatter.to_json(&references)
         }
-        ParseFormat::BibTeX => {
+        | ParseFormat::BibTeX => {
           formatter
             .to_bibtex(&references)
         }
-        ParseFormat::Csl => {
+        | ParseFormat::Csl => {
           formatter.to_csl(&references)
         }
       };
