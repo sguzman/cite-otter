@@ -110,7 +110,8 @@ struct TrainingReport {
 
 #[derive(Serialize)]
 struct ValidationReport {
-  parser: Vec<DatasetStat>
+  parser: Vec<DatasetStat>,
+  finder: Vec<DatasetStat>
 }
 
 #[derive(Clone, Serialize)]
@@ -361,8 +362,13 @@ fn run_validation() -> anyhow::Result<()>
   let parser_files = collect_files(
     "tmp/anystyle/res/parser/*.xml"
   )?;
+  let finder_files = collect_files(
+    "tmp/anystyle/res/finder/*.ttx"
+  )?;
   let parser_stats =
     gather_parser_stats(&parser_files)?;
+  let finder_stats =
+    gather_finder_stats(&finder_files)?;
   let parser_model_path =
     model_path("parser-model.json");
   let parser_model = ParserModel::load(
@@ -382,6 +388,25 @@ fn run_validation() -> anyhow::Result<()>
       );
     }
   }
+  let finder_model_path =
+    model_path("finder-model.json");
+  let finder_model = FinderModel::load(
+    &finder_model_path
+  )?;
+  for (path, stat) in &finder_stats {
+    if let Some(stored) =
+      finder_model.sequences(path)
+      && stored != stat.sequences
+    {
+      println!(
+        "  validation mismatch {}: \
+         stored {} vs current {}",
+        path.display(),
+        stored,
+        stat.sequences
+      );
+    }
+  }
 
   persist_report(
     Path::new(REPORT_DIR)
@@ -390,14 +415,20 @@ fn run_validation() -> anyhow::Result<()>
       parser: parser_stats
         .iter()
         .map(|(_, stat)| stat.clone())
+        .collect(),
+      finder: finder_stats
+        .iter()
+        .map(|(_, stat)| stat.clone())
         .collect()
     }
   )?;
 
   println!(
     "validation report written for {} \
+     parser datasets and {} finder \
      datasets",
-    parser_files.len()
+    parser_files.len(),
+    finder_files.len()
   );
   Ok(())
 }

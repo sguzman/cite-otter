@@ -115,6 +115,21 @@ fn training_validation_delta_flow_runs()
       "reference dataset must exist"
     );
 
+  let finder_dataset_path = Path::new(
+    env!("CARGO_MANIFEST_DIR")
+  )
+  .join(
+    "tmp/anystyle/res/finder/\
+     bb132pr2055.ttx"
+  );
+  let canonical_finder_path =
+    finder_dataset_path
+      .canonicalize()
+      .expect(
+        "reference finder dataset \
+         must exist"
+      );
+
   let parser = Parser::new();
   let content =
     fs::read_to_string(&dataset_path)
@@ -126,6 +141,17 @@ fn training_validation_delta_flow_runs()
     .prepare(&content, true)
     .0
     .len();
+
+  let finder_content =
+    fs::read_to_string(
+      &finder_dataset_path
+    )
+    .expect(
+      "finder dataset should be \
+       readable"
+    );
+  let expected_finder_sequences =
+    parser.label(&finder_content).len();
 
   let training_parser = training_json
     .get("parser")
@@ -158,6 +184,89 @@ fn training_validation_delta_flow_runs()
      match the training data"
   );
 
+  assert!(
+    training_json
+      .get("finder")
+      .and_then(Value::as_array)
+      .map(|arr| !arr.is_empty())
+      .unwrap_or(false),
+    "training report should list \
+     finder datasets"
+  );
+  let training_finder = training_json
+    .get("finder")
+    .and_then(Value::as_array)
+    .expect(
+      "training finder data should be \
+       present"
+    );
+  let finder_entry =
+    find_dataset_entry(
+      training_finder,
+      canonical_finder_path.as_path()
+    )
+    .expect(
+      "training report should include \
+       the finder dataset"
+    );
+  let recorded_finder_sequences =
+    finder_entry
+      .get("sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder sequences must be \
+         numeric"
+      ) as usize;
+  assert_eq!(
+    recorded_finder_sequences,
+    expected_finder_sequences,
+    "finder training stats should \
+     reflect parser labels"
+  );
+
+  let samples = training_json
+    .get("samples")
+    .and_then(Value::as_array)
+    .expect(
+      "training report should list \
+       sample outputs"
+    );
+  assert_eq!(
+    samples.len(),
+    3,
+    "training report should capture \
+     each sample format"
+  );
+  let sample_formats: Vec<_> = samples
+    .iter()
+    .filter_map(|entry| {
+      entry
+        .get("format")
+        .and_then(Value::as_str)
+    })
+    .collect();
+  for expected in
+    ["json", "bibtex", "csl"]
+  {
+    assert!(
+      sample_formats
+        .contains(&expected),
+      "sample outputs should cover \
+       {expected}"
+    );
+  }
+  for entry in samples {
+    assert!(
+      entry
+        .get("output")
+        .and_then(Value::as_str)
+        .map(|value| !value.is_empty())
+        .unwrap_or(false),
+      "sample outputs should be \
+       non-empty"
+    );
+  }
+
   let validation_parser =
     validation_json
       .get("parser")
@@ -188,6 +297,47 @@ fn training_validation_delta_flow_runs()
     expected_sequences,
     "validation stats should follow \
      the training numbers"
+  );
+
+  assert!(
+    validation_json
+      .get("finder")
+      .and_then(Value::as_array)
+      .map(|arr| !arr.is_empty())
+      .unwrap_or(false),
+    "validation report should list \
+     finder datasets"
+  );
+  let validation_finder =
+    validation_json
+      .get("finder")
+      .and_then(Value::as_array)
+      .expect(
+        "validation finder data \
+         should be present"
+      );
+  let validation_finder_entry =
+    find_dataset_entry(
+      validation_finder,
+      canonical_finder_path.as_path()
+    )
+    .expect(
+      "validation report should cover \
+       the finder dataset"
+    );
+  let validation_finder_sequences =
+    validation_finder_entry
+      .get("sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder sequences must be \
+         numeric"
+      ) as usize;
+  assert_eq!(
+    validation_finder_sequences,
+    expected_finder_sequences,
+    "finder validation stats should \
+     match the training numbers"
   );
 
   let delta_comparisons = delta_json

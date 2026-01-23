@@ -141,4 +141,14 @@ impl FinderModel {
   pub fn has_signatures(&self) -> bool {
     !self.signatures.is_empty()
   }
+
+  pub fn sequences(
+    &self,
+    path: &Path
+  ) -> Option<usize> {
+    self
+      .datasets
+      .get(&path.display().to_string())
+      .copied()
+  }
 }
