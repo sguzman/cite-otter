@@ -19,6 +19,7 @@ This migration roadmap translates `tmp/anystyle`’s structure (`docs/migration/
   - Augment test coverage with training/check validation: port `rake check`, `rake delta`, and `rake train` expectations into Rust integration tests using representative datasets.
   - Parser heuristics now emit the same metadata tokens `AnyStyle` expects (e.g., container-title/volume/issue/genre/edition) and the training/check/delta helpers can be invoked programmatically to produce `target/reports/*.json`.
   - Release: `cite-otter v0.5.0` with finder/training parity, dictionary adapters, and enhanced test suite confirming dataset-driven outputs.
+  - Persisted training reports now include JSON/BibTeX/CSL renderings of a curated sample reference set, captured via the new helper utilities in `src/cli.rs`, so formatting parity can be inspected without re-running the CLI sample command.
 
 - **`v1.0.0` – Polished release with documentation & parity**
   - Finalize CLI parity (`parse`, `find`, `train`, `check`, `delta`) with precise flag sets, help text, and error handling informed by the reference docs.
