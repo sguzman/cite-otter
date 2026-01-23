@@ -39,6 +39,84 @@ pub mod names {
   }
 }
 
+pub mod location {
+  #[derive(Debug, Clone)]
+  pub struct Normalizer;
+
+  impl Default for Normalizer {
+    fn default() -> Self {
+      Self::new()
+    }
+  }
+
+  impl Normalizer {
+    pub fn new() -> Self {
+      Self
+    }
+
+    pub fn normalize(
+      &self,
+      input: &str
+    ) -> (String, Option<String>) {
+      let trimmed = input.trim();
+      if let Some((before, after)) =
+        trimmed.split_once(':')
+      {
+        (
+          before.trim().to_string(),
+          Some(
+            after.trim().to_string()
+          )
+        )
+      } else {
+        (trimmed.to_string(), None)
+      }
+    }
+  }
+}
+
+pub mod container {
+  #[derive(Debug, Clone)]
+  pub struct Normalizer;
+
+  impl Default for Normalizer {
+    fn default() -> Self {
+      Self::new()
+    }
+  }
+
+  impl Normalizer {
+    pub fn new() -> Self {
+      Self
+    }
+
+    pub fn normalize(
+      &self,
+      input: &str
+    ) -> String {
+      let mut value = input.trim();
+      for prefix in &[
+        "in ",
+        "In ",
+        "of ",
+        "Presented at ",
+        "presented at "
+      ] {
+        if value.starts_with(prefix) {
+          value = value[prefix.len()..]
+            .trim();
+        }
+      }
+      value
+        .trim_end_matches(|c: char| {
+          c == ',' || c == '.'
+        })
+        .trim()
+        .to_string()
+    }
+  }
+}
+
 fn is_repeater(value: &str) -> bool {
   let allowed = ['-', '.', ',', ' '];
   !value.is_empty()
