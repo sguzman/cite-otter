@@ -232,22 +232,12 @@ fn parse_authors(
     .replace(" and ", ";")
     .replace(" AND ", ";");
 
-  let mut authors = normalized
+  normalized
     .split(';')
     .map(str::trim)
     .filter(|piece| !piece.is_empty())
     .filter_map(parse_author_chunk)
-    .collect::<Vec<_>>();
-
-  if authors.is_empty()
-    && !segment.trim().is_empty()
-    && let Some(author) =
-      parse_author_chunk(segment)
-  {
-    authors.push(author);
-  }
-
-  authors
+    .collect::<Vec<_>>()
 }
 
 fn parse_author_chunk(
@@ -302,6 +292,34 @@ fn parse_author_chunk(
   })
 }
 
+fn authors_for_reference(
+  reference: &str
+) -> Vec<Author> {
+  let mut authors =
+    parse_authors(reference);
+  if authors.is_empty() {
+    if let Some(author) =
+      parse_author_chunk(
+        extract_author_segment(
+          reference
+        )
+      )
+    {
+      authors.push(author);
+    } else {
+      let fallback =
+        extract_author(reference);
+      if !fallback.is_empty() {
+        authors.push(Author {
+          family: fallback,
+          given:  String::new()
+        });
+      }
+    }
+  }
+  authors
+}
+
 fn normalize_author_component(
   component: &str
 ) -> String {
@@ -340,47 +358,120 @@ fn tokens_from_authors(
 fn tokens_from_dates(
   reference: &str
 ) -> BTreeSet<String> {
-  let mut tokens = BTreeSet::new();
-
-  let year_tokens =
-    capture_year_like(reference);
-  for year in &year_tokens {
-    tokens.insert(year.clone());
-  }
-
-  if let Some(year) =
-    extract_year(reference)
-  {
-    tokens.extend(tokens_from_segment(
-      &year
-    ));
-  }
-
-  tokens
+  collect_year_tokens(reference)
+    .into_iter()
+    .collect()
 }
 
 fn capture_year_like(
   reference: &str
-) -> Vec<String> {
+) -> Vec<(String, bool)> {
   let mut tokens = Vec::new();
   let mut buffer = String::new();
+  let mut allow_short = false;
 
   for c in reference.chars() {
     if c.is_ascii_digit() {
       buffer.push(c);
     } else {
-      if buffer.len() >= 4 {
-        tokens.push(buffer.clone());
+      if buffer.len() >= 2 {
+        tokens.push((
+          buffer.clone(),
+          allow_short
+        ));
       }
       buffer.clear();
+      allow_short = matches!(
+        c,
+        '/' | '-' | '–' | '—'
+      );
     }
   }
 
-  if buffer.len() >= 4 {
-    tokens.push(buffer);
+  if buffer.len() >= 2 {
+    tokens.push((buffer, allow_short));
   }
 
   tokens
+}
+
+fn collect_year_tokens(
+  reference: &str
+) -> Vec<String> {
+  let mut tokens = Vec::new();
+  let mut previous: Option<String> =
+    None;
+
+  for (candidate, allow_short) in
+    capture_year_like(reference)
+  {
+    if let Some(year) =
+      normalize_year_candidate(
+        &candidate,
+        previous.as_ref(),
+        allow_short
+      )
+    {
+      if previous.as_deref()
+        == Some(&year)
+      {
+        continue;
+      }
+      previous = Some(year.clone());
+      tokens.push(year);
+    }
+  }
+
+  tokens
+}
+
+fn normalize_year_candidate(
+  candidate: &str,
+  previous: Option<&String>,
+  allow_short: bool
+) -> Option<String> {
+  let digits: String = candidate
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .collect();
+
+  match digits.len() {
+    | len if len >= 4 => {
+      Some(digits[..4].to_string())
+    }
+    | len if len >= 2 && allow_short => {
+      let prefix_len = 4 - len;
+      if let Some(prev) = previous
+        && prev.len() >= prefix_len
+      {
+        let prefix: String = prev
+          .chars()
+          .take(prefix_len)
+          .collect();
+        return Some(format!(
+          "{prefix}{digits}"
+        ));
+      }
+      let default_prefix =
+        default_century_prefix(
+          prefix_len
+        );
+      Some(format!(
+        "{default_prefix}{digits}"
+      ))
+    }
+    | _ => None
+  }
+}
+
+fn default_century_prefix(
+  len: usize
+) -> &'static str {
+  match len {
+    | 1 => "1",
+    | 2 => "19",
+    | _ => "19"
+  }
 }
 
 fn matches_field(
@@ -508,20 +599,15 @@ impl Parser {
         let mut mapped =
           Reference::new();
         let authors =
-          parse_authors(reference);
+          authors_for_reference(
+            reference
+          );
         if !authors.is_empty() {
           mapped.insert(
             "author",
             FieldValue::Authors(
               authors
             )
-          );
-        } else {
-          mapped.insert(
-            "author",
-            FieldValue::List(vec![
-              extract_author(reference),
-            ])
           );
         }
         mapped.insert(
@@ -698,12 +784,17 @@ impl Parser {
           );
         }
 
+        let mut year_values =
+          collect_year_tokens(
+            reference
+          );
+        if year_values.is_empty() {
+          year_values
+            .push(String::new());
+        }
         mapped.insert(
           "date",
-          FieldValue::List(vec![
-            extract_year(reference)
-              .unwrap_or_default(),
-          ])
+          FieldValue::List(year_values)
         );
         mapped.insert(
           "pages",
@@ -766,27 +857,6 @@ fn extract_author_segment(
     .unwrap_or(reference)
     .trim()
 }
-
-fn extract_year(
-  reference: &str
-) -> Option<String> {
-  let candidates =
-    capture_year_like(reference);
-  if candidates.is_empty() {
-    return None;
-  }
-
-  if let Some(candidate) =
-    candidates.iter().find(
-      |candidate| candidate.len() == 4
-    )
-  {
-    return Some(candidate.clone());
-  }
-
-  candidates.into_iter().next()
-}
-
 fn resolve_type(
   reference: &str
 ) -> String {

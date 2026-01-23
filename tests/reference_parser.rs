@@ -229,12 +229,12 @@ fn parse_prefers_first_year_in_multi_year_tokens()
     }
   };
 
-  assert!(
-    date_values
-      .iter()
-      .any(|value| value == "1995"),
-    "Parser should surface the first \
-     four-digit year"
+  let expected: Vec<String> =
+    vec!["1995".into(), "1996".into()];
+  assert_eq!(
+    date_values, &expected,
+    "Parser should normalize the \
+     multi-year range"
   );
 }
 
