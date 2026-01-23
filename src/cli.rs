@@ -95,11 +95,7 @@ struct DatasetStat {
   tokens:    usize
 }
 
-#[derive(
-  Debug,
-  Clone,
-  Serialize
-)]
+#[derive(Debug, Clone, Serialize)]
 struct SampleEntry {
   format: String,
   output: String
@@ -107,8 +103,8 @@ struct SampleEntry {
 
 #[derive(Serialize)]
 struct TrainingReport {
-  parser: Vec<DatasetStat>,
-  finder: Vec<DatasetStat>,
+  parser:  Vec<DatasetStat>,
+  finder:  Vec<DatasetStat>,
   samples: Vec<SampleEntry>
 }
 
@@ -341,11 +337,11 @@ fn run_training() -> anyhow::Result<()>
     Path::new(REPORT_DIR)
       .join("training-report.json"),
     &TrainingReport {
-      parser: parser_pairs
+      parser:  parser_pairs
         .iter()
         .map(|(_, stat)| stat.clone())
         .collect(),
-      finder: finder_pairs
+      finder:  finder_pairs
         .iter()
         .map(|(_, stat)| stat.clone())
         .collect(),
@@ -586,6 +582,67 @@ fn collect_finder_signatures(
       Ok((path.clone(), signatures))
     })
     .collect()
+}
+
+const SAMPLE_FORMATS: [ParseFormat; 3] = [
+  ParseFormat::Json,
+  ParseFormat::BibTeX,
+  ParseFormat::Csl
+];
+
+fn collect_sample_outputs()
+-> Vec<SampleEntry> {
+  let parser = Parser::new();
+  let formatter = Format::new();
+
+  SAMPLE_FORMATS
+    .iter()
+    .map(|format| {
+      let references = parser.parse(
+        &SAMPLE_REFERENCES,
+        *format
+      );
+      SampleEntry {
+        format: sample_format_label(
+          *format
+        )
+        .to_string(),
+        output: format_sample_output(
+          &formatter,
+          &references,
+          *format
+        )
+      }
+    })
+    .collect()
+}
+
+fn format_sample_output(
+  formatter: &Format,
+  references: &[Reference],
+  format: ParseFormat
+) -> String {
+  match format {
+    | ParseFormat::Json => {
+      formatter.to_json(references)
+    }
+    | ParseFormat::BibTeX => {
+      formatter.to_bibtex(references)
+    }
+    | ParseFormat::Csl => {
+      formatter.to_csl(references)
+    }
+  }
+}
+
+fn sample_format_label(
+  format: ParseFormat
+) -> &'static str {
+  match format {
+    | ParseFormat::Json => "json",
+    | ParseFormat::BibTeX => "bibtex",
+    | ParseFormat::Csl => "csl"
+  }
 }
 
 fn model_path(
