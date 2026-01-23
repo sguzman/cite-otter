@@ -18,7 +18,7 @@
 
 # Cite-Otter
 
-Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](tmp/anystyle) reference parser. The project retraces AnyStyle’s parser/finder/training workflows while embracing Rust idioms for parsing, modeling, and CLI tooling.
+Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](https://github.com/inukshuk/anystyle) reference parser. The project retraces AnyStyle’s parser/finder/training workflows while embracing Rust idioms for parsing, modeling, and CLI tooling.
 
 ## What’s here
 
@@ -46,5 +46,5 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](tmp/anystyle) re
 
 ## References
 
-- `tmp/anystyle` – Ruby source and training data that inspired the Rust port.
+- `https://github.com/inukshuk/anystyle` – Ruby source and training data that inspired the Rust port.
 - `docs/migration/structure.md` – Migration template that guided `REFERENCE.md` and overall planning.
