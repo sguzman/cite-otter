@@ -120,12 +120,30 @@ pub fn run() -> anyhow::Result<()> {
     } => {
       let text = load_input(&input)?;
       let finder = Finder::new();
-      let sequences =
-        finder.label(&text);
+      let _ = finder.label(&text);
+      let segments =
+        Finder::segments(&text);
       println!(
         "found {} sequence(s)",
-        sequences.len()
+        segments.len()
       );
+      if !segments.is_empty() {
+        let parser = Parser::new();
+        let references = segments
+          .iter()
+          .map(|segment| {
+            segment.as_str()
+          })
+          .collect::<Vec<_>>();
+        let parsed = parser.parse(
+          &references,
+          ParseFormat::Json
+        );
+        println!(
+          "{}",
+          formatter.to_json(&parsed)
+        );
+      }
     }
     | Command::Train => {
       run_training()?;

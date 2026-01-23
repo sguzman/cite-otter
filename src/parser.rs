@@ -78,12 +78,9 @@ impl FieldTokens {
   fn from_reference(
     reference: &str
   ) -> Self {
-    let year = extract_year(reference);
     Self {
-      author:    tokens_from_segment(
-        extract_author_segment(
-          reference
-        )
+      author:    tokens_from_authors(
+        reference
       ),
       title:     tokens_from_segment(
         &extract_title(reference)
@@ -94,10 +91,8 @@ impl FieldTokens {
       publisher: tokens_from_segment(
         &extract_publisher(reference)
       ),
-      date:      tokens_from_segment(
-        year
-          .unwrap_or_default()
-          .as_str()
+      date:      tokens_from_dates(
+        reference
       ),
       pages:     tokens_from_segment(
         &extract_pages(reference)
@@ -182,6 +177,73 @@ fn tokens_from_segment(
     .for_each(|token| {
       tokens.insert(token);
     });
+
+  tokens
+}
+
+fn tokens_from_authors(
+  reference: &str
+) -> BTreeSet<String> {
+  let author_segment =
+    extract_author_segment(reference);
+  let mut tokens =
+    tokens_from_segment(author_segment);
+
+  let normalized = author_segment
+    .replace('&', ";")
+    .replace(" and ", ";");
+  for part in normalized.split(';') {
+    let name = part.trim();
+    if !name.is_empty() {
+      tokens.extend(
+        tokens_from_segment(name)
+      );
+    }
+  }
+
+  tokens
+}
+
+fn tokens_from_dates(
+  reference: &str
+) -> BTreeSet<String> {
+  let mut tokens = BTreeSet::new();
+
+  if let Some(year) =
+    extract_year(reference)
+  {
+    tokens.extend(tokens_from_segment(
+      &year
+    ));
+  }
+
+  tokens.extend(capture_year_like(
+    reference
+  ));
+
+  tokens
+}
+
+fn capture_year_like(
+  reference: &str
+) -> BTreeSet<String> {
+  let mut tokens = BTreeSet::new();
+  let mut buffer = String::new();
+
+  for c in reference.chars() {
+    if c.is_ascii_digit() {
+      buffer.push(c);
+    } else {
+      if buffer.len() >= 4 {
+        tokens.insert(buffer.clone());
+      }
+      buffer.clear();
+    }
+  }
+
+  if buffer.len() >= 4 {
+    tokens.insert(buffer);
+  }
 
   tokens
 }

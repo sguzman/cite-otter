@@ -14,12 +14,18 @@ impl Finder {
     Self
   }
 
+  pub fn segments(
+    input: &str
+  ) -> Vec<String> {
+    split_into_references(input)
+  }
+
   pub fn label(
     &self,
     input: &str
   ) -> Vec<Document> {
     let candidates =
-      split_into_references(input);
+      Self::segments(input);
     if candidates.is_empty() {
       return vec![Document::from_text(
         input
@@ -29,7 +35,7 @@ impl Finder {
     candidates
       .into_iter()
       .map(|segment| {
-        Document::from_text(segment)
+        Document::from_text(&segment)
       })
       .collect()
   }
@@ -37,7 +43,7 @@ impl Finder {
 
 fn split_into_references(
   input: &str
-) -> Vec<&str> {
+) -> Vec<String> {
   input
     .split("\n\n")
     .map(str::trim)
@@ -48,5 +54,6 @@ fn split_into_references(
           .any(|c| c.is_ascii_digit())
         && seg.len() > 20
     })
+    .map(|seg| seg.to_string())
     .collect::<Vec<_>>()
 }
