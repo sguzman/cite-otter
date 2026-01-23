@@ -26,6 +26,7 @@ use crate::model::{
 };
 use crate::parser::{
   Parser,
+  Reference,
   sequence_signature,
   tagged_sequence_signature
 };
@@ -94,10 +95,21 @@ struct DatasetStat {
   tokens:    usize
 }
 
+#[derive(
+  Debug,
+  Clone,
+  Serialize
+)]
+struct SampleEntry {
+  format: String,
+  output: String
+}
+
 #[derive(Serialize)]
 struct TrainingReport {
   parser: Vec<DatasetStat>,
-  finder: Vec<DatasetStat>
+  finder: Vec<DatasetStat>,
+  samples: Vec<SampleEntry>
 }
 
 #[derive(Serialize)]
@@ -258,21 +270,6 @@ fn run_training() -> anyhow::Result<()>
       &parser_files
     )?;
 
-  persist_report(
-    Path::new(REPORT_DIR)
-      .join("training-report.json"),
-    &TrainingReport {
-      parser: parser_pairs
-        .iter()
-        .map(|(_, stat)| stat.clone())
-        .collect(),
-      finder: finder_pairs
-        .iter()
-        .map(|(_, stat)| stat.clone())
-        .collect()
-    }
-  )?;
-
   let parser_model_path =
     model_path("parser-model.json");
   let mut parser_model =
@@ -331,12 +328,30 @@ fn run_training() -> anyhow::Result<()>
     )
   )?;
 
+  let sample_outputs =
+    collect_sample_outputs();
+
   println!(
     "training report written (parser \
      {} files, finder {} files)",
     parser_files.len(),
     finder_files.len()
   );
+  persist_report(
+    Path::new(REPORT_DIR)
+      .join("training-report.json"),
+    &TrainingReport {
+      parser: parser_pairs
+        .iter()
+        .map(|(_, stat)| stat.clone())
+        .collect(),
+      finder: finder_pairs
+        .iter()
+        .map(|(_, stat)| stat.clone())
+        .collect(),
+      samples: sample_outputs
+    }
+  )?;
   Ok(())
 }
 
