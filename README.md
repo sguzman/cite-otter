@@ -40,6 +40,12 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](https://github.c
 - Build a parser/finder module suite with pluggable adapters that can be reused both as a CLI and as a library.
 - Keep documentation, tests, and release notes synchronized with the roadmap’s SemVer rhythm.
 
+## Release readiness (candidate v0.5.0)
+
+- `train/check/delta` now capture both parser and finder datasets plus sample outputs, so `target/reports/{training,validation,delta}-report.json` mirrors the Ruby `rake` flow and can be used to verify parity before tagging.
+- The CLI exposes deterministic metadata (structured authors, normalized years, container titles, etc.), and the docs/tests now describe how to feed the same sample references through `cite-otter sample --format json|bibtex|csl`.
+- Before tagging v0.5.0, run `cargo test`, `cargo clippy --all-targets -- -D warnings`, and inspect `target/reports` plus `target/models` in CI or locally; update `release.toml` details and the `README`/`ROADMAP` sections if any behavior changes occur afterward.
+
 ## Recent progress
 
 - **Parser precision & metadata coverage** – The parser now builds `FieldTokens` for each reference line so token tagging matches the same author/title/location/ publisher/date/pages data it extracts; additional helpers also populate `container-title`, `volume`, `issue`, `genre`, and `edition` fields and surface `scripts`/`language` from the reference string. The new heuristics live in `src/parser.rs` and keep `tests/reference_parser.rs` green.
