@@ -21,6 +21,7 @@
 - **(parser)**: Enrich metadata heuristics & training reports. ([3130f3d](https://github.com/sguzman/cite-otter/commit/3130f3d92c84813469bab898a20a54df76f84837))
 - **(parser)**: Emit structured author objects with normalized family/given data for multi-name references.
 - **(training)**: Finder/training models persist sequence signatures and `find` loads them to match trained segments.
+- **(training)**: Added lightweight learning backend so parser/finder training persists signature counts and inference obeys learned occurrences.
 - **(training)**: Added lightweight sequence model persistence for parser/finder so `train` now records signatures used during inference.
 - Polish ([a4ec1f8](https://github.com/sguzman/cite-otter/commit/a4ec1f8eb66f0b3a557630c6ab3b6e6cd397b87b))
 

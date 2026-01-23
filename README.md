@@ -43,6 +43,7 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](https://github.c
 
 - **Parser precision & metadata coverage** – The parser now builds `FieldTokens` for each reference line so token tagging matches the same author/title/location/ publisher/date/pages data it extracts; additional helpers also populate `container-title`, `volume`, `issue`, `genre`, and `edition` fields and surface `scripts`/`language` from the reference string. The new heuristics live in `src/parser.rs` and keep `tests/reference_parser.rs` green.
 - **Training/finder parity** – The training workflow now records sequence signatures for parser and finder datasets (persisted under `target/models/*-sequences.json`), and `find` loads those signatures so detected segments are compared against the trained corpus before falling back to the raw content; `tests/reference_training.rs` continues to exercise the train/check/delta lifecycle.
+- **Sequence learning backend** – Parser/finder training now builds lightweight sequence models (signature counts) so inference respects learned frequency patterns, laying the groundwork for a richer ML-style backend.
 
 ## References
 

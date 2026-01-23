@@ -67,7 +67,7 @@ impl Finder {
         if has_signatures
           && self
             .signatures
-            .contains(&signature)
+            .should_match(&signature, 1)
         {
           matched = true;
           break;

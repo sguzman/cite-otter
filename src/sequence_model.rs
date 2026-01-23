@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -16,7 +16,8 @@ use serde::{
   Deserialize,
 )]
 pub struct SequenceModel {
-  signatures: HashSet<String>
+  counts: HashMap<String, usize>,
+  total:  usize
 }
 
 impl SequenceModel {
@@ -51,17 +52,38 @@ impl SequenceModel {
     &mut self,
     signature: String
   ) {
-    self.signatures.insert(signature);
+    *self
+      .counts
+      .entry(signature)
+      .or_insert(0) += 1;
+    self.total += 1;
   }
 
-  pub fn contains(
+  pub fn count(
     &self,
     signature: &str
-  ) -> bool {
-    self.signatures.contains(signature)
+  ) -> usize {
+    self
+      .counts
+      .get(signature)
+      .copied()
+      .unwrap_or(0)
   }
 
   pub fn has_signatures(&self) -> bool {
-    !self.signatures.is_empty()
+    !self.counts.is_empty()
+  }
+
+  pub fn should_match(
+    &self,
+    signature: &str,
+    min_occurrences: usize
+  ) -> bool {
+    self.count(signature)
+      >= min_occurrences
+  }
+
+  pub fn total(&self) -> usize {
+    self.total
   }
 }
