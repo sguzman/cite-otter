@@ -13,11 +13,11 @@ extend-exclude = [
   "CHANGELOG.md",
   "dist/**",
   "docs/THIRD_PARTY_LICENSES.md",
+  "docs/migration/*-DeepWiki.md",
   "node_modules/**",
   "target/**",
   "tests/fixtures/**",
   "vendor/**",
-  "docs/migration/*-DeepWiki.md"
 ]
 
 [default.extend-words]
