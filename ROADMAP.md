@@ -17,6 +17,7 @@ This migration roadmap translates `tmp/anystyle`’s structure (`docs/migration/
   - Support base dictionary adapters (in-memory, file-backed) with pluggable configurations, aligning with `lib/anystyle/dictionary` behaviors.
   - Expand CLI serialization output modes (JSON, XML) and add optional `format` marshalling helpers to match `AnyStyle::Format`.
   - Augment test coverage with training/check validation: port `rake check`, `rake delta`, and `rake train` expectations into Rust integration tests using representative datasets.
+  - Parser heuristics now emit the same metadata tokens `AnyStyle` expects (e.g., container-title/volume/issue/genre/edition) and the training/check/delta helpers can be invoked programmatically to produce `target/reports/*.json`.
   - Release: `cite-otter v0.5.0` with finder/training parity, dictionary adapters, and enhanced test suite confirming dataset-driven outputs.
 
 - **`v1.0.0` – Polished release with documentation & parity**

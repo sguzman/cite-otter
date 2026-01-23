@@ -66,7 +66,12 @@ struct FieldTokens {
   location:  BTreeSet<String>,
   publisher: BTreeSet<String>,
   date:      BTreeSet<String>,
-  pages:     BTreeSet<String>
+  pages:     BTreeSet<String>,
+  container: BTreeSet<String>,
+  volume:    BTreeSet<String>,
+  issue:     BTreeSet<String>,
+  genre:     BTreeSet<String>,
+  edition:   BTreeSet<String>
 }
 
 impl FieldTokens {
@@ -96,6 +101,33 @@ impl FieldTokens {
       ),
       pages:     tokens_from_segment(
         &extract_pages(reference)
+      ),
+      container: tokens_from_segment(
+        extract_container_title(
+          reference
+        )
+        .unwrap_or_default()
+        .as_str()
+      ),
+      volume:    tokens_from_segment(
+        extract_volume(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      issue:     tokens_from_segment(
+        extract_issue(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      genre:     tokens_from_segment(
+        extract_genre(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      edition:   tokens_from_segment(
+        extract_edition(reference)
+          .unwrap_or_default()
+          .as_str()
       )
     }
   }
@@ -115,11 +147,43 @@ fn split_references(
 fn tokens_from_segment(
   segment: &str
 ) -> BTreeSet<String> {
+  let mut tokens = BTreeSet::new();
+
+  let normalized =
+    normalize_token(segment);
+  if !normalized.is_empty() {
+    tokens.insert(normalized);
+  }
+
+  segment
+    .split(|c: char| {
+      c == ','
+        || c == ';'
+        || c == ':'
+        || c == '('
+        || c == ')'
+        || c == '*'
+        || c == '-'
+    })
+    .map(str::trim)
+    .filter(|part| !part.is_empty())
+    .for_each(|part| {
+      let normalized_part =
+        normalize_token(part);
+      if !normalized_part.is_empty() {
+        tokens.insert(normalized_part);
+      }
+    });
+
   segment
     .split_whitespace()
     .map(normalize_token)
     .filter(|token| !token.is_empty())
-    .collect()
+    .for_each(|token| {
+      tokens.insert(token);
+    });
+
+  tokens
 }
 
 fn matches_field(
@@ -278,6 +342,64 @@ impl Parser {
             ),
           ])
         );
+
+        if let Some(container) =
+          extract_container_title(
+            reference
+          )
+        {
+          mapped.insert(
+            "container-title",
+            FieldValue::List(vec![
+              container,
+            ])
+          );
+        }
+
+        if let Some(volume) =
+          extract_volume(reference)
+        {
+          mapped.insert(
+            "volume",
+            FieldValue::List(vec![
+              volume,
+            ])
+          );
+        }
+
+        if let Some(issue) =
+          extract_issue(reference)
+        {
+          mapped.insert(
+            "issue",
+            FieldValue::List(vec![
+              issue,
+            ])
+          );
+        }
+
+        if let Some(edition) =
+          extract_edition(reference)
+        {
+          mapped.insert(
+            "edition",
+            FieldValue::List(vec![
+              edition,
+            ])
+          );
+        }
+
+        if let Some(genre) =
+          extract_genre(reference)
+        {
+          mapped.insert(
+            "genre",
+            FieldValue::List(vec![
+              genre,
+            ])
+          );
+        }
+
         mapped.insert(
           "date",
           FieldValue::List(vec![
@@ -294,15 +416,15 @@ impl Parser {
         mapped.insert(
           "language",
           FieldValue::Single(
-            "en".into()
+            guess_language(reference)
+              .into()
           )
         );
         mapped.insert(
           "scripts",
-          FieldValue::List(vec![
-            "Common".into(),
-            "Latin".into(),
-          ])
+          FieldValue::List(
+            detect_scripts(reference)
+          )
         );
         mapped
       })
@@ -434,6 +556,157 @@ fn extract_pages(
     .unwrap_or_default()
 }
 
+fn extract_container_title(
+  reference: &str
+) -> Option<String> {
+  let keywords = [
+    "journal",
+    "proceedings",
+    "conference",
+    "symposium",
+    "meeting",
+    "presented",
+    "proceedings of"
+  ];
+  reference
+    .split('.')
+    .map(str::trim)
+    .filter(|segment| {
+      !segment.is_empty()
+    })
+    .find(|segment| {
+      let lower =
+        segment.to_lowercase();
+      keywords
+        .iter()
+        .any(|kw| lower.contains(kw))
+    })
+    .map(|segment| {
+      segment
+        .trim_end_matches(|c: char| {
+          c == ':'
+            || c == ','
+            || c == ';'
+        })
+        .trim()
+        .to_string()
+    })
+}
+
+fn capture_number_after(
+  reference: &str,
+  start: usize
+) -> Option<String> {
+  let remainder =
+    reference.get(start..)?;
+  let digits: String = remainder
+    .chars()
+    .skip_while(|c| !c.is_ascii_digit())
+    .take_while(|c| c.is_ascii_digit())
+    .collect();
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
+  }
+}
+
+fn extract_volume(
+  reference: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  for keyword in [
+    "volume", "vol.", "vol", "v.",
+    "vols"
+  ] {
+    if let Some(pos) =
+      lower.find(keyword)
+    {
+      let start = pos + keyword.len();
+      if let Some(digits) =
+        capture_number_after(
+          reference, start
+        )
+      {
+        return Some(digits);
+      }
+    }
+  }
+  None
+}
+
+fn extract_issue(
+  reference: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  for keyword in
+    ["number", "no.", "issue", "part"]
+  {
+    if let Some(pos) =
+      lower.find(keyword)
+    {
+      let start = pos + keyword.len();
+      if let Some(digits) =
+        capture_number_after(
+          reference, start
+        )
+      {
+        return Some(digits);
+      }
+    }
+  }
+  None
+}
+
+fn extract_genre(
+  reference: &str
+) -> Option<String> {
+  let start = reference.find('[')?;
+  let close =
+    reference[start + 1..].find(']')?;
+  Some(
+    reference
+      [start + 1..start + 1 + close]
+      .trim()
+      .to_string()
+  )
+}
+
+fn extract_edition(
+  reference: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  for keyword in
+    ["edition", "éd.", "ed.", "édc"]
+  {
+    if let Some(pos) =
+      lower.find(keyword)
+    {
+      let start = pos + keyword.len();
+      let remainder = reference
+        .get(start..)
+        .unwrap_or("");
+      let edition = remainder
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .trim_matches(|c: char| {
+          c == ','
+            || c == '.'
+            || c == '('
+            || c == ')'
+        });
+      let normalized =
+        normalize_token(edition);
+      if !normalized.is_empty() {
+        return Some(normalized);
+      }
+      break;
+    }
+  }
+  None
+}
+
 fn expand_token(token: &str) -> String {
   let normalized =
     normalize_token(token);
@@ -461,6 +734,33 @@ fn normalize_token(
     })
     .collect::<String>()
     .to_lowercase()
+}
+
+fn detect_scripts(
+  reference: &str
+) -> Vec<String> {
+  let mut scripts = BTreeSet::new();
+  scripts.insert("Common".to_string());
+  scripts.insert("Latin".to_string());
+  if reference.chars().any(|c| {
+    c.is_alphabetic() && !c.is_ascii()
+  }) {
+    scripts.insert("Other".to_string());
+  }
+  scripts.into_iter().collect()
+}
+
+fn guess_language(
+  reference: &str
+) -> &'static str {
+  if reference
+    .chars()
+    .any(|c| c as u32 > 0x007f)
+  {
+    "fr"
+  } else {
+    "en"
+  }
 }
 
 fn casing_flag(
@@ -542,6 +842,11 @@ fn tag_token(
     "title".into()
   } else if matches_field(
     &normalized,
+    &context.container
+  ) {
+    "container-title".into()
+  } else if matches_field(
+    &normalized,
     &context.location
   ) {
     "location".into()
@@ -560,6 +865,26 @@ fn tag_token(
     &context.pages
   ) {
     "pages".into()
+  } else if matches_field(
+    &normalized,
+    &context.volume
+  ) {
+    "volume".into()
+  } else if matches_field(
+    &normalized,
+    &context.issue
+  ) {
+    "issue".into()
+  } else if matches_field(
+    &normalized,
+    &context.genre
+  ) {
+    "genre".into()
+  } else if matches_field(
+    &normalized,
+    &context.edition
+  ) {
+    "edition".into()
   } else if lower.contains("press") {
     "publisher".into()
   } else if lower.contains(',') {

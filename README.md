@@ -38,6 +38,11 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](tmp/anystyle) re
 - Build a parser/finder module suite with pluggable adapters that can be reused both as a CLI and as a library.
 - Keep documentation, tests, and release notes synchronized with the roadmap’s SemVer rhythm.
 
+## Recent progress
+
+- **Parser precision & metadata coverage** – The parser now builds `FieldTokens` for each reference line so token tagging matches the same author/title/location/ publisher/date/pages data it extracts; additional helpers also populate `container-title`, `volume`, `issue`, `genre`, and `edition` fields and surface `scripts`/`language` from the reference string. The new heuristics live in `src/parser.rs` and keep `tests/reference_parser.rs` green.
+- **Training/finder parity** – CLI helpers for `train`, `check`, and `delta` still write the usual reports into `target/reports`, but they now offer public wrappers so integration tests (e.g. `tests/reference_training.rs`) can verify the entire dataset workflow succeeds and emits JSON summaries that mirror AnyStyle’s `rake train/check/delta` feedback loop.
+
 ## References
 
 - `tmp/anystyle` – Ruby source and training data that inspired the Rust port.

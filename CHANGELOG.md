@@ -10,6 +10,8 @@
 - **(parser)**: Extended ([31430d2](https://github.com/sguzman/cite-otter/commit/31430d20527483d1e575e9b100bb7a00b05adf61))
 - **(parser)**: Prepare ([c8e9e1f](https://github.com/sguzman/cite-otter/commit/c8e9e1f4db0caf2e375394f2b070bfc35b7187e7))
 - **(parser)**: Align tokens/metadata with reference suite ([181b427](https://github.com/sguzman/cite-otter/commit/181b42781cb5fdf900ed3fde48d73687764ee4f8))
+- **(parser)**: Added metadata heuristics for container/volume/issue/genre/edition fields and script detection.
+- **(training)**: CLI training/check/delta flows now expose wrappers and an integration test ensures `target/reports` JSONs match expected data.
 
 ### 🚜 Refactor
 - **(fmt)**: Toml ([b9de022](https://github.com/sguzman/cite-otter/commit/b9de02232410228aeff780af5b8fb0518e6301ca))## [0.2.0] - 2026-01-21

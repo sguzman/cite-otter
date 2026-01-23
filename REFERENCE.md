@@ -42,6 +42,7 @@ Based on the `docs/migration/structure.md` template, this document records the l
 - **Test suites**: `bundle exec rspec` runs the unit/regression suite under `spec/`. The default `rake` task delegates to `RSpec::Core::RakeTask`.
 - **Test data**: Tagged parser documents live in `res/parser/*.xml`; finder datasets are under `res/finder/*.ttx`. These feed both `rake check` and `delta` tasks.
 - **Validation steps**: `rake check` iterates parser or finder datasets, prints error rates, and compares labeled output to curated ground truth. `rake delta` calculates and stores the delta between predictions and gold data for manual inspection (example outputs in `tmp/anystyle`).
+- **Rust validation**: `tests/reference_training.rs` now drives the same training/check/delta flow via the Rust CLI helpers (`cite_otter::cli::{training_report, validation_report, delta_report}`) and asserts the JSON report files in `target/reports` contain parser/finder statistics.
 
 # Attribution
 

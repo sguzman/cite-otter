@@ -216,6 +216,11 @@ fn run_training() -> anyhow::Result<()>
   Ok(())
 }
 
+pub fn training_report()
+-> anyhow::Result<()> {
+  run_training()
+}
+
 fn run_validation() -> anyhow::Result<()>
 {
   let parser_files = collect_files(
@@ -260,6 +265,11 @@ fn run_validation() -> anyhow::Result<()>
     parser_files.len()
   );
   Ok(())
+}
+
+pub fn validation_report()
+-> anyhow::Result<()> {
+  run_validation()
 }
 
 fn run_delta() -> anyhow::Result<()> {
@@ -314,6 +324,11 @@ fn run_delta() -> anyhow::Result<()> {
     delta_count
   );
   Ok(())
+}
+
+pub fn delta_report()
+-> anyhow::Result<()> {
+  run_delta()
 }
 
 fn gather_parser_stats(
