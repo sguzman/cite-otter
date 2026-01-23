@@ -1,6 +1,26 @@
 # Changelog
 ## [Unreleased]
 
+### ⚙️ Miscellaneous
+- (normalizer): handle repeaters in names ([6667838](https://github.com/sguzman/cite-otter/commit/666783856391e7e690b8d147a3f06355bf7e1c2f))
+- **(fmt)**: Toml ([3ed693b](https://github.com/sguzman/cite-otter/commit/3ed693b14a9e2a5c7057964ba72dfa48bb2efb60))
+
+### 🐛 Bug Fixes
+- **(cli)**: Borrowing ([0bad60f](https://github.com/sguzman/cite-otter/commit/0bad60f32837c0297683428b4f32ebeef3122ef9))
+- **(cli)**: Borrow shared model paths ([d7b5e90](https://github.com/sguzman/cite-otter/commit/d7b5e90ae0b7d262487d5186c7ea00efcaab7e57))
+
+### 🚀 Features
+- **(parser)**: Reference parser/document/finder specs now execute (dictionary, format, normalizer tests are still ignored until their modules are implemented). ([cd35485](https://github.com/sguzman/cite-otter/commit/cd35485145cd0bd0172385b301e7064ac441d37b))
+- **(dictionary)**: Add adapters and lookup helpers ([eef9e07](https://github.com/sguzman/cite-otter/commit/eef9e07e995bac18e62cb7d5f86dfe440bfc17c9))
+- **(dictionary)**: Enable test ([3754736](https://github.com/sguzman/cite-otter/commit/375473694c82438ae0bc5614e1be11d9ed090ee6))
+- **(cli)**: Enhanced stubs ([039b476](https://github.com/sguzman/cite-otter/commit/039b476684b3ff0318debe4f9fcdd9c7c307c8de))
+- **(cli)**: Prints ([1773708](https://github.com/sguzman/cite-otter/commit/1773708d5f46683a8d9604e05804971952877901))
+- **(cli)**: Training checks ([786e5cc](https://github.com/sguzman/cite-otter/commit/786e5cc1a1bcd74b9fa87fb6e281ec9f9a08de7f))
+- **(cli)**: Parsing ([54111ea](https://github.com/sguzman/cite-otter/commit/54111eadf90cd413d87d2a3c23f8afc2c098675d))
+- **(parser)**: Align labels with reference context ([54b3c8b](https://github.com/sguzman/cite-otter/commit/54b3c8b2f0b9b28ef34b12fe25c09d9ef42f010a))
+- **(parser)**: Enrich metadata heuristics & training reports. ([3130f3d](https://github.com/sguzman/cite-otter/commit/3130f3d92c84813469bab898a20a54df76f84837))
+- Polish ([a4ec1f8](https://github.com/sguzman/cite-otter/commit/a4ec1f8eb66f0b3a557630c6ab3b6e6cd397b87b))## [0.2.1] - 2026-01-22
+
 ### 🐛 Bug Fixes
 - **(semver)**: Broken semver ([0071d5f](https://github.com/sguzman/cite-otter/commit/0071d5f78047013da4470d5a8657aa226b6572f0))
 
@@ -10,8 +30,6 @@
 - **(parser)**: Extended ([31430d2](https://github.com/sguzman/cite-otter/commit/31430d20527483d1e575e9b100bb7a00b05adf61))
 - **(parser)**: Prepare ([c8e9e1f](https://github.com/sguzman/cite-otter/commit/c8e9e1f4db0caf2e375394f2b070bfc35b7187e7))
 - **(parser)**: Align tokens/metadata with reference suite ([181b427](https://github.com/sguzman/cite-otter/commit/181b42781cb5fdf900ed3fde48d73687764ee4f8))
-- **(parser)**: Added metadata heuristics for container/volume/issue/genre/edition fields and script detection.
-- **(training)**: CLI training/check/delta flows now expose wrappers and an integration test ensures `target/reports` JSONs match expected data.
 
 ### 🚜 Refactor
 - **(fmt)**: Toml ([b9de022](https://github.com/sguzman/cite-otter/commit/b9de02232410228aeff780af5b8fb0518e6301ca))## [0.2.0] - 2026-01-21
