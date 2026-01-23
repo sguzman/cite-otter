@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{
+  HashMap,
+  HashSet
+};
 use std::fs;
 use std::path::Path;
 
@@ -9,7 +12,11 @@ use serde::{
 };
 
 #[derive(
-  Debug, Default, Serialize, Deserialize,
+  Debug,
+  Default,
+  Serialize,
+  Deserialize,
+  Clone,
 )]
 pub struct ParserModel {
   datasets: HashMap<String, usize>
@@ -66,10 +73,16 @@ impl ParserModel {
 }
 
 #[derive(
-  Debug, Default, Serialize, Deserialize,
+  Debug,
+  Default,
+  Serialize,
+  Deserialize,
+  Clone,
 )]
 pub struct FinderModel {
-  datasets: HashMap<String, usize>
+  datasets:   HashMap<String, usize>,
+  #[serde(default)]
+  signatures: HashSet<String>
 }
 
 impl FinderModel {
@@ -109,5 +122,23 @@ impl FinderModel {
       path.display().to_string(),
       sequences
     );
+  }
+
+  pub fn record_signature(
+    &mut self,
+    signature: String
+  ) {
+    self.signatures.insert(signature);
+  }
+
+  pub fn contains_signature(
+    &self,
+    signature: &str
+  ) -> bool {
+    self.signatures.contains(signature)
+  }
+
+  pub fn has_signatures(&self) -> bool {
+    !self.signatures.is_empty()
   }
 }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::{
   self,
   File
@@ -24,7 +25,10 @@ use crate::model::{
   FinderModel,
   ParserModel
 };
-use crate::parser::Parser;
+use crate::parser::{
+  Parser,
+  TaggedToken
+};
 
 #[derive(ClapParser, Debug)]
 #[command(name = "cite-otter")]
@@ -136,7 +140,15 @@ pub fn run() -> anyhow::Result<()> {
       input
     } => {
       let text = load_input(&input)?;
-      let finder = Finder::new();
+      let finder_model =
+        FinderModel::load(
+          &model_path(
+            "finder-model.json"
+          )
+        )?;
+      let finder = Finder::with_model(
+        finder_model
+      );
       let _ = finder.label(&text);
       let segments =
         Finder::segments(&text);
@@ -201,6 +213,21 @@ fn run_training() -> anyhow::Result<()>
   let finder_pairs =
     gather_finder_stats(&finder_files)?;
 
+  let finder_signatures =
+    collect_finder_signatures(
+      &finder_files
+    )?;
+  let finder_signature_map =
+    finder_signatures
+      .iter()
+      .map(|(path, signatures)| {
+        (
+          path.display().to_string(),
+          signatures.clone()
+        )
+      })
+      .collect::<HashMap<String, Vec<String>>>();
+
   persist_report(
     Path::new(REPORT_DIR)
       .join("training-report.json"),
@@ -238,6 +265,17 @@ fn run_training() -> anyhow::Result<()>
   for (path, stat) in &finder_pairs {
     finder_model
       .record(path, stat.sequences);
+    if let Some(signatures) =
+      finder_signature_map.get(
+        &path.display().to_string()
+      )
+    {
+      for signature in signatures {
+        finder_model.record_signature(
+          signature.clone()
+        );
+      }
+    }
   }
   finder_model
     .save(&finder_model_path)?;
@@ -436,6 +474,41 @@ fn collect_files(
       .flat_map(Result::ok)
       .collect()
   )
+}
+
+fn collect_finder_signatures(
+  paths: &[PathBuf]
+) -> anyhow::Result<
+  Vec<(PathBuf, Vec<String>)>
+> {
+  paths
+    .iter()
+    .map(|path| {
+      let content =
+        fs::read_to_string(path)?;
+      let sequences =
+        Parser::new().label(&content);
+      let signatures = sequences
+        .iter()
+        .map(|sequence| {
+          sequence_signature(sequence)
+        })
+        .collect::<Vec<_>>();
+      Ok((path.clone(), signatures))
+    })
+    .collect()
+}
+
+fn sequence_signature(
+  sequence: &[TaggedToken]
+) -> String {
+  sequence
+    .iter()
+    .map(|token| token.token.trim())
+    .filter(|token| !token.is_empty())
+    .map(|token| token.to_string())
+    .collect::<Vec<_>>()
+    .join(" ")
 }
 
 fn model_path(
