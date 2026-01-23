@@ -16,7 +16,9 @@ use serde::{
   Deserialize,
 )]
 pub struct SequenceModel {
+  #[serde(default)]
   counts: HashMap<String, usize>,
+  #[serde(default)]
   total:  usize
 }
 

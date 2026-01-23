@@ -5,6 +5,7 @@ use std::collections::{
 
 use cite_otter::format::ParseFormat;
 use cite_otter::parser::{
+  Author,
   FieldValue,
   Parser
 };
@@ -21,6 +22,14 @@ const PREPARED_LINES: [&str; 2] = [
 const PEREC_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995. p.108.";
+
+const PEREC_REF_NO_COMMA: &str =
+  "Georges Perec. A Void. London: The \
+   Harvill Press, 1995. p.108.";
+
+const PEREC_MULTI_YEAR_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, 1995/96. p.108.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -103,6 +112,79 @@ fn parse_returns_metadata_map() {
     ),
     "Expected parser.parse to \
      populate the documented fields"
+  );
+}
+
+#[test]
+fn parse_builds_structured_authors_for_variant_formats()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PEREC_REF, PEREC_REF_NO_COMMA],
+    ParseFormat::Json
+  );
+
+  let expected = Author {
+    family: "Perec".into(),
+    given:  "Georges".into()
+  };
+
+  for reference in references {
+    let author_field = reference
+      .fields()
+      .get("author")
+      .expect(
+        "parser should always emit an \
+         author"
+      );
+
+    let authors = match author_field {
+      FieldValue::Authors(list) => list,
+      other => panic!(
+        "Expected FieldValue::Authors, got {other:?}"
+      )
+    };
+
+    assert!(
+      authors.first()
+        == Some(&expected),
+      "Each reference should \
+       normalize author components \
+       consistently"
+    );
+  }
+}
+
+#[test]
+fn parse_prefers_first_year_in_multi_year_tokens()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PEREC_MULTI_YEAR_REF],
+    ParseFormat::Json
+  );
+
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         tokens, got {other:?}"
+      )
+    }
+  };
+
+  assert!(
+    date_values
+      .iter()
+      .any(|value| value == "1995"),
+    "Parser should surface the first \
+     four-digit year"
   );
 }
 

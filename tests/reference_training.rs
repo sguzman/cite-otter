@@ -6,6 +6,7 @@ use cite_otter::cli::{
   training_report,
   validation_report
 };
+use cite_otter::parser::Parser;
 use serde_json::Value;
 
 fn report_path(
@@ -95,4 +96,148 @@ fn training_validation_delta_flow_runs()
     "delta report should list \
      comparisons"
   );
+
+  let dataset_path = Path::new(env!(
+    "CARGO_MANIFEST_DIR"
+  ))
+  .join(
+    "tmp/anystyle/res/parser/core.xml"
+  );
+  let canonical_path =
+    dataset_path.canonicalize().expect(
+      "reference dataset must exist"
+    );
+
+  let parser = Parser::new();
+  let content =
+    fs::read_to_string(&dataset_path)
+      .expect(
+        "reference dataset should be \
+         readable"
+      );
+  let expected_sequences = parser
+    .prepare(&content, true)
+    .0
+    .len();
+
+  let training_parser = training_json
+    .get("parser")
+    .and_then(Value::as_array)
+    .expect(
+      "training parser data should be \
+       present"
+    );
+  let training_entry =
+    find_dataset_entry(
+      training_parser,
+      canonical_path.as_path()
+    )
+    .expect(
+      "training report should include \
+       the core parser dataset"
+    );
+  let recorded_sequences =
+    training_entry
+      .get("sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "sequences must be numeric"
+      ) as usize;
+
+  assert_eq!(
+    recorded_sequences,
+    expected_sequences,
+    "parser sequencing stats should \
+     match the training data"
+  );
+
+  let validation_parser =
+    validation_json
+      .get("parser")
+      .and_then(Value::as_array)
+      .expect(
+        "validation parser data \
+         should be present"
+      );
+  let validation_entry =
+    find_dataset_entry(
+      validation_parser,
+      canonical_path.as_path()
+    )
+    .expect(
+      "validation report should cover \
+       the core parser dataset"
+    );
+  let validation_sequences =
+    validation_entry
+      .get("sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "sequences must be numeric"
+      ) as usize;
+
+  assert_eq!(
+    validation_sequences,
+    expected_sequences,
+    "validation stats should follow \
+     the training numbers"
+  );
+
+  let delta_comparisons = delta_json
+    .get("comparisons")
+    .and_then(Value::as_array)
+    .expect(
+      "delta comparisons should be \
+       present"
+    );
+  let delta_entry = find_dataset_entry(
+    delta_comparisons,
+    canonical_path.as_path()
+  )
+  .expect(
+    "delta report should include the \
+     core parser dataset"
+  );
+  let delta_prepared = delta_entry
+    .get("prepared")
+    .and_then(Value::as_u64)
+    .expect(
+      "prepared should be numeric"
+    ) as usize;
+  let delta_stored = delta_entry
+    .get("stored")
+    .and_then(Value::as_u64)
+    .expect("stored should be numeric")
+    as usize;
+
+  assert_eq!(
+    delta_prepared, expected_sequences,
+    "delta report should match parser \
+     prep counts"
+  );
+  assert_eq!(
+    delta_stored, expected_sequences,
+    "delta report should read the \
+     trained model counts"
+  );
+}
+
+fn find_dataset_entry<'a>(
+  entries: &'a [Value],
+  target: &Path
+) -> Option<&'a Value> {
+  entries.iter().find(|entry| {
+    entry
+      .get("path")
+      .and_then(Value::as_str)
+      .and_then(|path| {
+        Path::new(path)
+          .canonicalize()
+          .ok()
+      })
+      .map(|canonical| {
+        canonical == target
+      })
+      .unwrap_or(false)
+  })
 }

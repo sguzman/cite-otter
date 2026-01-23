@@ -21,7 +21,9 @@ pub struct TaggedToken {
   pub label: String
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(
+  Debug, Clone, Serialize, PartialEq, Eq,
+)]
 pub struct Author {
   pub family: String,
   pub given:  String
@@ -194,52 +196,79 @@ fn parse_authors(
 ) -> Vec<Author> {
   let segment =
     extract_author_segment(reference);
-  let cleaned = segment
-    .replace('&', ",")
-    .replace(" and ", ",")
-    .replace(" AND ", ",");
-  let pieces: Vec<&str> = cleaned
-    .split(',')
+  let normalized = segment
+    .replace('&', ";")
+    .replace(" and ", ";")
+    .replace(" AND ", ";");
+
+  let mut authors = normalized
+    .split(';')
     .map(str::trim)
     .filter(|piece| !piece.is_empty())
-    .collect();
-
-  let mut authors = Vec::new();
-  for chunk in pieces.chunks(2) {
-    let family = chunk[0];
-    let given = chunk
-      .get(1)
-      .copied()
-      .unwrap_or("");
-    let normalized_family =
-      normalize_author_component(
-        family
-      );
-    let normalized_given =
-      normalize_author_component(given);
-    if !normalized_family.is_empty()
-      || !normalized_given.is_empty()
-    {
-      authors.push(Author {
-        family: normalized_family,
-        given:  normalized_given
-      });
-    }
-  }
+    .filter_map(parse_author_chunk)
+    .collect::<Vec<_>>();
 
   if authors.is_empty()
     && !segment.trim().is_empty()
+    && let Some(author) =
+      parse_author_chunk(segment)
   {
-    authors.push(Author {
-      family:
-        normalize_author_component(
-          segment
-        ),
-      given:  "".into()
-    });
+    authors.push(author);
   }
 
   authors
+}
+
+fn parse_author_chunk(
+  chunk: &str
+) -> Option<Author> {
+  let trimmed = chunk.trim();
+  if trimmed.is_empty() {
+    return None;
+  }
+
+  let (family, given) =
+    if trimmed.contains(',') {
+      let mut parts = trimmed
+        .split(',')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>();
+      let family =
+        parts.remove(0).to_string();
+      let given = parts.join(" ");
+      (family, given)
+    } else {
+      let tokens = trimmed
+        .split_whitespace()
+        .collect::<Vec<_>>();
+      if tokens.is_empty() {
+        return None;
+      }
+      let family = tokens
+        .last()
+        .unwrap()
+        .to_string();
+      let given = tokens
+        [..tokens.len() - 1]
+        .join(" ");
+      (family, given)
+    };
+
+  let normalized_family =
+    normalize_author_component(&family);
+  let normalized_given =
+    normalize_author_component(&given);
+  if normalized_family.is_empty()
+    && normalized_given.is_empty()
+  {
+    return None;
+  }
+
+  Some(Author {
+    family: normalized_family,
+    given:  normalized_given
+  })
 }
 
 fn normalize_author_component(
@@ -282,6 +311,12 @@ fn tokens_from_dates(
 ) -> BTreeSet<String> {
   let mut tokens = BTreeSet::new();
 
+  let year_tokens =
+    capture_year_like(reference);
+  for year in &year_tokens {
+    tokens.insert(year.clone());
+  }
+
   if let Some(year) =
     extract_year(reference)
   {
@@ -290,17 +325,13 @@ fn tokens_from_dates(
     ));
   }
 
-  tokens.extend(capture_year_like(
-    reference
-  ));
-
   tokens
 }
 
 fn capture_year_like(
   reference: &str
-) -> BTreeSet<String> {
-  let mut tokens = BTreeSet::new();
+) -> Vec<String> {
+  let mut tokens = Vec::new();
   let mut buffer = String::new();
 
   for c in reference.chars() {
@@ -308,14 +339,14 @@ fn capture_year_like(
       buffer.push(c);
     } else {
       if buffer.len() >= 4 {
-        tokens.insert(buffer.clone());
+        tokens.push(buffer.clone());
       }
       buffer.clear();
     }
   }
 
   if buffer.len() >= 4 {
-    tokens.insert(buffer);
+    tokens.push(buffer);
   }
 
   tokens
@@ -618,22 +649,21 @@ fn extract_author_segment(
 fn extract_year(
   reference: &str
 ) -> Option<String> {
-  reference
-    .split_whitespace()
-    .find(|token| {
-      token
-        .chars()
-        .filter(|c| c.is_ascii_digit())
-        .count()
-        >= 3
-    })
-    .map(|token| {
-      token
-        .trim_matches(|c: char| {
-          !c.is_ascii_digit()
-        })
-        .to_string()
-    })
+  let candidates =
+    capture_year_like(reference);
+  if candidates.is_empty() {
+    return None;
+  }
+
+  if let Some(candidate) =
+    candidates.iter().find(
+      |candidate| candidate.len() == 4
+    )
+  {
+    return Some(candidate.clone());
+  }
+
+  candidates.into_iter().next()
 }
 
 fn resolve_type(
