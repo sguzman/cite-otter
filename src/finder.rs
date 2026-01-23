@@ -1,10 +1,13 @@
 use crate::document::Document;
-use crate::model::FinderModel;
-use crate::parser::Parser;
+use crate::parser::{
+  Parser,
+  sequence_signature
+};
+use crate::sequence_model::SequenceModel;
 
 #[derive(Debug, Clone)]
 pub struct Finder {
-  model: FinderModel
+  signatures: SequenceModel
 }
 
 impl Default for Finder {
@@ -16,15 +19,16 @@ impl Default for Finder {
 impl Finder {
   pub fn new() -> Self {
     Self {
-      model: FinderModel::default()
+      signatures:
+        SequenceModel::default()
     }
   }
 
-  pub fn with_model(
-    model: FinderModel
+  pub fn with_signatures(
+    signatures: SequenceModel
   ) -> Self {
     Self {
-      model
+      signatures
     }
   }
 
@@ -47,9 +51,9 @@ impl Finder {
     }
 
     let parser = Parser::new();
-    let has_signatures =
-      self.model.has_signatures();
     let mut results = Vec::new();
+    let has_signatures =
+      self.signatures.has_signatures();
 
     for segment in segments {
       let sequences = parser
@@ -59,15 +63,11 @@ impl Finder {
 
       for sequence in &sequences {
         let signature =
-          token_sequence_signature(
-            sequence
-          );
+          sequence_signature(sequence);
         if has_signatures
           && self
-            .model
-            .contains_signature(
-              &signature
-            )
+            .signatures
+            .contains(&signature)
         {
           matched = true;
           break;
@@ -103,17 +103,5 @@ fn split_into_references(
         && seg.len() > 20
     })
     .map(|seg| seg.to_string())
-    .collect::<Vec<_>>()
-}
-
-fn token_sequence_signature(
-  tokens: &[String]
-) -> String {
-  tokens
-    .iter()
-    .map(|token| token.trim())
-    .filter(|token| !token.is_empty())
-    .map(|token| token.to_string())
-    .collect::<Vec<_>>()
-    .join(" ")
+    .collect()
 }

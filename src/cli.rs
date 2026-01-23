@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs::{
   self,
   File
@@ -27,8 +26,10 @@ use crate::model::{
 };
 use crate::parser::{
   Parser,
-  TaggedToken
+  TaggedToken,
+  sequence_signature
 };
+use crate::sequence_model::SequenceModel;
 
 #[derive(ClapParser, Debug)]
 #[command(name = "cite-otter")]
@@ -140,15 +141,16 @@ pub fn run() -> anyhow::Result<()> {
       input
     } => {
       let text = load_input(&input)?;
-      let finder_model =
-        FinderModel::load(
+      let signatures =
+        SequenceModel::load(
           &model_path(
-            "finder-model.json"
+            "finder-sequences.json"
           )
         )?;
-      let finder = Finder::with_model(
-        finder_model
-      );
+      let finder =
+        Finder::with_signatures(
+          signatures
+        );
       let _ = finder.label(&text);
       let segments =
         Finder::segments(&text);
@@ -217,16 +219,10 @@ fn run_training() -> anyhow::Result<()>
     collect_finder_signatures(
       &finder_files
     )?;
-  let finder_signature_map =
-    finder_signatures
-      .iter()
-      .map(|(path, signatures)| {
-        (
-          path.display().to_string(),
-          signatures.clone()
-        )
-      })
-      .collect::<HashMap<String, Vec<String>>>();
+  let parser_signatures =
+    collect_parser_signatures(
+      &parser_files
+    )?;
 
   persist_report(
     Path::new(REPORT_DIR)
@@ -265,20 +261,41 @@ fn run_training() -> anyhow::Result<()>
   for (path, stat) in &finder_pairs {
     finder_model
       .record(path, stat.sequences);
-    if let Some(signatures) =
-      finder_signature_map.get(
-        &path.display().to_string()
-      )
-    {
-      for signature in signatures {
-        finder_model.record_signature(
-          signature.clone()
-        );
-      }
-    }
   }
   finder_model
     .save(&finder_model_path)?;
+
+  let mut parser_signature_model =
+    SequenceModel::load(&model_path(
+      "parser-sequences.json"
+    ))?;
+  for signature in parser_signatures {
+    parser_signature_model
+      .record(signature);
+  }
+  parser_signature_model.save(
+    &model_path(
+      "parser-sequences.json"
+    )
+  )?;
+
+  let mut finder_signature_model =
+    SequenceModel::load(&model_path(
+      "finder-sequences.json"
+    ))?;
+  for (_, signatures) in
+    finder_signatures
+  {
+    for signature in signatures {
+      finder_signature_model
+        .record(signature);
+    }
+  }
+  finder_signature_model.save(
+    &model_path(
+      "finder-sequences.json"
+    )
+  )?;
 
   println!(
     "training report written (parser \
@@ -476,6 +493,27 @@ fn collect_files(
   )
 }
 
+fn collect_parser_signatures(
+  paths: &[PathBuf]
+) -> anyhow::Result<Vec<String>> {
+  let parser = Parser::new();
+  let mut signatures = Vec::new();
+
+  for path in paths {
+    let content =
+      fs::read_to_string(path)?;
+    let prepared =
+      parser.prepare(&content, true);
+    for sequence in prepared.0 {
+      signatures.push(
+        sequence_signature(&sequence)
+      );
+    }
+  }
+
+  Ok(signatures)
+}
+
 fn collect_finder_signatures(
   paths: &[PathBuf]
 ) -> anyhow::Result<
@@ -491,7 +529,9 @@ fn collect_finder_signatures(
       let signatures = sequences
         .iter()
         .map(|sequence| {
-          sequence_signature(sequence)
+          tagged_sequence_signature(
+            sequence
+          )
         })
         .collect::<Vec<_>>();
       Ok((path.clone(), signatures))
@@ -499,7 +539,7 @@ fn collect_finder_signatures(
     .collect()
 }
 
-fn sequence_signature(
+fn tagged_sequence_signature(
   sequence: &[TaggedToken]
 ) -> String {
   sequence

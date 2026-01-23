@@ -964,6 +964,18 @@ fn digit_flag(token: &str) -> String {
   }
 }
 
+pub fn sequence_signature(
+  tokens: &[String]
+) -> String {
+  tokens
+    .iter()
+    .map(|token| token.trim())
+    .filter(|token| !token.is_empty())
+    .map(|token| token.to_string())
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
 fn tag_token(
   token: &str,
   context: &FieldTokens

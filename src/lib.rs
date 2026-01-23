@@ -7,3 +7,4 @@ pub mod format;
 pub mod model;
 pub mod normalizer;
 pub mod parser;
+pub mod sequence_model;
