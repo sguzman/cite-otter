@@ -17,6 +17,7 @@ extend-exclude = [
   "target/**",
   "tests/fixtures/**",
   "vendor/**",
+  "docs/migration/*-DeepWiki.md"
 ]
 
 [default.extend-words]
