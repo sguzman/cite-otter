@@ -2,6 +2,29 @@
 ## [Unreleased]
 
 ### ⚙️ Miscellaneous
+- Persist report ([3189c1d](https://github.com/sguzman/cite-otter/commit/3189c1de57327dc9db2a95410628afb41b652e97))
+- Ignore deepwiki md from lychee and typos ([a208471](https://github.com/sguzman/cite-otter/commit/a20847179d5cf46e19d0bc0468c593649ac02cdf))
+
+### 📚 Documentation
+- Docs: point anystyle links to github ([439af42](https://github.com/sguzman/cite-otter/commit/439af425a389e959e11b8e22c8711d098a1303bd))
+- Describe training report samples and moved docs ([b12d0cc](https://github.com/sguzman/cite-otter/commit/b12d0cc6e209c60cbc293f9ee64b620758693a85))
+- Ignore deepwiki from typo check ([c58637b](https://github.com/sguzman/cite-otter/commit/c58637ba64a1196d2dd8e0903f355f65e5f53800))
+
+### 🚀 Features
+- **(parser)**: Structured author metadata ([23fa19f](https://github.com/sguzman/cite-otter/commit/23fa19ffce942212a4ebe4c2163a4398691b4fa9))
+- **(cli)**: Support parse format flag ([981520e](https://github.com/sguzman/cite-otter/commit/981520e021a6c9ccfe69728b10f3ccc9c5c07e16))
+- **(cli)**: Support parse format flag ([d1f4223](https://github.com/sguzman/cite-otter/commit/d1f42233049e4cb3f0a4804b4cfb37d0d9451e8f))
+- **(finder)**: Persist training signatures ([0601a82](https://github.com/sguzman/cite-otter/commit/0601a82cb03658f00c8e0b705c3393bc2d46529d))
+- **(training)**: Persist sequence model signatures ([9421181](https://github.com/sguzman/cite-otter/commit/9421181248021c93728777fe816af9d3f67e6b6a))
+- **(learning)**: Init ([8e02f32](https://github.com/sguzman/cite-otter/commit/8e02f3244f5749c9e4d9b5859a7ebb890317f808))
+- Parser heuristics and training/delta validation ([1b7022c](https://github.com/sguzman/cite-otter/commit/1b7022c37bfd16876b4c9dc83ea207af1a4f1594))
+- **(parser)**: Extend metadata heuristics & validate training outputs ([9102ffd](https://github.com/sguzman/cite-otter/commit/9102ffd95181102007453513818a0c25bc403da1))
+- **(format)**: Align outputs with AnyStyle metadata ([9333710](https://github.com/sguzman/cite-otter/commit/9333710f528a6454e27327a6f0f4ca17855bb1ef))
+- **(format)**: Add journal normalizer & sample CLI output ([7add570](https://github.com/sguzman/cite-otter/commit/7add5701d7b7c2caec8bb811cea0d35d6e825e6f))
+- **(cli)**: Persist sample parse outputs ([192bc10](https://github.com/sguzman/cite-otter/commit/192bc102a756376295bbd48a002a28b214022dfe))
+- **(parser)**: Normalize author and year heuristics ([0ddbccf](https://github.com/sguzman/cite-otter/commit/0ddbccf0fc3fc4ca21d50aba8e6b5d98c2e1ed45))## [0.3.0] - 2026-01-23
+
+### ⚙️ Miscellaneous
 - (normalizer): handle repeaters in names ([6667838](https://github.com/sguzman/cite-otter/commit/666783856391e7e690b8d147a3f06355bf7e1c2f))
 - **(fmt)**: Toml ([3ed693b](https://github.com/sguzman/cite-otter/commit/3ed693b14a9e2a5c7057964ba72dfa48bb2efb60))
 
@@ -19,13 +42,7 @@
 - **(cli)**: Parsing ([54111ea](https://github.com/sguzman/cite-otter/commit/54111eadf90cd413d87d2a3c23f8afc2c098675d))
 - **(parser)**: Align labels with reference context ([54b3c8b](https://github.com/sguzman/cite-otter/commit/54b3c8b2f0b9b28ef34b12fe25c09d9ef42f010a))
 - **(parser)**: Enrich metadata heuristics & training reports. ([3130f3d](https://github.com/sguzman/cite-otter/commit/3130f3d92c84813469bab898a20a54df76f84837))
-- **(parser)**: Emit structured author objects with normalized family/given data for multi-name references.
-- **(training)**: Finder/training models persist sequence signatures and `find` loads them to match trained segments.
-- **(training)**: Added lightweight learning backend so parser/finder training persists signature counts and inference obeys learned occurrences.
-- **(training)**: Added lightweight sequence model persistence for parser/finder so `train` now records signatures used during inference.
-- Polish ([a4ec1f8](https://github.com/sguzman/cite-otter/commit/a4ec1f8eb66f0b3a557630c6ab3b6e6cd397b87b))
-
-## [0.2.1] - 2026-01-22
+- Polish ([a4ec1f8](https://github.com/sguzman/cite-otter/commit/a4ec1f8eb66f0b3a557630c6ab3b6e6cd397b87b))## [0.2.1] - 2026-01-22
 
 ### 🐛 Bug Fixes
 - **(semver)**: Broken semver ([0071d5f](https://github.com/sguzman/cite-otter/commit/0071d5f78047013da4470d5a8657aa226b6572f0))
