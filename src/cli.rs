@@ -40,7 +40,14 @@ enum Command {
   Parse {
     /// Plain reference text or file
     /// path
-    input: String
+    input:  String,
+    #[arg(
+      short,
+      long,
+      default_value_t = ParseFormat::Json,
+      value_enum
+    )]
+    output_format: ParseFormat
   },
 
   /// Find references inside a textual
@@ -102,18 +109,28 @@ pub fn run() -> anyhow::Result<()> {
 
   match cli.command {
     | Command::Parse {
-      input
+      input,
+      output_format
     } => {
       let text = load_input(&input)?;
       let parser = Parser::new();
       let references = parser.parse(
         &[text.as_str()],
-        ParseFormat::Json
+        output_format
       );
-      println!(
-        "{}",
-        formatter.to_json(&references)
-      );
+      let output = match output_format {
+        ParseFormat::Json => {
+          formatter.to_json(&references)
+        }
+        ParseFormat::BibTeX => {
+          formatter
+            .to_bibtex(&references)
+        }
+        ParseFormat::Csl => {
+          formatter.to_csl(&references)
+        }
+      };
+      println!("{output}");
     }
     | Command::Find {
       input

@@ -1,3 +1,4 @@
+use clap::ValueEnum;
 use serde_json::Value;
 
 use crate::parser::{
@@ -5,7 +6,14 @@ use crate::parser::{
   Reference
 };
 
-#[derive(Debug, Clone)]
+#[derive(
+  Debug,
+  Clone,
+  Copy,
+  PartialEq,
+  Eq,
+  ValueEnum,
+)]
 pub enum ParseFormat {
   Json,
   BibTeX,
@@ -92,6 +100,64 @@ impl Format {
       references
     )
     .unwrap_or_else(|_| "[]".into())
+  }
+
+  pub fn to_csl(
+    &self,
+    references: &[Reference]
+  ) -> String {
+    references
+      .iter()
+      .enumerate()
+      .map(|(idx, reference)| {
+        let title = reference
+          .fields()
+          .get("title")
+          .and_then(|value| {
+            match value {
+              | FieldValue::List(
+                list
+              ) => {
+                list.first().cloned()
+              }
+              | FieldValue::Single(
+                value
+              ) => Some(value.clone()),
+              | FieldValue::Authors(
+                authors
+              ) => {
+                authors.first().map(
+                  |author| {
+                    if author
+                      .given
+                      .is_empty()
+                    {
+                      author
+                        .family
+                        .clone()
+                    } else {
+                      format!(
+                        "{}, {}",
+                        author.family,
+                        author.given
+                      )
+                    }
+                  }
+                )
+              }
+            }
+          })
+          .unwrap_or_else(|| {
+            format!("cite-{:03}", idx)
+          });
+
+        format!(
+          "{{\"id\":\"citeotter{idx}\"\
+           ,\"title\":\"{title}\"}}"
+        )
+      })
+      .collect::<Vec<_>>()
+      .join("\n")
   }
 
   pub fn to_value(

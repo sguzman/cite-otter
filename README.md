@@ -31,6 +31,7 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](tmp/anystyle) re
 1. Install Rust (2024 edition) per `rust-toolchain.toml`.
 2. Build/test via `cargo build` / `cargo test`.
 3. Use `ROADMAP.md` to decide which phase you are tackling and refer to `REFERENCE.md` for Ruby behaviors to match.
+4. The CLI `parse` command now accepts `--format json|bibtex|csl` so you can request multiple export styles from the same parsing pipeline.
 
 ## Goals beyond the docs
 
