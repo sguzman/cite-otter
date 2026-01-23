@@ -26,8 +26,8 @@ use crate::model::{
 };
 use crate::parser::{
   Parser,
-  TaggedToken,
-  sequence_signature
+  sequence_signature,
+  tagged_sequence_signature
 };
 use crate::sequence_model::SequenceModel;
 
@@ -537,18 +537,6 @@ fn collect_finder_signatures(
       Ok((path.clone(), signatures))
     })
     .collect()
-}
-
-fn tagged_sequence_signature(
-  sequence: &[TaggedToken]
-) -> String {
-  sequence
-    .iter()
-    .map(|token| token.token.trim())
-    .filter(|token| !token.is_empty())
-    .map(|token| token.to_string())
-    .collect::<Vec<_>>()
-    .join(" ")
 }
 
 fn model_path(

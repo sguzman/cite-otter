@@ -1,12 +1,19 @@
 use std::fs;
-use std::path::Path;
+use std::path::{
+  Path,
+  PathBuf
+};
 
 use cite_otter::cli::{
   delta_report,
   training_report,
   validation_report
 };
-use cite_otter::parser::Parser;
+use cite_otter::parser::{
+  Parser,
+  sequence_signature
+};
+use cite_otter::sequence_model::SequenceModel;
 use serde_json::Value;
 
 fn report_path(
@@ -220,6 +227,73 @@ fn training_validation_delta_flow_runs()
     "delta report should read the \
      trained model counts"
   );
+
+  let parser_model_path =
+    model_file("parser-sequences.json");
+  let parser_model =
+    SequenceModel::load(
+      &parser_model_path
+    )
+    .expect(
+      "parser sequence model loads"
+    );
+  assert!(
+    parser_model.total() > 0,
+    "parser sequence model should \
+     record sequences"
+  );
+  let prepared_dataset =
+    parser.prepare(&content, true);
+  let first_sequence =
+    prepared_dataset.0.first().expect(
+      "parser.prepare should yield \
+       sequences"
+    );
+  let signature =
+    sequence_signature(first_sequence);
+  assert!(
+    parser_model.count(&signature) > 0,
+    "parser sequence model should \
+     keep the signature used in \
+     training"
+  );
+
+  let finder_model_path =
+    model_file("finder-sequences.json");
+  let finder_model =
+    SequenceModel::load(
+      &finder_model_path
+    )
+    .expect(
+      "finder sequence model loads"
+    );
+  assert!(
+    finder_model.total() > 0,
+    "finder sequence model should \
+     store sequences"
+  );
+  let finder_json: Value =
+    serde_json::from_str(
+      &fs::read_to_string(
+        &finder_model_path
+      )
+      .expect(
+        "finder sequence model should \
+         exist"
+      )
+    )
+    .expect(
+      "finder sequence json parses"
+    );
+  assert!(
+    finder_json
+      .get("counts")
+      .and_then(Value::as_object)
+      .map(|counts| !counts.is_empty())
+      .unwrap_or(false),
+    "finder sequence model should \
+     contain signatures"
+  );
 }
 
 fn find_dataset_entry<'a>(
@@ -240,4 +314,10 @@ fn find_dataset_entry<'a>(
       })
       .unwrap_or(false)
   })
+}
+
+fn model_file(name: &str) -> PathBuf {
+  Path::new("target")
+    .join("models")
+    .join(name)
 }

@@ -31,6 +31,14 @@ const PEREC_MULTI_YEAR_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995/96. p.108.";
 
+const COMPLEX_REF: &str =
+  "Smith, Alice. On heuristics for \
+   mixing metadata. Lecture Notes in \
+   Computer Science, 4050. Journal of \
+   Testing. Edited by Doe, J. \
+   (Note: Preprint release). \
+   doi:10.1000/test https://example.org.";
+
 #[test]
 fn prepare_returns_expanded_dataset() {
   let parser = Parser::new();
@@ -112,6 +120,48 @@ fn parse_returns_metadata_map() {
     ),
     "Expected parser.parse to \
      populate the documented fields"
+  );
+}
+
+#[test]
+fn parse_captures_collection_journal_editor_and_identifiers()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[COMPLEX_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "collection-title",
+    "Lecture Notes in Computer Science"
+  );
+  assert_list_field(
+    reference,
+    "journal",
+    "Journal of Testing"
+  );
+  assert_list_field(
+    reference,
+    "editor",
+    "Edited by Doe"
+  );
+  assert_list_field(
+    reference,
+    "note",
+    "Note: Preprint release"
+  );
+  assert_list_field(
+    reference,
+    "doi",
+    "doi:10.1000/test"
+  );
+  assert_list_field(
+    reference,
+    "url",
+    "https://example.org"
   );
 }
 
@@ -248,4 +298,34 @@ fn label_handles_unrecognizable_input()
   parser
     .label("@misc{70213094902020,\n");
   parser.label("\n doi ");
+}
+
+fn assert_list_field(
+  reference: &BTreeMap<
+    String,
+    FieldValue
+  >,
+  key: &str,
+  expected: &str
+) {
+  match reference.get(key) {
+    | Some(FieldValue::List(
+      values
+    )) => {
+      assert_eq!(
+        values
+          .first()
+          .map(|value| value.as_str()),
+        Some(expected),
+        "field {key} should contain \
+         {expected}"
+      );
+    }
+    | other => {
+      panic!(
+        "expected list value for \
+         {key}, got {other:?}"
+      )
+    }
+  }
 }

@@ -71,17 +71,22 @@ impl Default for Reference {
 
 #[derive(Debug, Clone, Default)]
 struct FieldTokens {
-  author:    BTreeSet<String>,
-  title:     BTreeSet<String>,
-  location:  BTreeSet<String>,
-  publisher: BTreeSet<String>,
-  date:      BTreeSet<String>,
-  pages:     BTreeSet<String>,
-  container: BTreeSet<String>,
-  volume:    BTreeSet<String>,
-  issue:     BTreeSet<String>,
-  genre:     BTreeSet<String>,
-  edition:   BTreeSet<String>
+  author:     BTreeSet<String>,
+  title:      BTreeSet<String>,
+  location:   BTreeSet<String>,
+  publisher:  BTreeSet<String>,
+  date:       BTreeSet<String>,
+  pages:      BTreeSet<String>,
+  container:  BTreeSet<String>,
+  collection: BTreeSet<String>,
+  journal:    BTreeSet<String>,
+  editor:     BTreeSet<String>,
+  note:       BTreeSet<String>,
+  identifier: BTreeSet<String>,
+  volume:     BTreeSet<String>,
+  issue:      BTreeSet<String>,
+  genre:      BTreeSet<String>,
+  edition:    BTreeSet<String>
 }
 
 impl FieldTokens {
@@ -89,47 +94,73 @@ impl FieldTokens {
     reference: &str
   ) -> Self {
     Self {
-      author:    tokens_from_authors(
+      author:     tokens_from_authors(
         reference
       ),
-      title:     tokens_from_segment(
+      title:      tokens_from_segment(
         &extract_title(reference)
       ),
-      location:  tokens_from_segment(
+      location:   tokens_from_segment(
         &extract_location(reference)
       ),
-      publisher: tokens_from_segment(
+      publisher:  tokens_from_segment(
         &extract_publisher(reference)
       ),
-      date:      tokens_from_dates(
+      date:       tokens_from_dates(
         reference
       ),
-      pages:     tokens_from_segment(
+      pages:      tokens_from_segment(
         &extract_pages(reference)
       ),
-      container: tokens_from_segment(
+      container:  tokens_from_segment(
         extract_container_title(
           reference
         )
         .unwrap_or_default()
         .as_str()
       ),
-      volume:    tokens_from_segment(
+      collection: tokens_from_segment(
+        extract_collection_title(
+          reference
+        )
+        .unwrap_or_default()
+        .as_str()
+      ),
+      journal:    tokens_from_segment(
+        extract_journal(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      editor:     tokens_from_segment(
+        extract_editor(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      note:       tokens_from_segment(
+        extract_note(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      identifier:
+        tokens_from_identifiers(
+          reference
+        ),
+      volume:     tokens_from_segment(
         extract_volume(reference)
           .unwrap_or_default()
           .as_str()
       ),
-      issue:     tokens_from_segment(
+      issue:      tokens_from_segment(
         extract_issue(reference)
           .unwrap_or_default()
           .as_str()
       ),
-      genre:     tokens_from_segment(
+      genre:      tokens_from_segment(
         extract_genre(reference)
           .unwrap_or_default()
           .as_str()
       ),
-      edition:   tokens_from_segment(
+      edition:    tokens_from_segment(
         extract_edition(reference)
           .unwrap_or_default()
           .as_str()
@@ -533,6 +564,96 @@ impl Parser {
           );
         }
 
+        if let Some(collection) =
+          extract_collection_title(
+            reference
+          )
+        {
+          mapped.insert(
+            "collection-title",
+            FieldValue::List(vec![
+              collection,
+            ])
+          );
+        }
+
+        if let Some(journal) =
+          extract_journal(reference)
+        {
+          mapped.insert(
+            "journal",
+            FieldValue::List(vec![
+              journal,
+            ])
+          );
+        }
+
+        if let Some(editor) =
+          extract_editor(reference)
+        {
+          mapped.insert(
+            "editor",
+            FieldValue::List(vec![
+              editor,
+            ])
+          );
+        }
+
+        if let Some(note) =
+          extract_note(reference)
+        {
+          mapped.insert(
+            "note",
+            FieldValue::List(vec![
+              note,
+            ])
+          );
+        }
+
+        let identifiers =
+          extract_identifiers(
+            reference
+          );
+        let mut doi_values = Vec::new();
+        let mut url_values = Vec::new();
+        for identifier in identifiers {
+          let lower =
+            identifier.to_lowercase();
+          if lower.contains("doi") {
+            doi_values
+              .push(identifier.clone());
+            continue;
+          }
+
+          if identifier
+            .starts_with("http")
+            || identifier
+              .starts_with("www")
+            || lower.contains("url")
+          {
+            url_values
+              .push(identifier.clone());
+          }
+        }
+
+        if !doi_values.is_empty() {
+          mapped.insert(
+            "doi",
+            FieldValue::List(
+              doi_values
+            )
+          );
+        }
+
+        if !url_values.is_empty() {
+          mapped.insert(
+            "url",
+            FieldValue::List(
+              url_values
+            )
+          );
+        }
+
         if let Some(volume) =
           extract_volume(reference)
         {
@@ -732,6 +853,57 @@ fn extract_pages(
     .unwrap_or_default()
 }
 
+fn extract_collection_title(
+  reference: &str
+) -> Option<String> {
+  if let Some(segment) =
+    segment_after_keyword(
+      reference,
+      "lecture notes"
+    )
+  {
+    return Some(segment);
+  }
+
+  let keywords = [
+    "series",
+    "collection",
+    "notes",
+    "proceedings",
+    "symposium",
+    "volume"
+  ];
+  for keyword in keywords {
+    if let Some(segment) =
+      segment_after_keyword(
+        reference, keyword
+      )
+    {
+      return Some(segment);
+    }
+  }
+
+  reference
+    .split(|c: char| {
+      c == ','
+        || c == ';'
+        || c == '('
+        || c == ')'
+    })
+    .map(str::trim)
+    .filter(|segment| {
+      !segment.is_empty()
+    })
+    .find(|segment| {
+      let lower =
+        segment.to_lowercase();
+      keywords.iter().any(|keyword| {
+        lower.contains(keyword)
+      })
+    })
+    .map(clean_segment)
+}
+
 fn extract_container_title(
   reference: &str
 ) -> Option<String> {
@@ -787,6 +959,141 @@ fn capture_number_after(
   }
 }
 
+fn extract_journal(
+  reference: &str
+) -> Option<String> {
+  reference
+    .split('.')
+    .map(str::trim)
+    .find(|segment| {
+      let lower =
+        segment.to_lowercase();
+      lower.contains("journal")
+        || lower.contains("proceedings")
+    })
+    .map(clean_segment)
+}
+
+fn extract_editor(
+  reference: &str
+) -> Option<String> {
+  let keywords = [
+    "edited by",
+    "edited",
+    "editor",
+    "eds"
+  ];
+
+  for keyword in keywords {
+    if let Some(segment) =
+      segment_after_keyword(
+        reference, keyword
+      )
+    {
+      return Some(segment);
+    }
+  }
+
+  None
+}
+
+fn extract_note(
+  reference: &str
+) -> Option<String> {
+  let keywords = [
+    "note",
+    "report",
+    "deliverable",
+    "volume"
+  ];
+
+  for (start, _) in
+    reference.match_indices('(')
+  {
+    if let Some(end) =
+      reference[start + 1..].find(')')
+    {
+      let segment = reference
+        [start + 1..start + 1 + end]
+        .trim();
+      if segment.is_empty() {
+        continue;
+      }
+      let lower =
+        segment.to_lowercase();
+      if keywords.iter().any(
+        |keyword| {
+          lower.contains(keyword)
+        }
+      ) {
+        return Some(clean_segment(
+          segment
+        ));
+      }
+    }
+  }
+
+  None
+}
+
+fn extract_identifiers(
+  reference: &str
+) -> Vec<String> {
+  reference
+    .split_whitespace()
+    .map(|token| {
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      })
+    })
+    .filter(|token| !token.is_empty())
+    .filter(|token| {
+      let lower = token.to_lowercase();
+      lower.starts_with("doi")
+        || lower.contains("doi:")
+        || lower.starts_with("http")
+        || lower.starts_with("www")
+        || lower.contains("url")
+        || lower.contains("urn")
+    })
+    .map(|token| token.to_string())
+    .collect()
+}
+
+fn clean_segment(
+  segment: &str
+) -> String {
+  segment
+    .trim_matches(|c: char| {
+      c == ','
+        || c == '.'
+        || c == ';'
+        || c == ':'
+    })
+    .trim()
+    .to_string()
+}
+
+fn segment_after_keyword(
+  reference: &str,
+  keyword: &str
+) -> Option<String> {
+  reference
+    .to_lowercase()
+    .find(keyword)
+    .and_then(|pos| {
+      reference[pos..]
+        .split(|c: char| {
+          c == '.'
+            || c == ','
+            || c == ';'
+            || c == ':'
+        })
+        .next()
+    })
+    .map(clean_segment)
+}
+
 fn extract_volume(
   reference: &str
 ) -> Option<String> {
@@ -809,6 +1116,22 @@ fn extract_volume(
     }
   }
   None
+}
+
+fn tokens_from_identifiers(
+  reference: &str
+) -> BTreeSet<String> {
+  let mut tokens = BTreeSet::new();
+  for identifier in
+    extract_identifiers(reference)
+  {
+    let normalized =
+      normalize_token(&identifier);
+    if !normalized.is_empty() {
+      tokens.insert(normalized);
+    }
+  }
+  tokens
 }
 
 fn extract_issue(
@@ -918,10 +1241,42 @@ fn detect_scripts(
   let mut scripts = BTreeSet::new();
   scripts.insert("Common".to_string());
   scripts.insert("Latin".to_string());
-  if reference.chars().any(|c| {
-    c.is_alphabetic() && !c.is_ascii()
-  }) {
-    scripts.insert("Other".to_string());
+  for c in reference.chars() {
+    match c as u32 {
+      | 0x0370..=0x03ff => {
+        scripts
+          .insert("Greek".to_string());
+      }
+      | 0x0400..=0x04ff => {
+        scripts.insert(
+          "Cyrillic".to_string()
+        );
+      }
+      | 0x0590..=0x05ff => {
+        scripts
+          .insert("Hebrew".to_string());
+      }
+      | 0x0600..=0x06ff => {
+        scripts
+          .insert("Arabic".to_string());
+      }
+      | 0x0900..=0x097f => {
+        scripts.insert(
+          "Devanagari".to_string()
+        );
+      }
+      | 0x3040..=0x30ff
+      | 0x31f0..=0x31ff => {
+        scripts.insert(
+          "Katakana".to_string()
+        );
+      }
+      | 0x4e00..=0x9fff => {
+        scripts
+          .insert("Han".to_string());
+      }
+      | _ => {}
+    }
   }
   scripts.into_iter().collect()
 }
@@ -1006,6 +1361,18 @@ pub fn sequence_signature(
     .join(" ")
 }
 
+pub fn tagged_sequence_signature(
+  sequence: &[TaggedToken]
+) -> String {
+  sequence
+    .iter()
+    .map(|token| token.token.trim())
+    .filter(|token| !token.is_empty())
+    .map(|token| token.to_string())
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
 fn tag_token(
   token: &str,
   context: &FieldTokens
@@ -1020,6 +1387,15 @@ fn tag_token(
 
   if matches_field(
     &normalized,
+    &context.identifier
+  ) || lower.contains("doi")
+    || lower.starts_with("http")
+    || lower.starts_with("www")
+    || lower.contains("urn")
+  {
+    "identifier".into()
+  } else if matches_field(
+    &normalized,
     &context.author
   ) {
     "author".into()
@@ -1028,6 +1404,11 @@ fn tag_token(
     &context.title
   ) {
     "title".into()
+  } else if matches_field(
+    &normalized,
+    &context.journal
+  ) {
+    "journal".into()
   } else if matches_field(
     &normalized,
     &context.container
@@ -1045,9 +1426,24 @@ fn tag_token(
     "publisher".into()
   } else if matches_field(
     &normalized,
+    &context.collection
+  ) {
+    "collection-title".into()
+  } else if matches_field(
+    &normalized,
     &context.date
   ) {
     "date".into()
+  } else if matches_field(
+    &normalized,
+    &context.editor
+  ) {
+    "editor".into()
+  } else if matches_field(
+    &normalized,
+    &context.note
+  ) {
+    "note".into()
   } else if matches_field(
     &normalized,
     &context.pages
