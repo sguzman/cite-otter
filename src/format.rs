@@ -4,6 +4,7 @@ use serde_json::{
   Value
 };
 
+use crate::normalizer::journal::Normalizer as JournalNormalizer;
 use crate::parser::{
   FieldValue,
   Reference
@@ -47,6 +48,8 @@ impl Format {
       .map(|(idx, reference)| {
         let mut map =
           reference_to_map(reference);
+        JournalNormalizer::new()
+          .normalize(&mut map);
         normalize_bibtex_entry(
           &mut map
         );
@@ -78,8 +81,10 @@ impl Format {
       .iter()
       .enumerate()
       .map(|(idx, reference)| {
-        let map =
+        let mut map =
           reference_to_map(reference);
+        JournalNormalizer::new()
+          .normalize(&mut map);
         csl_entry(idx, map)
       })
       .collect::<Vec<_>>()

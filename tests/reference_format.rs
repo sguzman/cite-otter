@@ -48,10 +48,11 @@ fn bibtex_includes_container_series_and_doi()
 
   assert!(
     bibtex.contains(
-      "journal = {Journal of Testing}"
+      "booktitle = {Journal of \
+       Testing}"
     ),
-    "BibTeX output should keep the \
-     journal field from metadata"
+    "BibTeX output should promote \
+     journal metadata into booktitle"
   );
   assert!(
     bibtex.contains(
@@ -83,11 +84,11 @@ fn csl_formatter_outputs_enriched_json()
 
   assert!(
     csl.contains(
-      "\"journal\":\"Journal of \
-       Testing\""
+      "\"container-title\":\"Journal \
+       of Testing\""
     ),
-    "CSL output should keep journal \
-     metadata"
+    "CSL output should report the \
+     journal as container-title"
   );
   assert!(
     csl.contains(

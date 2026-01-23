@@ -32,6 +32,7 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](https://github.c
 2. Build/test via `cargo build` / `cargo test`.
 3. Use `ROADMAP.md` to decide which phase you are tackling and refer to `REFERENCE.md` for Ruby behaviors to match.
 4. The CLI `parse` command now accepts `--format json|bibtex|csl` so you can request multiple export styles from the same parsing pipeline.
+5. Run `cite-otter sample --format json|bibtex|csl` to see the richer metadata map emitted by the parser/formatter (journal → container-title, collection → series, DOI/URL, etc.).
 
 ## Goals beyond the docs
 

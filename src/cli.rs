@@ -69,7 +69,18 @@ enum Command {
   Check,
 
   /// Produce delta outputs
-  Delta
+  Delta,
+
+  /// Output sample parse results
+  Sample {
+    #[arg(
+      short,
+      long,
+      default_value_t = ParseFormat::Json,
+      value_enum
+    )]
+    format: ParseFormat
+  }
 }
 
 const REPORT_DIR: &str =
@@ -184,6 +195,29 @@ pub fn run() -> anyhow::Result<()> {
     }
     | Command::Delta => {
       run_delta()?;
+    }
+    | Command::Sample {
+      format
+    } => {
+      let parser = Parser::new();
+      let references = parser.parse(
+        &SAMPLE_REFERENCES,
+        format
+      );
+      let formatter = Format::new();
+      let output = match format {
+        | ParseFormat::Json => {
+          formatter.to_json(&references)
+        }
+        | ParseFormat::BibTeX => {
+          formatter
+            .to_bibtex(&references)
+        }
+        | ParseFormat::Csl => {
+          formatter.to_csl(&references)
+        }
+      };
+      println!("{output}");
     }
   }
 
@@ -544,3 +578,13 @@ fn model_path(
 ) -> PathBuf {
   Path::new(MODEL_DIR).join(filename)
 }
+
+const SAMPLE_REFERENCES: [&str; 2] = [
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, 1995. p.108.",
+  "Smith, Alice. On heuristics for \
+   mixing metadata. Lecture Notes in \
+   Computer Science. Journal of Testing. \
+   Edited by Doe, J. (Note: Preprint \
+   release). doi:10.1000/test https://example.org."
+];

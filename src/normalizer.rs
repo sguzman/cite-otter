@@ -117,6 +117,97 @@ pub mod container {
   }
 }
 
+pub mod journal {
+  use serde_json::map::Entry;
+  use serde_json::{
+    Map,
+    Value
+  };
+
+  #[derive(Debug, Clone)]
+  pub struct Normalizer;
+
+  impl Default for Normalizer {
+    fn default() -> Self {
+      Self::new()
+    }
+  }
+
+  impl Normalizer {
+    pub fn new() -> Self {
+      Self
+    }
+
+    pub fn normalize(
+      &self,
+      map: &mut Map<String, Value>
+    ) {
+      if let Some(value) =
+        map.remove("journal")
+      {
+        map.insert(
+          "type".into(),
+          Value::String(
+            "article-journal".into()
+          )
+        );
+        let journals =
+          extract_strings(value);
+        for journal in journals {
+          append_field(
+            map,
+            "container-title",
+            journal
+          );
+        }
+      }
+    }
+  }
+
+  fn extract_strings(
+    value: Value
+  ) -> Vec<String> {
+    match value {
+      | Value::Array(items) => {
+        items
+          .into_iter()
+          .filter_map(|item| {
+            item
+              .as_str()
+              .map(|s| s.to_string())
+          })
+          .collect()
+      }
+      | Value::String(text) => {
+        vec![text]
+      }
+      | _ => Vec::new()
+    }
+  }
+
+  fn append_field(
+    map: &mut Map<String, Value>,
+    key: &str,
+    text: String
+  ) {
+    match map.entry(key.to_string()) {
+      | Entry::Vacant(entry) => {
+        entry.insert(Value::Array(
+          vec![Value::String(text)]
+        ));
+      }
+      | Entry::Occupied(mut entry) => {
+        if let Value::Array(array) =
+          entry.get_mut()
+        {
+          array
+            .push(Value::String(text));
+        }
+      }
+    }
+  }
+}
+
 fn is_repeater(value: &str) -> bool {
   let allowed = ['-', '.', ',', ' '];
   !value.is_empty()
