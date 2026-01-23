@@ -1,6 +1,13 @@
 # Changelog
 ## [Unreleased]
 
+### 📚 Documentation
+- Cover release readiness for v0.5.0 ([1bdcd9a](https://github.com/sguzman/cite-otter/commit/1bdcd9a33a12febca3a7468ba3a20ff537c02024))
+
+### 🚀 Features
+- **(training)**: Validate finder datasets ([36733cb](https://github.com/sguzman/cite-otter/commit/36733cbf614e96695605a652f81badf0947d8ebf))
+- **(delta)**: Include finder datasets ([5520f4d](https://github.com/sguzman/cite-otter/commit/5520f4d25fbce397a480069dd66178fd905d840c))## [0.4.0] - 2026-01-23
+
 ### ⚙️ Miscellaneous
 - Persist report ([3189c1d](https://github.com/sguzman/cite-otter/commit/3189c1de57327dc9db2a95410628afb41b652e97))
 - Ignore deepwiki md from lychee and typos ([a208471](https://github.com/sguzman/cite-otter/commit/a20847179d5cf46e19d0bc0468c593649ac02cdf))
