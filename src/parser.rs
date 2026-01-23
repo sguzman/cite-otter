@@ -22,9 +22,17 @@ pub struct TaggedToken {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct Author {
+  pub family: String,
+  pub given:  String
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
 pub enum FieldValue {
   Single(String),
-  List(Vec<String>)
+  List(Vec<String>),
+  Authors(Vec<Author>)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -179,6 +187,71 @@ fn tokens_from_segment(
     });
 
   tokens
+}
+
+fn parse_authors(
+  reference: &str
+) -> Vec<Author> {
+  let segment =
+    extract_author_segment(reference);
+  let cleaned = segment
+    .replace('&', ",")
+    .replace(" and ", ",")
+    .replace(" AND ", ",");
+  let pieces: Vec<&str> = cleaned
+    .split(',')
+    .map(str::trim)
+    .filter(|piece| !piece.is_empty())
+    .collect();
+
+  let mut authors = Vec::new();
+  for chunk in pieces.chunks(2) {
+    let family = chunk[0];
+    let given = chunk
+      .get(1)
+      .copied()
+      .unwrap_or("");
+    let normalized_family =
+      normalize_author_component(
+        family
+      );
+    let normalized_given =
+      normalize_author_component(given);
+    if !normalized_family.is_empty()
+      || !normalized_given.is_empty()
+    {
+      authors.push(Author {
+        family: normalized_family,
+        given:  normalized_given
+      });
+    }
+  }
+
+  if authors.is_empty()
+    && !segment.trim().is_empty()
+  {
+    authors.push(Author {
+      family:
+        normalize_author_component(
+          segment
+        ),
+      given:  "".into()
+    });
+  }
+
+  authors
+}
+
+fn normalize_author_component(
+  component: &str
+) -> String {
+  component
+    .trim()
+    .trim_matches(|c: char| {
+      c == '.' || c == ',' || c == ';'
+    })
+    .trim()
+    .to_string()
 }
 
 fn tokens_from_authors(
@@ -372,12 +445,23 @@ impl Parser {
       .map(|reference| {
         let mut mapped =
           Reference::new();
-        mapped.insert(
-          "author",
-          FieldValue::List(vec![
-            extract_author(reference),
-          ])
-        );
+        let authors =
+          parse_authors(reference);
+        if !authors.is_empty() {
+          mapped.insert(
+            "author",
+            FieldValue::Authors(
+              authors
+            )
+          );
+        } else {
+          mapped.insert(
+            "author",
+            FieldValue::List(vec![
+              extract_author(reference),
+            ])
+          );
+        }
         mapped.insert(
           "title",
           FieldValue::List(vec![

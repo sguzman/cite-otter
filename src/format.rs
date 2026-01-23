@@ -41,13 +41,36 @@ impl Format {
             match value {
               | FieldValue::List(
                 list
-              ) => list.first(),
+              ) => {
+                list.first().cloned()
+              }
               | FieldValue::Single(
                 value
-              ) => Some(value)
+              ) => Some(value.clone()),
+              | FieldValue::Authors(
+                authors
+              ) => {
+                authors.first().map(
+                  |author| {
+                    if author
+                      .given
+                      .is_empty()
+                    {
+                      author
+                        .family
+                        .clone()
+                    } else {
+                      format!(
+                        "{}, {}",
+                        author.family,
+                        author.given
+                      )
+                    }
+                  }
+                )
+              }
             }
           })
-          .cloned()
           .unwrap_or_else(|| {
             format!("cite-{:03}", idx)
           });
