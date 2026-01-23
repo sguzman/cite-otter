@@ -117,6 +117,7 @@ struct ValidationReport {
 #[derive(Clone, Serialize)]
 struct DeltaEntry {
   path:     String,
+  kind:     String,
   prepared: usize,
   labeled:  usize,
   stored:   usize,
@@ -444,7 +445,7 @@ fn run_delta() -> anyhow::Result<()> {
   )?;
   let parser_model_path =
     model_path("parser-model.json");
-  let delta_entries =
+  let mut delta_entries =
     parser_files
       .iter()
       .map(|path| {
@@ -467,6 +468,7 @@ fn run_delta() -> anyhow::Result<()> {
 
         Ok(DeltaEntry {
           path: path.display().to_string(),
+          kind: "parser".into(),
           prepared: prepared_seq,
           labeled: labeled.len(),
           stored,
@@ -475,7 +477,41 @@ fn run_delta() -> anyhow::Result<()> {
       })
       .collect::<Result<Vec<_>, anyhow::Error>>()?;
 
-  let delta_count = delta_entries.len();
+  let finder_files = collect_files(
+    "tmp/anystyle/res/finder/*.ttx"
+  )?;
+  let finder_model_path =
+    model_path("finder-model.json");
+  let finder_model = FinderModel::load(
+    &finder_model_path
+  )?;
+  let finder_entries = finder_files
+    .iter()
+    .map(|path| {
+      let content =
+        fs::read_to_string(path)?;
+      let labeled =
+        Parser::new().label(&content);
+      let stored = finder_model
+        .sequences(path)
+        .unwrap_or(0);
+      let delta =
+        (labeled.len() as isize
+          - stored as isize)
+          .abs();
+      Ok(DeltaEntry {
+        path: path.display().to_string(),
+        kind: "finder".into(),
+        prepared: labeled.len(),
+        labeled: labeled.len(),
+        stored,
+        delta
+      })
+    })
+    .collect::<Result<Vec<_>, anyhow::Error>>()?;
+
+  delta_entries.extend(finder_entries);
+
   persist_report(
     Path::new(REPORT_DIR)
       .join("delta-report.json"),
@@ -485,9 +521,10 @@ fn run_delta() -> anyhow::Result<()> {
   )?;
 
   println!(
-    "delta report written ({} \
-     datasets)",
-    delta_count
+    "delta report written ({} parser \
+     + {} finder datasets)",
+    parser_files.len(),
+    finder_files.len()
   );
   Ok(())
 }
