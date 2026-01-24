@@ -189,6 +189,57 @@ fn bibtex_uses_publisher_place_when_missing_location()
 }
 
 #[test]
+fn csl_includes_issued_page_and_volume_issue()
+ {
+  let formatter = Format::new();
+  let mut reference = Reference::new();
+  reference.insert(
+    "date",
+    FieldValue::List(vec![
+      "2020-12-05".into(),
+    ])
+  );
+  reference.insert(
+    "pages",
+    FieldValue::List(vec![
+      "12-34".into(),
+    ])
+  );
+  reference.insert(
+    "volume",
+    FieldValue::List(vec!["42".into()])
+  );
+  reference.insert(
+    "issue",
+    FieldValue::List(vec!["3".into()])
+  );
+  let csl =
+    formatter.to_csl(&[reference]);
+
+  assert!(
+    csl.contains(
+      "\"issued\":{\"date-parts\":\
+       [[2020,12,5]]}"
+    ),
+    "CSL output should emit issued \
+     date-parts"
+  );
+  assert!(
+    csl.contains("\"page\":\"12-34\""),
+    "CSL output should emit page \
+     ranges"
+  );
+  assert!(
+    csl.contains("\"volume\":\"42\""),
+    "CSL output should emit volume"
+  );
+  assert!(
+    csl.contains("\"issue\":\"3\""),
+    "CSL output should emit issue"
+  );
+}
+
+#[test]
 fn formatter_expands_journal_abbrev() {
   let contents = fs::read_to_string(
     "tests/fixtures/abbrev-sample.txt"

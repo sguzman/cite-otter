@@ -301,6 +301,44 @@ fn csl_entry(
     );
   }
 
+  if let Some(date_parts) =
+    extract_date_parts(&map)
+  {
+    record.insert(
+      "issued".into(),
+      Value::Object(
+        Map::from_iter([(
+          "date-parts".into(),
+          Value::Array(vec![Value::Array(
+            date_parts
+              .into_iter()
+              .map(|part| {
+                Value::Number(
+                  serde_json::Number::from(
+                    part
+                  )
+                )
+              })
+              .collect()
+          )])
+        )])
+      )
+    );
+  }
+
+  if let Some(pages) =
+    extract_first_value_from_map(
+      &map, "pages"
+    )
+  {
+    if !pages.is_empty() {
+      record.insert(
+        "page".into(),
+        Value::String(pages)
+      );
+    }
+  }
+
   for key in
     ["author", "editor", "translator"]
   {
@@ -327,6 +365,8 @@ fn csl_entry(
     "publisher",
     "publisher-place",
     "address",
+    "volume",
+    "issue",
     "doi",
     "url",
     "isbn",
@@ -396,6 +436,29 @@ fn extract_values_from_map(
       })
     })
     .filter(|values| !values.is_empty())
+}
+
+fn extract_date_parts(
+  map: &Map<String, Value>
+) -> Option<Vec<i32>> {
+  let value =
+    extract_first_value_from_map(
+      map, "date"
+    )?;
+  let parts = value
+    .split(|c: char| {
+      !c.is_ascii_digit()
+    })
+    .filter(|part| !part.is_empty())
+    .filter_map(|part| {
+      part.parse().ok()
+    })
+    .collect::<Vec<i32>>();
+  if parts.is_empty() {
+    None
+  } else {
+    Some(parts)
+  }
 }
 
 fn rename_field(
