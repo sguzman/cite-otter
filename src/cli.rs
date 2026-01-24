@@ -1116,6 +1116,8 @@ fn is_score_token(token: &str) -> bool {
 mod tests {
   use std::collections::HashMap;
   use std::fs;
+  #[cfg(unix)]
+  use std::os::unix::fs::PermissionsExt;
 
   use super::*;
 
@@ -1403,6 +1405,119 @@ mod tests {
       result.is_ok(),
       "delta should succeed with zero \
        parser datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn training_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        dataset
+          .to_string_lossy()
+          .as_ref(),
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "training should error on \
+       unreadable datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn validation_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        dataset
+          .to_string_lossy()
+          .as_ref(),
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "validation should error on \
+       unreadable datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn delta_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      dataset
+        .to_string_lossy()
+        .as_ref(),
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "delta should error on \
+       unreadable datasets"
     );
   }
 }
