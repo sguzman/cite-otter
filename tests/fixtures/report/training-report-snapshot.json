@@ -1,0 +1,30 @@
+{
+  "parser": [
+    {
+      "path": "tests/fixtures/report/parser.txt",
+      "sequences": 2,
+      "tokens": 2
+    }
+  ],
+  "finder": [
+    {
+      "path": "tests/fixtures/report/finder.txt",
+      "sequences": 2,
+      "tokens": 0
+    }
+  ],
+  "samples": [
+    {
+      "format": "json",
+      "output": "<redacted>"
+    },
+    {
+      "format": "bibtex",
+      "output": "<redacted>"
+    },
+    {
+      "format": "csl",
+      "output": "<redacted>"
+    }
+  ]
+}

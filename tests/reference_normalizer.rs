@@ -318,3 +318,17 @@ fn normalization_config_handles_missing_assets()
      keep original publisher"
   );
 }
+
+#[test]
+fn abbreviations_last_entry_wins() {
+  let abbreviations =
+    AbbreviationMap::load_from_str(
+      "J. Test.\tOld Journal\nJ. Test.\tNew Journal"
+    );
+  assert_eq!(
+    abbreviations.expand("J. Test."),
+    "New Journal",
+    "last abbreviation entry should \
+     win for duplicates"
+  );
+}

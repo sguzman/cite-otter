@@ -311,6 +311,17 @@ fn csl_entry(
     ))
   );
 
+  if let Some(entry_type) =
+    extract_first_value_from_map(
+      &map, "type"
+    )
+  {
+    record.insert(
+      "type".into(),
+      Value::String(entry_type)
+    );
+  }
+
   if let Some(title) =
     extract_first_value_from_map(
       &map, "title"
@@ -389,6 +400,9 @@ fn csl_entry(
   }
 
   for key in [
+    "note",
+    "genre",
+    "edition",
     "container-title",
     "collection-title",
     "collection-number",
@@ -396,6 +410,7 @@ fn csl_entry(
     "publisher",
     "publisher-place",
     "address",
+    "language",
     "volume",
     "issue",
     "doi",

@@ -287,6 +287,90 @@ fn csl_includes_issued_page_and_volume_issue()
 }
 
 #[test]
+fn bibtex_maps_article_issue_to_number() {
+  let formatter = Format::new();
+  let mut reference = Reference::new();
+  reference.insert(
+    "type",
+    FieldValue::Single("article".into())
+  );
+  reference.insert(
+    "issue",
+    FieldValue::List(vec!["7".into()])
+  );
+  let bibtex =
+    formatter.to_bibtex(&[reference]);
+
+  assert!(
+    bibtex.contains("number = {7}"),
+    "BibTeX should map issue to \
+     number for article entries"
+  );
+  assert!(
+    !bibtex.contains("issue = {7}"),
+    "BibTeX output should not retain \
+     issue when mapping to number"
+  );
+}
+
+#[test]
+fn csl_includes_type_note_genre_edition_and_language()
+ {
+  let formatter = Format::new();
+  let mut reference = Reference::new();
+  reference.insert(
+    "type",
+    FieldValue::Single("book".into())
+  );
+  reference.insert(
+    "note",
+    FieldValue::List(vec![
+      "Special issue".into(),
+    ])
+  );
+  reference.insert(
+    "genre",
+    FieldValue::List(vec![
+      "Report".into(),
+    ])
+  );
+  reference.insert(
+    "edition",
+    FieldValue::List(vec!["2nd".into()])
+  );
+  reference.insert(
+    "language",
+    FieldValue::Single("fr".into())
+  );
+
+  let csl =
+    formatter.to_csl(&[reference]);
+
+  assert!(
+    csl.contains("\"type\":\"book\""),
+    "CSL output should include type"
+  );
+  assert!(
+    csl.contains(
+      "\"note\":\"Special issue\""
+    ),
+    "CSL output should include note"
+  );
+  assert!(
+    csl.contains("\"genre\":\"Report\""),
+    "CSL output should include genre"
+  );
+  assert!(
+    csl.contains("\"edition\":\"2nd\""),
+    "CSL output should include edition"
+  );
+  assert!(
+    csl.contains("\"language\":\"fr\""),
+    "CSL output should include language"
+  );
+}
+
+#[test]
 fn formatter_expands_journal_abbrev() {
   let contents = fs::read_to_string(
     "tests/fixtures/abbrev-sample.txt"

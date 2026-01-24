@@ -1119,6 +1119,9 @@ mod tests {
   #[cfg(unix)]
   use std::os::unix::fs::PermissionsExt;
 
+  use serde_json::Value;
+  use tempfile::tempdir;
+
   use super::*;
 
   #[test]
@@ -1519,6 +1522,77 @@ mod tests {
       "delta should error on \
        unreadable datasets"
     );
+  }
+
+  #[test]
+  fn training_report_matches_fixture_snapshot()
+   {
+    let temp_dir =
+      tempdir().expect("temp dir");
+    let report_dir =
+      temp_dir.path().join("reports");
+    let paths = CliPaths {
+      parser_model:     temp_dir
+        .path()
+        .join("parser-model.json"),
+      finder_model:     temp_dir
+        .path()
+        .join("finder-model.json"),
+      parser_sequences: temp_dir
+        .path()
+        .join("parser-sequences.json"),
+      finder_sequences: temp_dir
+        .path()
+        .join("finder-sequences.json"),
+      report_dir:       report_dir
+        .clone()
+    };
+
+    run_training_with_config(
+      "tests/fixtures/report/parser.\
+       txt",
+      "tests/fixtures/report/finder.\
+       txt",
+      &paths
+    )
+    .expect("training report");
+
+    let report_path = report_dir
+      .join("training-report.json");
+    let report =
+      fs::read_to_string(&report_path)
+        .expect("read report");
+    let mut actual: Value =
+      serde_json::from_str(&report)
+        .expect("parse report json");
+    if let Some(samples) = actual
+      .get_mut("samples")
+      .and_then(Value::as_array_mut)
+    {
+      for sample in samples {
+        if let Some(obj) =
+          sample.as_object_mut()
+        {
+          obj.insert(
+            "output".into(),
+            Value::String(
+              "<redacted>".into()
+            )
+          );
+        }
+      }
+    }
+
+    let expected = fs::read_to_string(
+      "tests/fixtures/report/\
+       training-report-snapshot.json"
+    )
+    .expect("read snapshot");
+    let expected: Value =
+      serde_json::from_str(&expected)
+        .expect("parse snapshot");
+
+    assert_eq!(actual, expected);
   }
 }
 
