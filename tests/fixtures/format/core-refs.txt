@@ -1,0 +1,50 @@
+Heidegger M., 1927, Être et temps, Gallimard, Ed. 1986, Paris.
+Romero, C., Paunesku, D., & Dweck, C. (2011). Brainology in the classroom: An online growth mindset intervention a↵ects GPA, conduct, and implicit theories. Poster session presented at Society for Research in Child Development Biennial Meeting, Montreal, Canada.
+Solon, G. (1999). Chapter 29. Intergenerational mobility in the labor market. In O. C. A. and D. Card (Ed.), Handbook of labor economics (Vol. 3, Part A, pp. 1761–1800). London: Elsevier. Retrieved from http://www.sciencedirect.com/science/article/pii/S1573446399030102
+60. Differences in cyclic fatigue resistance between ProTaper Next and ProTaper Universal instruments at different levels. Pérez-Higueras JJ, Arias A, de la Macorra JC, Peters OA. septembre 2014, J Endod, Vol. 9, pp. 1477-81.
+H. Fischer, Centre Pompidou, Deutsche Bauzeitung, No. 134, Part 3, 2000, 20-21
+Brischoux, F., Chakraborty, S., Brierley, D.I., and Ungless, M.A. (2009). Phasic excitation of dopamine neurons in ventral VTA by noxious stimuli. Proc Natl Acad Sci U S A 106, 4894–4899.
+[13] S. E. Han, G. Chen, Nano Lett. 2010, 10, 1012.
+Adams, Nicholson B., “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera,” Proceedings of the Modern Language Association, 45 (1930), pp. 573–77.
+Lee, L. L., W. E. Howard, and R. E. Marsh. 1990. Acquired strychnine tolerance by pocket gophers. Proceedings of the Vertebrate Pest Conference 14: 87-90.
+A. Cau, R. Kuiper, and W.-P. de Roever. Formalising Dijkstra's development strategy within Stark's formalism. In C. B. Jones, R. C. Shaw, and T. Denvir, editors, Proc. 5th. BCS-FACS Refinement Workshop, 1992.
+M. Kitsuregawa, H. Tanaka, and T. Moto-oka. Application of hash to data base machine and its architecture. New Generation Computing, 1(1), 1983.
+Alexander Vrchoticky. Modula/R language definition. Technical Report TU Wien rr-02-92, version 2.0, Dept. for Real-Time Systems, Technical University of Vienna, May 1993.
+Marc Shapiro and Susan Horwitz. Fast and accurate flow-insensitive points-to analysis. In Proceedings of the 24th Annual ACM Symposium on Principles of Programming Languages, January 1997.
+W. Landi and B. G. Ryder. Aliasing with and without pointers: A problem taxonomy. Center for Computer Aids for Industrial Productivity Technical Report CAIP-TR-125, Rutgers University, September 1990.
+W. H. Enright. Improving the efficiency of matrix operations in the numerical solution of stiff ordinary differential equations. ACM Trans. Math. Softw., 4(2), 127-136, June 1978.
+Gmytrasiewicz, P. J., Durfee, E. H., & Wehe, D. K. (1991a). A decision theoretic approach to coordinating multiagent interaction. In Proceedings of the Twelfth International Joint Conference on Artificial Intelligence, pp. 62-68 Sydney, Australia.
+A. Bookstein and S. T. Klein, Detecting content-bearing words by serial clustering, Proceedings of the Nineteenth Annual International ACM SIGIR Conference on Research and Development in Information Retrieval, pp. 319327, 1995.
+U. Dayal, H. Garcia-Molina, M. Hsu, B. Kao, and M.- C. Shan. Third generation TP monitors: A database challenge. In ACM SIGMOD Conference on Management of Data, pages 393-397, Washington, D. C., May 1993.
+C. Qiao and R. Melhem, "Reducing Communication Latency with Path Multiplexing in Optically Interconnected Multiprocessor Systems", Proc. of HPCA-1, 1995.
+Ramadge, P., & Wonham, W. (1989). The Control of Discrete Event Systems. Proceedings of the IEEE, 77 (1), 81-98.
+Schaal, S., & Atkeson, C. (1994). Robot juggling: An implementation of memory-based learning. Control Systems, 14, 57-71.
+Hinton, G. E., & Nowlan, S. J. (1987). How learning can guide evolution. Complex Systems, 1, 495-502.
+Cameron-Jones, R. M., & Quinlan, J. R. (1994). Efficient top-down induction of logic programs. SIGART Bulletin, 5 (1), 33-42.
+D. Ourston and R. J. Mooney. Changing the Rules: A Comprehensive Approach to Theory Refinement. In Proceedings of the Eighth International Conference on Machine Learning, pages 485-489, 1991.
+E. Styer, "Improving Fast Mutual Exclusion", Proceedings of the Eleventh Annual ACM Symposium on Principles of Distributed Computing, 1992, pp. 159-168.
+Pearl, J. (1988). Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference. Morgan Kaufmann.
+Larry D. Wittie, Gudjun Hermannsson, and Ai Li. Eager sharing for efficient massive parallelism. In 1992 International Conference on Parallel Processing, pages 251-255, St. Charles, IL, August 1992. 11
+Bylander, T. (1992). Complexity results for serial decomposability. In Proceedings of National Conference on Artificial Intelligence, pp. 729-734. San Jose, CA. AAAI Press.
+A. Elmagarmid, editor. Transaction Models for Advanced Database Applications. Morgan-Kaufmann, 1992.
+T. Fahringer, R. Blasko, and H. Zima. Automatic performance prediction to support parallelization of Fortran programs for massively parallel systems. In Proceedings of the 1992 ACM International Conference on Supercomputing, Washington, DC, July 1992.
+A. D. Kallis and D. Klappholz, ``Reaching definitions analysis on code containing array references,'' Conf. Rec. of the 4th Workshop on Languages and Compilers for Parallel Computing, Aug. 1991.
+R. Fletcher. Practical Methods of Optimization. John Wiley & Sons, 1987.
+Clark, K. L., Negation as Failure, in: H. Gallaire and J. Minker (eds.), Logic and Data Bases, Plenum Press, New York, 1978.
+Gent, I. P., & Walsh, T. (1994a). Easy problems are sometimes hard. Artificial Intelligence, 70, 335-345.
+P. D. Alevizos. A linear time algorithm for labeling planar projections of polyhedra. IEEE/RSJ IROS '91 (Osaka, Japan), 1991.
+Ancona, D., and Zucca, E. An algebraic approach to mixins and modularity. In Proc. Conference on Algebraic and Logic Programming (Berlin, 1996),
+P. Yang and J. H. Chern "Design for Reliability: The Major Challenge for VLSI," Proceedings of IEEE, Vol. 81, No. 5, pp. 730-744, May 1993.
+M. Gupta and P. Banerjee. Automatic data partitioning on distributed memory multiprocessors. In Proceedings of the 6th Distributed Memory Computing Conference, Portland, OR, April 1991.
+Harry Heffes and David Lucantoni. A markov modulated characterization of voice and data traffic and related statistical multiplexer performance. IEEE J.Select.Areas Commun., SAC- 4, 856-867, September 1986.
+C. Ghezzi, D. Mandriolli, and A. Morzenti. Trio: A logic language for executable specifications of real-time systems. Journal of Systems and Software, 12(2), 107-123, May 1990.
+Cohen, W. W. (1992). Compiling knowledge into an explicit bias. In Proceedings of the Ninth International Conference on Machine Learning.
+Winston, P. H., Binford, T. O., Katz, B., & Lowry, M. (1983). "Learning physical descriptions from functional definitions, examples, and precedents". National Conference on Artificial Intelligence, 433-439.
+Domingos, P. (1996b). Using partitioning to speed up specific-to-general rule induction. In Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models, pp. 29-34.
+P. T. Harker and J.-S. Pang. Finite-dimensional variational inequality and nonlinear complementarity problems: A survey of theory, algorithms, and applications. Mathematical Programming, 48(2), 161-220, September 1990.
+Knopfmacher, A., and Warlimont, R. Distinct degree factorizations for polynomials over a finite field. Trans. Amer. Math. Soc. 347, (1995), 2235-2243.
+Feferman, S., Transfinite Recursive Progressions of Axiomatic Theories, J. Symbolic Logic, 27, 259-316 (1962).
+K. Gharachorloo, D. Lenoski, J. Laudon, P. Gibbons, A. Gupta, and J. Hennessy. Memory consistency and event ordering in scalable shared-memory multiprocessors. In Proceedings of the 17th Annual International Symposium on Computer Architecture, pages 15-26, May 1990.
+Etzioni, O. and Weld, D. (1994) A Softbot-based Interface to the Internet, Comm. of th e ACM, 37(7), pages 72-76.
+S. Hiranandani, K. Kennedy, C. Koelbel, U. Kremer, and C. Tseng. An overview of the fortran d programming system. Technical Report CRPC-TR91121, Dept of computer Science, Rice University, 1991.
+R. Chandra, S. Devine, B. Verghese, A. Gupta, M. Rosenblum, Scheduling and Page Migration for Multiprocessor Compute Servers. Proc. 6th Int'l. Conf. on Architectural Support for Programming Languages and Operating Systems (ASPLOS-VI), San Jose, CA, pp. 12-24, October 1994.

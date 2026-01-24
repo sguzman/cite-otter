@@ -281,6 +281,9 @@ fn split_reference_segments(
     if depth > 0 {
       continue;
     }
+    if is_initial_boundary(reference, idx) {
+      continue;
+    }
     let mut next_chars = reference
       [idx + ch.len_utf8()..]
       .chars()
@@ -292,6 +295,7 @@ fn split_reference_segments(
       next.map_or(true, |next_char| {
         next_char.is_uppercase()
           || next_char.is_ascii_digit()
+          || matches!(next_char, '"' | '“' | '‘')
       });
     if !is_boundary {
       continue;
@@ -314,6 +318,39 @@ fn split_reference_segments(
   }
 
   segments
+}
+
+fn is_initial_boundary(
+  reference: &str,
+  idx: usize
+) -> bool {
+  let before = reference[..idx].trim_end();
+  let mut token_start = 0usize;
+  for (pos, ch) in before.char_indices()
+  {
+    if ch.is_whitespace() {
+      token_start = pos + ch.len_utf8();
+    }
+  }
+  let token = before[token_start..].trim();
+  if token.len() != 1
+    || !token
+      .chars()
+      .all(|c| c.is_alphabetic())
+  {
+    return false;
+  }
+  let mut chars = reference
+    [idx + 1..]
+    .chars()
+    .skip_while(|c| c.is_whitespace());
+  let next = chars.next();
+  let following = chars.next();
+  matches!(
+    (next, following),
+    (Some(letter), Some('.'))
+      if letter.is_alphabetic()
+  )
 }
 
 fn tokens_from_segment(
@@ -535,12 +572,17 @@ fn normalize_author_component(
   component: &str
 ) -> String {
   component
-    .trim()
-    .trim_matches(|c: char| {
-      c == '.' || c == ',' || c == ';'
+    .split_whitespace()
+    .map(|part| {
+      part
+        .trim_matches(|c: char| {
+          c == '.' || c == ',' || c == ';'
+        })
+        .to_string()
     })
-    .trim()
-    .to_string()
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>()
+    .join(" ")
 }
 
 fn strip_et_al_suffix(

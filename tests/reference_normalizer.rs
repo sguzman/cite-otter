@@ -386,6 +386,42 @@ fn normalization_config_applies_locale_overrides()
 }
 
 #[test]
+fn normalization_config_prefers_manual_locale_overrides()
+ {
+  let dir = std::path::Path::new(
+    "tests/fixtures/normalization-any"
+  );
+  let config =
+    NormalizationConfig::load_from_dir(
+      dir
+    )
+    .expect("load normalization dir");
+  let overrides =
+    AbbreviationMap::load_from_str(
+      "en\ten-GB"
+    );
+  let config =
+    config.with_language_locale(overrides);
+
+  let mut map = Map::new();
+  map.insert(
+    "language".into(),
+    Value::String("en".into())
+  );
+  config.apply_to_map(&mut map);
+
+  let language = map
+    .get("language")
+    .and_then(Value::as_str);
+  assert_eq!(
+    language,
+    Some("en-GB"),
+    "manual locale overrides should \
+     take precedence"
+  );
+}
+
+#[test]
 fn abbreviations_last_entry_wins() {
   let abbreviations =
     AbbreviationMap::load_from_str(

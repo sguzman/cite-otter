@@ -1,0 +1,2 @@
+Latin	Latn
+Cyrillic	Cyrl

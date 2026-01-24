@@ -87,6 +87,15 @@ const DERRIDA_REF: &str =
   "Derrida, J. (c.1967). \
    L’écriture et la différence (1 \
    éd.). Paris: Éditions du Seuil.";
+const QUOTED_TITLE_REF: &str =
+  "Doe, Jane. \"Quoted Title\". \
+   City: Pub, 2020.";
+const PARTICLE_NAME_REF: &str =
+  "van der Waals, J. D. A Title. \
+   City: Pub, 2020.";
+const GENRE_REF: &str =
+  "Doe, Jane. A Title. [PhD thesis]. \
+   City: Pub, 2020.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -353,6 +362,70 @@ fn parse_extracts_edition_from_parenthetical()
     circa,
     Some("true"),
     "parser should flag circa dates"
+  );
+}
+
+#[test]
+fn parse_strips_wrapping_quotes_from_titles()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[QUOTED_TITLE_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Quoted Title"
+  );
+}
+
+#[test]
+fn parse_preserves_author_particles() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PARTICLE_NAME_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(
+    authors[0],
+    Author {
+      family: "van der Waals".into(),
+      given:  "J D".into()
+    }
+  );
+}
+
+#[test]
+fn parse_extracts_genre_from_brackets()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[GENRE_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "genre",
+    "PhD thesis"
   );
 }
 

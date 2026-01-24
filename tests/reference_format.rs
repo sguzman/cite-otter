@@ -616,3 +616,53 @@ fn format_outputs_match_parity_snapshots()
     expected_bibtex.trim_end()
   );
 }
+
+#[test]
+fn format_core_outputs_match_snapshots()
+ {
+  let refs_text = fs::read_to_string(
+    "tests/fixtures/format/core-refs.txt"
+  )
+  .expect("read core refs");
+  let references = refs_text
+    .lines()
+    .map(str::trim)
+    .filter(|line| !line.is_empty())
+    .map(|line| line.to_string())
+    .collect::<Vec<_>>();
+  let ref_slices =
+    references.iter().map(|line| {
+      line.as_str()
+    })
+    .collect::<Vec<_>>();
+
+  let parser = Parser::new();
+  let parsed = parser.parse(
+    &ref_slices,
+    ParseFormat::Json
+  );
+  let formatter = Format::new();
+
+  let csl_output =
+    formatter.to_csl(&parsed);
+  let expected_csl = fs::read_to_string(
+    "tests/fixtures/format/core-csl.txt"
+  )
+  .expect("read core CSL");
+  assert_eq!(
+    csl_output.trim_end(),
+    expected_csl.trim_end()
+  );
+
+  let bibtex_output =
+    formatter.to_bibtex(&parsed);
+  let expected_bibtex =
+    fs::read_to_string(
+      "tests/fixtures/format/core-bibtex.txt"
+    )
+    .expect("read core BibTeX");
+  assert_eq!(
+    bibtex_output.trim_end(),
+    expected_bibtex.trim_end()
+  );
+}
