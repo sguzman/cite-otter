@@ -332,6 +332,145 @@ pub mod journal {
   }
 }
 
+use std::path::Path;
+
+use abbreviations::AbbreviationMap;
+use journal::Normalizer as JournalNormalizer;
+use serde_json::{
+  Map,
+  Value
+};
+
+#[derive(Debug, Clone)]
+pub struct NormalizationConfig {
+  journal:   AbbreviationMap,
+  publisher: AbbreviationMap,
+  container: AbbreviationMap
+}
+
+impl Default for NormalizationConfig {
+  fn default() -> Self {
+    Self {
+      journal:
+        AbbreviationMap::default(),
+      publisher:
+        AbbreviationMap::default(),
+      container:
+        AbbreviationMap::default()
+    }
+  }
+}
+
+impl NormalizationConfig {
+  pub fn load_from_dir(
+    dir: &Path
+  ) -> std::io::Result<Self> {
+    Ok(Self {
+      journal:   load_abbrev(
+        dir,
+        "journal-abbrev.txt"
+      )?,
+      publisher: load_abbrev(
+        dir,
+        "publisher-abbrev.txt"
+      )?,
+      container: load_abbrev(
+        dir,
+        "container-abbrev.txt"
+      )?
+    })
+  }
+
+  pub fn with_journal_abbrev(
+    mut self,
+    abbreviations: AbbreviationMap
+  ) -> Self {
+    self.journal = abbreviations;
+    self
+  }
+
+  pub fn with_publisher_abbrev(
+    mut self,
+    abbreviations: AbbreviationMap
+  ) -> Self {
+    self.publisher = abbreviations;
+    self
+  }
+
+  pub fn with_container_abbrev(
+    mut self,
+    abbreviations: AbbreviationMap
+  ) -> Self {
+    self.container = abbreviations;
+    self
+  }
+
+  pub fn apply_to_map(
+    &self,
+    map: &mut Map<String, Value>
+  ) {
+    JournalNormalizer::new()
+      .normalize_with_abbrev(
+        map,
+        &self.journal
+      );
+    expand_field(
+      map,
+      "publisher",
+      &self.publisher
+    );
+    expand_field(
+      map,
+      "container-title",
+      &self.container
+    );
+  }
+}
+
+fn load_abbrev(
+  dir: &Path,
+  filename: &str
+) -> std::io::Result<AbbreviationMap> {
+  let path = dir.join(filename);
+  if path.exists() {
+    AbbreviationMap::load_from_file(
+      &path
+    )
+  } else {
+    Ok(AbbreviationMap::default())
+  }
+}
+
+fn expand_field(
+  map: &mut Map<String, Value>,
+  key: &str,
+  abbreviations: &AbbreviationMap
+) {
+  let Some(value) = map.get_mut(key)
+  else {
+    return;
+  };
+  match value {
+    | Value::String(text) => {
+      let expanded =
+        abbreviations.expand(text);
+      *text = expanded;
+    }
+    | Value::Array(items) => {
+      for item in items {
+        if let Value::String(text) =
+          item
+        {
+          let expanded =
+            abbreviations.expand(text);
+          *text = expanded;
+        }
+      }
+    }
+    | _ => {}
+  }
+}
+
 fn is_repeater(value: &str) -> bool {
   let allowed = ['-', '.', ',', ' '];
   !value.is_empty()

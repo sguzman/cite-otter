@@ -4,7 +4,7 @@ use serde_json::{
   Value
 };
 
-use crate::normalizer::journal::Normalizer as JournalNormalizer;
+use crate::normalizer::NormalizationConfig;
 use crate::parser::{
   FieldValue,
   Reference
@@ -25,7 +25,9 @@ pub enum ParseFormat {
 }
 
 #[derive(Debug, Clone)]
-pub struct Format;
+pub struct Format {
+  normalization: NormalizationConfig
+}
 
 impl Default for Format {
   fn default() -> Self {
@@ -35,7 +37,18 @@ impl Default for Format {
 
 impl Format {
   pub fn new() -> Self {
-    Self
+    Self {
+      normalization:
+        NormalizationConfig::default()
+    }
+  }
+
+  pub fn with_normalization(
+    normalization: NormalizationConfig
+  ) -> Self {
+    Self {
+      normalization
+    }
   }
 
   pub fn to_bibtex(
@@ -48,8 +61,9 @@ impl Format {
       .map(|(idx, reference)| {
         let mut map =
           reference_to_map(reference);
-        JournalNormalizer::new()
-          .normalize(&mut map);
+        self
+          .normalization
+          .apply_to_map(&mut map);
         normalize_bibtex_entry(
           &mut map
         );
@@ -83,8 +97,9 @@ impl Format {
       .map(|(idx, reference)| {
         let mut map =
           reference_to_map(reference);
-        JournalNormalizer::new()
-          .normalize(&mut map);
+        self
+          .normalization
+          .apply_to_map(&mut map);
         csl_entry(idx, map)
       })
       .collect::<Vec<_>>()
