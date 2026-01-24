@@ -10,7 +10,7 @@ use cite_otter::parser::Parser;
 const CORE_XML: &str =
   "tmp/anystyle/res/parser/core.xml";
 const OUT_DIR: &str = "tests/fixtures/format";
-const LIMIT: usize = 100;
+const LIMIT: usize = 200;
 
 fn main() -> anyhow::Result<()> {
   let limit = std::env::var(
@@ -82,14 +82,14 @@ fn extract_core_refs(
     let segment = &cursor[..end];
     let mut parts = Vec::new();
     for line in segment.lines() {
-      if let Some(text) =
-        extract_tag_text(line)
+      if let Some((tag, text)) =
+        extract_tag_line(line)
       {
-        parts.push(text);
+        parts.push((tag, text));
       }
     }
     let reference =
-      normalize_reference(parts.join(" "));
+      normalize_reference(render_reference(&parts));
     if !reference.is_empty() {
       refs.push(reference);
     }
@@ -101,26 +101,94 @@ fn extract_core_refs(
   Ok(refs)
 }
 
-fn extract_tag_text(
+fn extract_tag_line(
   line: &str
-) -> Option<String> {
-  let start = line.find('>')?;
-  let end = line.rfind('<')?;
-  if end <= start {
+) -> Option<(String, String)> {
+  let trimmed = line.trim();
+  if !trimmed.starts_with('<') {
     return None;
   }
-  let text = line[start + 1..end].trim();
+  let tag_start = trimmed.find('<')? + 1;
+  let tag_end = trimmed.find('>')?;
+  let tag = trimmed[tag_start..tag_end]
+    .trim()
+    .trim_start_matches('/')
+    .to_string();
+  if tag.is_empty() {
+    return None;
+  }
+  let close_tag = format!("</{tag}>");
+  let close_idx = trimmed.rfind(&close_tag)?;
+  if close_idx <= tag_end {
+    return None;
+  }
+  let text = trimmed[tag_end + 1..close_idx]
+    .trim();
   if text.is_empty() {
     return None;
   }
-  Some(
-    text
-      .replace("&amp;", "&")
-      .replace("&#39;", "'")
-      .replace("&quot;", "\"")
-      .replace("&apos;", "'")
-      .replace("&nbsp;", " ")
-  )
+  Some((tag, decode_entities(text)))
+}
+
+fn decode_entities(
+  value: &str
+) -> String {
+  value
+    .replace("&amp;", "&")
+    .replace("&#39;", "'")
+    .replace("&quot;", "\"")
+    .replace("&apos;", "'")
+    .replace("&nbsp;", " ")
+}
+
+fn render_reference(
+  parts: &[(String, String)]
+) -> String {
+  let mut output = String::new();
+  let mut previous = String::new();
+  for (_tag, text) in parts {
+    let text = text.trim();
+    if text.is_empty() {
+      continue;
+    }
+    if output.is_empty() {
+      output.push_str(text);
+      previous = text.to_string();
+      continue;
+    }
+    let needs_space = !ends_with_punct(&previous)
+      && !starts_with_punct(text);
+    if needs_space {
+      output.push(' ');
+    } else if !output.ends_with(' ')
+      && !starts_with_punct(text)
+    {
+      output.push(' ');
+    }
+    output.push_str(text);
+    previous = text.to_string();
+  }
+  output
+}
+
+fn ends_with_punct(
+  value: &str
+) -> bool {
+  value
+    .trim_end()
+    .ends_with(|c: char| {
+      matches!(c, '.' | ',' | ';' | ':' | ')')
+    })
+}
+
+fn starts_with_punct(
+  value: &str
+) -> bool {
+  value
+    .trim_start()
+    .starts_with(|c: char| {
+      matches!(c, '.' | ',' | ';' | ':' | ')')
+    })
 }
 
 fn normalize_reference(

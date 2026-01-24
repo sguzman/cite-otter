@@ -22,9 +22,17 @@ pub fn assert_snapshot_eq(
     return;
   }
 
+  let diff = diff_lines(expected, actual);
+  let report_path = Path::new("target")
+    .join("reports")
+    .join("format-diff.txt");
+  if let Some(parent) = report_path.parent() {
+    let _ = std::fs::create_dir_all(parent);
+  }
+  let _ = std::fs::write(&report_path, &diff);
   eprintln!(
-    "\nsnapshot mismatch: {label}\n{}",
-    diff_lines(expected, actual)
+    "\nsnapshot mismatch: {label}\n{diff}\n(diff saved to {})",
+    report_path.display()
   );
   panic!("snapshot mismatch: {label}");
 }

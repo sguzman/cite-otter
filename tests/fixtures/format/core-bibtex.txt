@@ -882,3 +882,875 @@
   volume = {1986}
   year = {1986}
 }
+
+@book{citeotter100,
+  address = {1990}
+  author = {G, L}
+  title = {Valiant}
+  year = {1111}
+}
+
+@book{citeotter101,
+  address = {communication}
+  author = {Ling, C X (1995)}
+  title = {Personal communication}
+  year = {1995}
+}
+
+@book{citeotter102,
+  address = {1985}
+  author = {R, Albert}
+  editor = {editor}
+  number = {219}
+  series = {Lecture Notes in Computer Science}
+  title = {Meyer and Mitchell Wand}
+  volume = {193}
+  year = {1224}
+}
+
+@book{citeotter103,
+  address = {1462-1477}
+  author = {E, S}
+  issue = {21}
+  title = {Conry, K}
+  volume = {1991}
+  year = {1991}
+}
+
+@book{citeotter104,
+  address = {493-509}
+  author = {Chernoff, H (1952)}
+  title = {A measure of the asymptotic efficiency for tests of a hypothesis based on the sum of observations}
+  year = {1952}
+}
+
+@misc{citeotter105,
+  address = {1996}
+  author = {Flajolet, P Gourdon X}
+  booktitle = {Proceedings of the 23rd ICALP Conference, Paderborn, July 1996}
+  editor = {Eds}
+  number = {232}
+  pages = {232-243}
+  series = {Lecture Notes in Computer Science}
+  title = {Random polynomials and polynomial factorization}
+  volume = {1099}
+  year = {2322}
+}
+
+@book{citeotter106,
+  address = {1994}
+  author = {Andersen, Lars Ole}
+  title = {Program Analysis and Specialization for the C Programming Language}
+  year = {1994}
+}
+
+@misc{citeotter107,
+  address = {1995}
+  author = {G, L}
+  booktitle = {In Proceedings of the Fifth European Conference in Software Engineering, volume 989 of Lecture Notes in Computer Science, pages 44-58}
+  number = {44}
+  series = {Lecture Notes in Computer Science}
+  title = {Votta and M. L}
+  volume = {989}
+  year = {4458}
+}
+
+@book{citeotter108,
+  address = {1977}
+  author = {B, J}
+  issue = {3}
+  pages = {305-317}
+  title = {Kam and J. D}
+  volume = {7}
+  year = {3053}
+}
+
+@book{citeotter109,
+  address = {393-405}
+  author = {Cooper, G F (1990)}
+  title = {The computational complexity of probabilistic inference using Bayesian belief networks}
+  year = {2}
+}
+
+@book{citeotter110,
+  address = {Delegation}
+  author = {C}
+  publisher = {Efficiently Rewriting History. TR95-90 Computer Science Dept.}
+  title = {Pedregal-Martin and K}
+  year = {9590}
+}
+
+@book{citeotter111,
+  address = {knowledge}
+  author = {W}
+  publisher = {A case study. In AAAI-90}
+  title = {Cohen}
+  year = {1990}
+}
+
+@book{citeotter112,
+  address = {454-469}
+  author = {M}
+  title = {Reiman, and B}
+  year = {1988}
+}
+
+@misc{citeotter113,
+  address = {1987}
+  author = {M}
+  booktitle = {Wing, "Axioms for Concurrent Objects", Proceedings of the 14th ACM Symposium on Principles of Programming Languages, pp}
+  number = {13}
+  pages = {13-26}
+  series = {Proceedings of the 14th ACM Symposium on Principles of Programming Languages}
+  title = {Herlihy and J}
+  year = {1987}
+}
+
+@misc{citeotter114,
+  address = {MA}
+  author = {Linden, A}
+  booktitle = {In Roitblat, H. (Ed.), Proceedings of the 2nd International Conference on Simulation of Adaptive Behavior}
+  series = {Proceedings of the 2nd International Conference on Simulation of Adaptive Behavior}
+  title = {Implementing inner drive by competence reflection}
+  year = {1993}
+}
+
+@misc{citeotter115,
+  address = {415}
+  author = {Holte, R C Acker L E}
+  booktitle = {In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, pp}
+  number = {813}
+  pages = {813-818}
+  series = {Proceedings of the Eleventh International Joint Conference on Artificial Intelligence}
+  title = {Concept learning and the problem of small disjuncts}
+  year = {1989}
+}
+
+@book{citeotter116,
+  address = {1977}
+  author = {I}
+  title = {Meilijson and U}
+  year = {1932}
+}
+
+@book{citeotter117,
+  address = {Addison-Wesley}
+  author = {Hopcroft, J}
+  title = {Introduction to Automata Theory, Languages, and Computation}
+  year = {1979}
+}
+
+@misc{citeotter118,
+  address = {1994}
+  author = {S}
+  booktitle = {In Proceedings of the 1994 ACM Conference on Lisp and Functional Programming, pages 12-23, Orlando, FL, June 1994}
+  number = {1994}
+  series = {collection for strongly-typed languages using run-time type reconstruction}
+  title = {Aditya, C}
+  year = {1223}
+}
+
+@misc{citeotter119,
+  address = {1994}
+  author = {M, Arthur}
+  booktitle = {In Proceedings of PDIS-94, 1994}
+  number = {1994}
+  series = {Proceedings of PDIS-94}
+  title = {Keller and Julie Basu}
+  year = {1994}
+}
+
+@book{citeotter120,
+  address = {CSL-84-5}
+  author = {T, P}
+  pages = {1984-84}
+  title = {Zellweger}
+  year = {1984}
+}
+
+@book{citeotter121,
+  address = {459-477}
+  author = {Oliker, S Furst M}
+  title = {A distributed genetic algorithm for neural network design and training}
+  year = {1992}
+}
+
+@book{citeotter122,
+  address = {1986}
+  author = {P, B K}
+  pages = {1986}
+  title = {Horn}
+  year = {1986}
+}
+
+@misc{citeotter123,
+  address = {1992}
+  author = {J, M}
+  booktitle = {In OOPSLA '92 Conference Proceedings, pages 247-262, October 1992}
+  number = {247}
+  series = {Proceedings}
+  title = {Feeley and H. M}
+  year = {2472}
+}
+
+@book{citeotter124,
+  address = {MA}
+  author = {Gardenfors, Peter (1988)}
+  title = {Knowledge in Flux}
+  year = {1988}
+}
+
+@book{citeotter125,
+  address = {365-390}
+  author = {De Raedt, L}
+  title = {Indirect relevance and bias in inductive concept learning}
+  year = {1990}
+}
+
+@book{citeotter126,
+  address = {University}
+  author = {Reilly, W S (1996)}
+  title = {Believable Emotional and Social Agents}
+  year = {1996}
+}
+
+@misc{citeotter127,
+  address = {STREAMS}
+  author = {Garg, Arun}
+  booktitle = {In Proceedings of the Winter 1990 USENIX Conference, pages 163-176, Washington, D. C., January 1990}
+  number = {163}
+  publisher = {A multi-processor implementation. In Proceedings of the Winter 1990 USENIX Conference}
+  series = {Proceedings of the Winter 1990 USENIX Conference}
+  title = {Parallel STREAMS: A multi-processor implementation}
+  year = {1631}
+}
+
+@book{citeotter128,
+  address = {publication}
+  author = {C, J}
+  title = {Butcher}
+  year = {1993}
+}
+
+@misc{citeotter129,
+  address = {Pad}
+  author = {Bederson, B B}
+  booktitle = {Bederson, B. B., & Hollan, J. D., Pad++: A zooming graphical interface for exploring alternate interface physics, Proceedings of User Interface Software and Technology (UIST 94) 1726, ACM, New York, 1994}
+  number = {1994}
+  publisher = {A zooming graphical interface for exploring alternate interface physics}
+  series = {Proceedings of User Interface Software and Technology (UIST 94) 1726}
+  year = {1726}
+}
+
+@misc{citeotter130,
+  address = {166-172}
+  author = {Gmytrasiewicz, P J Durfee E H}
+  booktitle = {In Proceedings of the Ninth National Conference on Artificial Intelligence, pp}
+  number = {166}
+  pages = {166-172}
+  series = {Proceedings of the Ninth National Conference on Artificial Intelligence}
+  title = {The utility of communication in coordinating intelligent agents}
+  year = {1991}
+}
+
+@misc{citeotter131,
+  address = {1995}
+  author = {A}
+  booktitle = {"Aggregate-Query Processing in Data Warehousing Environments", Proceedings of the 21st VLDB Conference, Zurich, Swizerland, 1995}
+  number = {1995}
+  series = {Proceedings of the 21st VLDB Conference}
+  title = {Gupta, V Harinarayan, D}
+  year = {1995}
+}
+
+@book{citeotter132,
+  address = {1995}
+  author = {Ling Tony Chen, R}
+  pages = {155-183}
+  title = {Drach, M}
+  year = {1183}
+}
+
+@book{citeotter133,
+  address = {Grammars}
+  author = {Deransart, P Jourdan M}
+  number = {323}
+  pages = {323-1988}
+  publisher = {Definitions}
+  series = {Lecture Notes in Computer Science}
+  title = {323, Springer-Verlag, New York, NY (1988)}
+  volume = {323}
+  year = {1988}
+}
+
+@misc{citeotter134,
+  address = {Creation}
+  author = {E}
+  booktitle = {In Proceedings of the 1990 ACM Conference on LISP and Functional Programming, pages 185-197, June 1990}
+  number = {185}
+  publisher = {a Technique for Increasing the Granularity of Parallel Programs. In Proceedings of the 1990 ACM Conference on LISP and Functional Programming}
+  series = {Proceedings of the 1990 ACM Conference on LISP and Functional Programming}
+  title = {Mohr, D. A}
+  year = {1851}
+}
+
+@book{citeotter135,
+  address = {Berlin}
+  author = {Richter (Eds.), Topics in Case-Based Reasoning}
+  editor = {Eds}
+  pages = {167-181}
+  publisher = {Springer-Verlag}
+  title = {Berlin: Springer-Verlag, pp}
+  year = {1181}
+}
+
+@book{citeotter136,
+  address = {York}
+  author = {Scott, D}
+  editor = {eds}
+  publisher = {Academic Press. 47-73.}
+  title = {1990}
+  year = {1990}
+}
+
+@book{citeotter137,
+  address = {27-47}
+  author = {Poole, David (1988)}
+  title = {A logical framework for default reasoning}
+  year = {1988}
+}
+
+@misc{citeotter138,
+  address = {1990}
+  author = {J, S}
+  booktitle = {In Proceedings of the International Conference on Measurement and Modeling of Computer Systems, pages 37-47, May 1990}
+  number = {37}
+  series = {Proceedings of the International Conference on Measurement and Modeling of Computer Systems}
+  title = {Eggers, D. R}
+  year = {3747}
+}
+
+@misc{citeotter139,
+  address = {1991}
+  author = {S}
+  booktitle = {Journal of Computer and System Sciences, 43, 62-124, 1991}
+  title = {Abiteboul and V}
+  volume = {43}
+  year = {1124}
+}
+
+@book{citeotter140,
+  address = {VHDL}
+  author = {R}
+  publisher = {Hardware Description and Design}
+  title = {Lipsett, C}
+  year = {1989}
+}
+
+@book{citeotter141,
+  address = {104-113}
+  author = {S}
+  title = {Majumdar, D}
+  year = {1988}
+}
+
+@misc{citeotter142,
+  address = {1994}
+  author = {S}
+  booktitle = {In Proceedings of the Sixth International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS-VI), San Jose, CA, October 1994}
+  number = {1994}
+  series = {Proceedings of the Sixth International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS-VI)}
+  title = {Carr, K. S}
+  year = {1994}
+}
+
+@book{citeotter143,
+  address = {STRIPS}
+  author = {Fikes, R E}
+  publisher = {A new approach to the application of theorem proving to problem solving. Artificial Intelligence}
+  title = {STRIPS: A new approach to the application of theorem proving to problem solving}
+  year = {1971}
+}
+
+@book{citeotter144,
+  address = {URL}
+  author = {Felleisen, M}
+  publisher = {www.cs.rice.edu/~matthias/411web/mono.ps.}
+  title = {Programming languages and lambda calculi}
+  url = {URL}
+  year = {1411}
+}
+
+@book{citeotter145,
+  address = {Linearizability}
+  author = {M}
+  issue = {3}
+  pages = {463-492}
+  publisher = {A Correctness Condition for Concurrent Objects"}
+  title = {Herlihy and J}
+  volume = {12}
+  year = {1990}
+}
+
+@misc{citeotter146,
+  address = {1987}
+  author = {J, M}
+  booktitle = {International Journal of Parallel Programming, 16(2), 137-178, April 1987}
+  title = {Wolfe and U}
+  year = {1371}
+}
+
+@book{citeotter147,
+  address = {1977}
+  author = {Raab, F H "Remote object position locator"}
+  title = {US patent 4 0054 881 October 18, 1977}
+  year = {0054}
+}
+
+@book{citeotter148,
+  address = {1995}
+  author = {Lin, Jinxin}
+  title = {Mendelzon}
+  year = {1995}
+}
+
+@book{citeotter149,
+  address = {1987}
+  author = {T, R}
+  title = {Snodgrass}
+  year = {2472}
+}
+
+@book{citeotter150,
+  address = {Linguistics}
+  author = {Vander Linden, K}
+  title = {1992}
+  year = {1992}
+}
+
+@book{citeotter151,
+  address = {520-540}
+  author = {Witten, I H Neal R M}
+  title = {Arithmetic coding for data compression}
+  year = {1987}
+}
+
+@book{citeotter152,
+  address = {turtle}
+  author = {Emihovich, C}
+  publisher = {A discourse analysis of Logo instruction. Discourse Processes}
+  title = {Talking to the turtle: A discourse analysis of Logo instruction}
+  year = {1988}
+}
+
+@book{citeotter153,
+  address = {1995}
+  author = {R}
+  booktitle = {In Conference Record of the 22nd Annual ACM Symposium on Principles of Programming Languages, San Francisco, CA, Jan}
+  number = {1995}
+  series = {Symposium on Principles of Programming Languages}
+  title = {Harper and G}
+  year = {1995}
+}
+
+@misc{citeotter154,
+  address = {1995}
+  author = {A}
+  booktitle = {IEEE Journal on Selected Areas in Communication, 13(4), May 1995}
+  title = {Romanow and S}
+  year = {1995}
+}
+
+@book{citeotter155,
+  address = {1996}
+  author = {Knopfmacher, A}
+  issue = {1996}
+  title = {On the number of distinct degree sizes of a polynomial over a finite field}
+  year = {1996}
+}
+
+@misc{citeotter156,
+  address = {1993}
+  author = {S}
+  booktitle = {In Proceedings of the SIGPLAN '93 Conference on Programming Language Design and Implementation, Albuquerque, NM, June 1993}
+  number = {1993}
+  series = {Proceedings of the SIGPLAN '93 Conference on Programming Language Design and Implementation}
+  title = {Amarasinghe and M}
+  year = {1993}
+}
+
+@book{citeotter157,
+  address = {Tread-Marks}
+  author = {C}
+  pages = {29-2}
+  publisher = {Shared memory computing on networks of workstations. IEEE Computer}
+  title = {Amza, A. L}
+  year = {1828}
+}
+
+@book{citeotter158,
+  address = {mutagenicity}
+  author = {Srinivasan, A Muggleton S H Sternberg M J E}
+  publisher = {a study in first-order and feature-based induction. Artificial Intelligence}
+  title = {Theories for mutagenicity: a study in first-order and feature-based induction}
+  year = {1996}
+}
+
+@book{citeotter159,
+  address = {1991}
+  author = {B}
+  title = {Berthomieu and M}
+  translator = {Trans}
+  year = {1273}
+}
+
+@misc{citeotter160,
+  address = {APRIL}
+  author = {A}
+  booktitle = {In Proceedings of the 17th Annual International Symposium on Computer Architecture, pages 104-114, May 1990}
+  number = {104}
+  publisher = {a processor architecture for multiprocessing. In Proceedings of the 17th Annual International Symposium on Computer Architecture}
+  series = {Proceedings of the 17th Annual International Symposium on Computer Architecture}
+  title = {Agarwal, B.-H}
+  year = {1041}
+}
+
+@book{citeotter161,
+  address = {London}
+  author = {Serra, J (1982)}
+  title = {Image Analysis and Mathematical Morphology}
+  year = {1982}
+}
+
+@book{citeotter162,
+  address = {1991}
+  author = {D}
+  editor = {Editor}
+  title = {Borman, Editor, ``Telnet Encryption Option,'' Internet-Draft, Internet Engineering Task Force, Telnet Working Group (July 1991)}
+  year = {1991}
+}
+
+@book{citeotter163,
+  address = {Megainduction}
+  author = {Catlett, J (1991b)}
+  publisher = {Machine Learning on Very Large Databases. Ph.D. thesis}
+  title = {Megainduction: Machine Learning on Very Large Databases}
+  year = {1991}
+}
+
+@book{citeotter164,
+  address = {239-266}
+  author = {Quinlan, J R (1990)}
+  title = {Learning logical definitions from relations}
+  year = {1990}
+}
+
+@misc{citeotter165,
+  address = {180-190}
+  author = {Felleisen, M}
+  booktitle = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages (1988), 180-190}
+  number = {180}
+  series = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages (1988)}
+  title = {The theory and practice of first-class prompts}
+  year = {1988}
+}
+
+@misc{citeotter166,
+  address = {1988}
+  author = {Narayana, K T}
+  booktitle = {Narayana, K. T. and Aaby, A. A., "Specification of Real-Time Systems in Real-Time Temporal Interval Logic", Proceedings of Real-Time Systems Symposium, December 1988}
+  number = {1988}
+  series = {Proceedings of Real-Time Systems Symposium}
+  year = {1988}
+}
+
+@misc{citeotter167,
+  address = {7-12}
+  author = {Adorni, G Broggi A Conte G}
+  booktitle = {In Proceedings IEEE System, Man, and Cybernetics Conf, Vol}
+  number = {3}
+  pages = {7-12}
+  series = {Proceedings IEEE System}
+  title = {A self-tuning system for real-time Optical Flow detection}
+  volume = {3}
+  year = {1993}
+}
+
+@book{citeotter168,
+  address = {1992}
+  author = {Ripley, B (1992)}
+  title = {Statistical aspects of neural networks}
+  year = {2530}
+}
+
+@book{citeotter169,
+  address = {Press}
+  author = {Umrigar, Zerksis D}
+  booktitle = {In Symposium of Logic Programming, Boston, MA}
+  series = {Symposium of Logic Programming}
+  title = {An experiment in programming with full first-order logic}
+  year = {1985}
+}
+
+@book{citeotter170,
+  address = {CS-90-25}
+  author = {van Arragon, Paul (1990)}
+  issue = {90}
+  title = {Nested Default Reasoning for User Modeling}
+  year = {1990}
+}
+
+@book{citeotter171,
+  address = {theory}
+  author = {Eifrig, J Smith S Trifonov V}
+  booktitle = {Conference on Object-Oriented Programming Systems, Languages, and Applications (Oct. 1994), pp}
+  pages = {16-30}
+  publisher = {State}
+  title = {Application of OOP type theory: State, decid-ability, integration}
+  volume = {1994}
+  year = {1994}
+}
+
+@book{citeotter172,
+  address = {symbols}
+  author = {MacWhinney, B (1993)}
+  pages = {49-3}
+  publisher = {closing the gap. Cognition}
+  title = {Connections and symbols: closing the gap}
+  year = {1993}
+}
+
+@book{citeotter173,
+  address = {1991}
+  author = {L}
+  collection-number = {317}
+  issue = {1991}
+  series = {Lecture notes on evasiveness of graph properties}
+  title = {Lovasz and N}
+  year = {1317}
+}
+
+@book{citeotter174,
+  address = {15}
+  author = {Bestavros, Azer}
+  title = {Server-initiated document dissemination for the www}
+  url = {www}
+  year = {1996}
+}
+
+@book{citeotter175,
+  address = {245-253}
+  author = {Bunke, H}
+  title = {Inexact graph matching for structural pattern recognition}
+  year = {1983}
+}
+
+@book{citeotter176,
+  address = {Preprint}
+  author = {Kyriazis, G C Approximation Orders of Principal Shift-Invariant Spaces Generated by Box Splines Preprint}
+}
+
+@book{citeotter177,
+  address = {1992}
+  author = {A}
+  title = {Bricker, M}
+  volume = {1992}
+  year = {1069}
+}
+
+@misc{citeotter178,
+  address = {Florida}
+  author = {Laird, J E Jones R M}
+  booktitle = {In Proceedings of the Fourth Conference on Computer Generated Forces and Behavioral Representation}
+  pages = {1994}
+  publisher = {Institute for Simulation and Training}
+  series = {Proceedings of the Fourth Conference on Computer Generated Forces and Behavioral Representation}
+  title = {Coordinated behavior of computer generated forces in tacair-soar}
+  year = {1994}
+}
+
+@misc{citeotter179,
+  address = {Kaufmann}
+  author = {Peot, M A}
+  booktitle = {In Proceedings of the Eleventh National Conference of the American Association for Artificial Intelligence (AAAI-93), pp}
+  collection-number = {492}
+  issue = {93}
+  pages = {492-499}
+  series = {Proceedings of the Eleventh National Conference of the American Association for Artificial Intelligence (AAAI-93)}
+  title = {Threat-removal strategies for partial-order planning}
+  year = {1993}
+}
+
+@book{citeotter180,
+  address = {No.70}
+  author = {J}
+  issue = {70}
+  note = {See also LAPACK Working Note No.70}
+  title = {Demmel, I}
+  year = {1149}
+}
+
+@book{citeotter181,
+  address = {1996}
+  author = {V, Sarita}
+  issue = {1996}
+  title = {Adve}
+  volume = {9603}
+  year = {9603}
+}
+
+@book{citeotter182,
+  address = {2-23}
+  author = {Jia, R.-Q}
+  title = {Lei, Approximation by Multiinteger Translates of Functions Having Global Support, J}
+  year = {1993}
+}
+
+@book{citeotter183,
+  address = {37-79}
+  author = {Rees, J}
+  editor = {Eds}
+  title = {Clinger}
+  year = {1986}
+}
+
+@book{citeotter184,
+  address = {5-28}
+  author = {Wettschereck, Dietrich}
+  issue = {1}
+  pages = {5-28}
+  title = {Dietterich, (1995)}
+  volume = {19}
+  year = {1995}
+}
+
+@book{citeotter185,
+  address = {1994}
+  author = {I, C K}
+  title = {Williams}
+  year = {1994}
+}
+
+@misc{citeotter186,
+  address = {Failsafe}
+  author = {Mostow, J}
+  booktitle = {In Proceedings IJCAI-87}
+  publisher = {A floor planner that uses ebg to learn from its failures. In Proceedings IJCAI-87.}
+  series = {Proceedings IJCAI-87}
+  title = {Failsafe: A floor planner that uses ebg to learn from its failures}
+  year = {1987}
+}
+
+@book{citeotter187,
+  address = {1982}
+  author = {H}
+  title = {Raiffa}
+  volume = {1982}
+  year = {1982}
+}
+
+@book{citeotter188,
+  address = {University}
+  author = {Plotkin, G D (1971a)}
+  title = {Automatic Methods of Inductive Inference}
+  year = {1971}
+}
+
+@book{citeotter189,
+  address = {1994}
+  author = {E, T}
+  pages = {20-2}
+  title = {Hull, T. F}
+  translator = {Trans}
+  year = {1244}
+}
+
+@misc{citeotter190,
+  address = {1991}
+  author = {Anoop Gupta, Andrew Tucker}
+  booktitle = {In Proceedings of the ACM SIGMETRICS Conference on Measurement and Modeling of Computer Systems, pages 120-132, May 1991}
+  number = {120}
+  series = {Proceedings of the ACM SIGMETRICS Conference on Measurement and Modeling of Computer Systems}
+  title = {The impact of operating system scheduling policies and synchro nization methods on the performance of parallel applications}
+  year = {1201}
+}
+
+@book{citeotter191,
+  address = {1988}
+  author = {Aaron Kershenbaum, David Musser}
+  issue = {1988}
+  title = {Higher order imperative programming}
+  volume = {1988}
+  year = {1988}
+}
+
+@misc{citeotter192,
+  address = {1991}
+  author = {Card, S K Robertson G G Mackinlay J D The Information Visualizer an Information Workspace Proceedings of Human Factors in Computing Systems (CHI91) 181188 ACM New York 1991}
+  booktitle = {Card, S. K., Robertson, G. G., Mackinlay, J. D., The Information Visualizer, an Information Workspace, Proceedings of Human Factors in Computing Systems (CHI91), 181188, ACM, New York, 1991}
+  number = {181188}
+  series = {Proceedings of Human Factors in Computing Systems (CHI91)}
+  year = {1811}
+}
+
+@book{citeotter193,
+  address = {1989}
+  author = {M}
+  title = {Wolfe, ``Optimizing supercompilers for supercomputers,'' Pitman Publishing Company, London, MIT Press, Cambridge, Massachusets, 1989}
+  year = {1989}
+}
+
+@book{citeotter194,
+  address = {perceptron}
+  author = {Plunkett, K}
+  publisher = {Implications for child language acquisition. Cognition}
+  title = {U-shaped learning and frequency effects in a multilayered perceptron: Implications for child language acquisition}
+  volume = {1991}
+  year = {1991}
+}
+
+@book{citeotter195,
+  address = {1977}
+  author = {G, William}
+  edition = {3}
+  title = {Cochran}
+  year = {1977}
+}
+
+@misc{citeotter196,
+  address = {461-467}
+  author = {Renals, Steve}
+  booktitle = {In Proceedings of the IEEE International Joint Conference on Neural Networks (IJCNN89), Vol}
+  number = {1}
+  pages = {461-467}
+  series = {Proceedings of the IEEE International Joint Conference on Neural Networks (IJCNN89)}
+  title = {Phoneme Classification Experiments Using Radial Basis Functions}
+  volume = {1}
+  year = {1989}
+}
+
+@misc{citeotter197,
+  address = {Press}
+  author = {Selman, B Levesque H}
+  booktitle = {In Proceedings of AAAI-92, pp}
+  number = {440}
+  pages = {440-446}
+  series = {Proceedings of AAAI-92}
+  title = {A new method for solving hard satisfiability problems}
+  year = {1992}
+}
+
+@book{citeotter198,
+  address = {229-246}
+  author = {Rivest, R L (1987)}
+  title = {Learning decision lists}
+  year = {1987}
+}
+
+@misc{citeotter199,
+  address = {61-76}
+  author = {McKinsey, J C C (1943)}
+  booktitle = {Journal of Symbolic Logic, 8 (3), 61-76}
+  title = {The decision problem for some classes of sentences without quantifier}
+  year = {1943}
+}
