@@ -179,6 +179,17 @@ fn normalize_bibtex_entry(
     map.insert("type".into(), value);
   }
 
+  if let Some(value) =
+    map.remove("isbn")
+  {
+    map.insert("isbn".into(), value);
+  }
+  if let Some(value) =
+    map.remove("issn")
+  {
+    map.insert("issn".into(), value);
+  }
+
   rename_field(
     map,
     "container-title",

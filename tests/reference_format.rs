@@ -60,7 +60,7 @@ fn bibtex_includes_container_series_and_doi()
  {
   let parser = Parser::new();
   let references = parser.parse(
-    &[COMPLEX_REF],
+    &[COMPLEX_REF, TRANSLATOR_REF],
     ParseFormat::BibTeX
   );
   let formatter = Format::new();
@@ -88,6 +88,17 @@ fn bibtex_includes_container_series_and_doi()
       "doi = {doi:10.1000/test}"
     ),
     "DOI metadata should be exposed"
+  );
+  assert!(
+    bibtex.contains(
+      "isbn = {978-1-2345-6789-0}"
+    ),
+    "ISBN metadata should be exposed"
+  );
+  assert!(
+    bibtex
+      .contains("issn = {1234-5678}"),
+    "ISSN metadata should be exposed"
   );
 }
 
