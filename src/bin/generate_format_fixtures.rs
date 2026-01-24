@@ -10,6 +10,8 @@ use cite_otter::parser::Parser;
 const CORE_XML: &str =
   "tmp/anystyle/res/parser/core.xml";
 const OUT_DIR: &str = "tests/fixtures/format";
+const SAMPLE_REFS: &str =
+  "tests/fixtures/format/refs.txt";
 const LIMIT: usize = 200;
 
 fn main() -> anyhow::Result<()> {
@@ -38,7 +40,36 @@ fn main() -> anyhow::Result<()> {
     &refs_path,
     refs.join("\n")
   )?;
+  write_format_fixtures(
+    "core",
+    &refs
+  )?;
 
+  if Path::new(SAMPLE_REFS).exists() {
+    let sample_text =
+      fs::read_to_string(SAMPLE_REFS)?;
+    let sample_refs = sample_text
+      .lines()
+      .map(str::trim)
+      .filter(|line| !line.is_empty())
+      .map(|line| line.to_string())
+      .collect::<Vec<_>>();
+    write_format_fixtures(
+      "sample",
+      &sample_refs
+    )?;
+  }
+
+  Ok(())
+}
+
+fn write_format_fixtures(
+  prefix: &str,
+  refs: &[String]
+) -> anyhow::Result<()> {
+  if refs.is_empty() {
+    return Ok(());
+  }
   let ref_slices =
     refs.iter().map(|line| line.as_str()).collect::<Vec<_>>();
   let parser = Parser::new();
@@ -50,16 +81,21 @@ fn main() -> anyhow::Result<()> {
 
   let csl =
     formatter.to_csl(&parsed);
-  let csl_path =
-    Path::new(OUT_DIR).join("core-csl.txt");
+  let csl_path = if prefix == "core" {
+    Path::new(OUT_DIR).join("core-csl.txt")
+  } else {
+    Path::new(OUT_DIR).join("csl.txt")
+  };
   fs::write(csl_path, csl)?;
 
   let bibtex =
     formatter.to_bibtex(&parsed);
-  let bibtex_path =
-    Path::new(OUT_DIR).join("core-bibtex.txt");
+  let bibtex_path = if prefix == "core" {
+    Path::new(OUT_DIR).join("core-bibtex.txt")
+  } else {
+    Path::new(OUT_DIR).join("bibtex.txt")
+  };
   fs::write(bibtex_path, bibtex)?;
-
   Ok(())
 }
 

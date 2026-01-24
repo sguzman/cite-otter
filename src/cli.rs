@@ -445,8 +445,8 @@ struct TrainingReport {
 
 #[derive(Serialize)]
 struct ValidationReport {
-  parser: Vec<DatasetStat>,
-  finder: Vec<DatasetStat>,
+  parser: Vec<ValidationStat>,
+  finder: Vec<ValidationStat>,
   summary: ValidationSummary
 }
 
@@ -457,7 +457,24 @@ struct DeltaEntry {
   prepared: usize,
   labeled:  usize,
   stored:   usize,
-  delta:    isize
+  delta:    isize,
+  prepared_tokens: usize,
+  labeled_tokens:  usize,
+  stored_tokens:   usize,
+  delta_tokens:    isize
+}
+
+#[derive(Clone, Serialize)]
+struct ValidationStat {
+  path:            String,
+  sequences:       usize,
+  tokens:          usize,
+  stored_sequences: usize,
+  stored_tokens:   usize,
+  delta_sequences: usize,
+  delta_tokens:    usize,
+  delta_rate:      f64,
+  token_rate:      f64
 }
 
 #[derive(Serialize)]
@@ -1772,6 +1789,8 @@ fn run_validation_with_config(
   let parser_model = ParserModel::load(
     &parser_model_path
   )?;
+  let mut parser_validations =
+    Vec::with_capacity(parser_stats.len());
   for (path, stat) in &parser_stats {
     let stored_sequences = parser_model
       .sequences(path)
@@ -1799,6 +1818,17 @@ fn run_validation_with_config(
       token_delta,
       stat.tokens
     );
+    parser_validations.push(ValidationStat {
+      path: path.display().to_string(),
+      sequences: stat.sequences,
+      tokens: stat.tokens,
+      stored_sequences,
+      stored_tokens,
+      delta_sequences: seq_delta,
+      delta_tokens: token_delta,
+      delta_rate: seq_rate,
+      token_rate
+    });
     println!(
       "checking {}... {:>4} seq \
        {:>5.2}% {:>4} tok {:>5.2}%",
@@ -1814,6 +1844,8 @@ fn run_validation_with_config(
   let finder_model = FinderModel::load(
     &finder_model_path
   )?;
+  let mut finder_validations =
+    Vec::with_capacity(finder_stats.len());
   for (path, stat) in &finder_stats {
     let stored_sequences = finder_model
       .sequences(path)
@@ -1826,6 +1858,22 @@ fn run_validation_with_config(
       seq_delta,
       stat.sequences
     );
+    let token_delta = 0usize;
+    let token_rate = percent_delta(
+      token_delta,
+      stat.tokens
+    );
+    finder_validations.push(ValidationStat {
+      path: path.display().to_string(),
+      sequences: stat.sequences,
+      tokens: stat.tokens,
+      stored_sequences,
+      stored_tokens: 0,
+      delta_sequences: seq_delta,
+      delta_tokens: token_delta,
+      delta_rate: seq_rate,
+      token_rate
+    });
     println!(
       "checking {}... {:>4} seq \
        {:>5.2}%",
@@ -1841,14 +1889,8 @@ fn run_validation_with_config(
       "validation-report.json"
     ),
     &ValidationReport {
-      parser: parser_stats
-        .iter()
-        .map(|(_, stat)| stat.clone())
-        .collect(),
-      finder: finder_stats
-        .iter()
-        .map(|(_, stat)| stat.clone())
-        .collect(),
+      parser: parser_validations,
+      finder: finder_validations,
       summary: ValidationSummary {
         parser: summarize_stats(&parser_stats),
         finder: summarize_stats(&finder_stats)
@@ -1889,6 +1931,9 @@ fn run_delta_with_config(
     collect_files(parser_pattern)?;
   let parser_model_path =
     paths.parser_model.clone();
+  let parser_model = ParserModel::load(
+    &parser_model_path
+  )?;
   let mut delta_entries =
     parser_files
       .iter()
@@ -1900,14 +1945,28 @@ fn run_delta_with_config(
         let labeled =
           Parser::new().label(&content);
         let prepared_seq = prepared.0.len();
-        let stored = ParserModel::load(
-          &parser_model_path,
-        )?
-        .sequences(path)
-        .unwrap_or(0);
+        let prepared_tokens = prepared
+          .0
+          .iter()
+          .map(|sequence| sequence.len())
+          .sum::<usize>();
+        let labeled_tokens = labeled
+          .iter()
+          .map(|sequence| sequence.len())
+          .sum::<usize>();
+        let stored = parser_model
+          .sequences(path)
+          .unwrap_or(0);
+        let stored_tokens = parser_model
+          .tokens(path)
+          .unwrap_or(0);
         let delta =
           (prepared_seq as isize
             - stored as isize)
+            .abs();
+        let delta_tokens =
+          (prepared_tokens as isize
+            - stored_tokens as isize)
             .abs();
 
         Ok(DeltaEntry {
@@ -1917,6 +1976,10 @@ fn run_delta_with_config(
           labeled: labeled.len(),
           stored,
           delta,
+          prepared_tokens,
+          labeled_tokens,
+          stored_tokens,
+          delta_tokens
         })
       })
       .collect::<Result<Vec<_>, anyhow::Error>>()?;
@@ -1935,6 +1998,10 @@ fn run_delta_with_config(
         fs::read_to_string(path)?;
       let labeled =
         Parser::new().label(&content);
+      let labeled_tokens = labeled
+        .iter()
+        .map(|sequence| sequence.len())
+        .sum::<usize>();
       let stored = finder_model
         .sequences(path)
         .unwrap_or(0);
@@ -1948,7 +2015,11 @@ fn run_delta_with_config(
         prepared: labeled.len(),
         labeled: labeled.len(),
         stored,
-        delta
+        delta,
+        prepared_tokens: labeled_tokens,
+        labeled_tokens,
+        stored_tokens: 0,
+        delta_tokens: labeled_tokens as isize
       })
     })
     .collect::<Result<Vec<_>, anyhow::Error>>()?;

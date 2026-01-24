@@ -320,19 +320,10 @@ fn fields_to_bibtex(
   entry_type: String,
   map: &Map<String, Value>
 ) -> String {
-  let fields = map
-    .iter()
-    .filter_map(|(key, value)| {
-      let content = value
-        .as_array()
-        .and_then(|items| {
-          items
-            .first()
-            .and_then(Value::as_str)
-        });
-      content.map(|value| {
-        format!("  {key} = {{{value}}}")
-      })
+  let fields = bibtex_fields(map)
+    .into_iter()
+    .map(|(key, value)| {
+      format!("  {key} = {{{value}}},")
     })
     .collect::<Vec<_>>()
     .join("\n");
@@ -635,19 +626,28 @@ fn split_name(
 fn extract_date_parts(
   map: &Map<String, Value>
 ) -> Option<Vec<i32>> {
-  let value =
-    extract_first_value_from_map(
-      map, "date"
-    )?;
-  let parts = value
-    .split(|c: char| {
-      !c.is_ascii_digit()
-    })
-    .filter(|part| !part.is_empty())
-    .filter_map(|part| {
-      part.parse().ok()
-    })
-    .collect::<Vec<i32>>();
+  let array = map.get("date")?.as_array()?;
+  let mut parts = Vec::new();
+  if array.len() > 1 {
+    for value in array {
+      let raw = value.as_str()?;
+      if let Ok(parsed) = raw.parse::<i32>()
+      {
+        parts.push(parsed);
+      }
+    }
+  } else if let Some(value) =
+    array.first().and_then(Value::as_str)
+  {
+    parts.extend(
+      value
+        .split(|c: char| {
+          !c.is_ascii_digit()
+        })
+        .filter(|part| !part.is_empty())
+        .filter_map(|part| part.parse::<i32>().ok())
+    );
+  }
   if parts.is_empty() {
     None
   } else {
@@ -680,4 +680,69 @@ fn rename_field(
       .entry(to.to_string())
       .or_insert(value);
   }
+}
+
+fn bibtex_fields(
+  map: &Map<String, Value>
+) -> Vec<(String, String)> {
+  let mut entries = map
+    .iter()
+    .filter_map(|(key, value)| {
+      let content = value
+        .as_array()
+        .and_then(|items| {
+          items
+            .first()
+            .and_then(Value::as_str)
+        })
+        .map(sanitize_bibtex_value);
+      content.map(|value| (key.clone(), value))
+    })
+    .collect::<Vec<_>>();
+  let order = [
+    "author",
+    "title",
+    "booktitle",
+    "journal",
+    "series",
+    "volume",
+    "number",
+    "edition",
+    "publisher",
+    "institution",
+    "school",
+    "address",
+    "year",
+    "pages",
+    "doi",
+    "url",
+    "isbn",
+    "issn",
+    "note"
+  ];
+  entries.sort_by(|(left, _), (right, _)| {
+    let left_idx = order
+      .iter()
+      .position(|key| key == left)
+      .unwrap_or(usize::MAX);
+    let right_idx = order
+      .iter()
+      .position(|key| key == right)
+      .unwrap_or(usize::MAX);
+    left_idx
+      .cmp(&right_idx)
+      .then_with(|| left.cmp(right))
+  });
+  entries
+}
+
+fn sanitize_bibtex_value(
+  value: &str
+) -> String {
+  value
+    .replace('\n', " ")
+    .replace('\r', " ")
+    .split_whitespace()
+    .collect::<Vec<_>>()
+    .join(" ")
 }

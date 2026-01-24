@@ -494,7 +494,17 @@ fn training_validation_delta_flow_runs()
     );
   assert_report_keys(
     validation_entry,
-    &["path", "sequences", "tokens"],
+    &[
+      "path",
+      "sequences",
+      "tokens",
+      "stored_sequences",
+      "stored_tokens",
+      "delta_sequences",
+      "delta_tokens",
+      "delta_rate",
+      "token_rate"
+    ],
     "validation parser entry"
   );
   let validation_sequences =
@@ -510,6 +520,40 @@ fn training_validation_delta_flow_runs()
       .and_then(Value::as_u64)
       .expect("tokens must be numeric")
       as usize;
+  let validation_stored_sequences =
+    validation_entry
+      .get("stored_sequences")
+      .and_then(Value::as_u64)
+      .expect("stored sequences numeric")
+      as usize;
+  let validation_stored_tokens =
+    validation_entry
+      .get("stored_tokens")
+      .and_then(Value::as_u64)
+      .expect("stored tokens numeric")
+      as usize;
+  let validation_delta_sequences =
+    validation_entry
+      .get("delta_sequences")
+      .and_then(Value::as_u64)
+      .expect("delta sequences numeric")
+      as usize;
+  let validation_delta_tokens =
+    validation_entry
+      .get("delta_tokens")
+      .and_then(Value::as_u64)
+      .expect("delta tokens numeric")
+      as usize;
+  let validation_delta_rate =
+    validation_entry
+      .get("delta_rate")
+      .and_then(Value::as_f64)
+      .expect("delta rate numeric");
+  let validation_token_rate =
+    validation_entry
+      .get("token_rate")
+      .and_then(Value::as_f64)
+      .expect("token rate numeric");
 
   assert_eq!(
     validation_sequences,
@@ -521,6 +565,38 @@ fn training_validation_delta_flow_runs()
     validation_tokens, expected_tokens,
     "validation token counts should \
      match training data"
+  );
+  assert_eq!(
+    validation_stored_sequences,
+    expected_sequences,
+    "validation stored sequences \
+     should match training data"
+  );
+  assert_eq!(
+    validation_stored_tokens,
+    expected_tokens,
+    "validation stored tokens should \
+     match training data"
+  );
+  assert_eq!(
+    validation_delta_sequences, 0,
+    "validation delta sequences \
+     should be zero"
+  );
+  assert_eq!(
+    validation_delta_tokens, 0,
+    "validation delta tokens should \
+     be zero"
+  );
+  assert_eq!(
+    validation_delta_rate, 0.0,
+    "validation delta rate should \
+     be zero"
+  );
+  assert_eq!(
+    validation_token_rate, 0.0,
+    "validation token rate should \
+     be zero"
   );
 
   assert!(
@@ -551,7 +627,17 @@ fn training_validation_delta_flow_runs()
     );
   assert_report_keys(
     validation_finder_entry,
-    &["path", "sequences", "tokens"],
+    &[
+      "path",
+      "sequences",
+      "tokens",
+      "stored_sequences",
+      "stored_tokens",
+      "delta_sequences",
+      "delta_tokens",
+      "delta_rate",
+      "token_rate"
+    ],
     "validation finder entry"
   );
   let validation_finder_sequences =
@@ -569,6 +655,25 @@ fn training_validation_delta_flow_runs()
       .expect(
         "finder tokens must be numeric"
       ) as usize;
+  let validation_finder_stored =
+    validation_finder_entry
+      .get("stored_sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder stored sequences numeric"
+      ) as usize;
+  let validation_finder_delta =
+    validation_finder_entry
+      .get("delta_sequences")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder delta sequences numeric"
+      ) as usize;
+  let validation_finder_rate =
+    validation_finder_entry
+      .get("delta_rate")
+      .and_then(Value::as_f64)
+      .expect("finder delta rate numeric");
   let validation_summary =
     validation_json
       .get("summary")
@@ -608,6 +713,22 @@ fn training_validation_delta_flow_runs()
     "finder validation token counts \
      should match labeled sequences"
   );
+  assert_eq!(
+    validation_finder_stored,
+    expected_finder_sequences,
+    "finder stored sequences should \
+     match training data"
+  );
+  assert_eq!(
+    validation_finder_delta, 0,
+    "finder delta sequences should \
+     be zero"
+  );
+  assert_eq!(
+    validation_finder_rate, 0.0,
+    "finder delta rate should be \
+     zero"
+  );
 
   let delta_comparisons = delta_json
     .get("comparisons")
@@ -644,8 +765,16 @@ fn training_validation_delta_flow_runs()
   assert_report_keys(
     delta_entry,
     &[
-      "path", "kind", "prepared",
-      "labeled", "stored", "delta"
+      "path",
+      "kind",
+      "prepared",
+      "labeled",
+      "stored",
+      "delta",
+      "prepared_tokens",
+      "labeled_tokens",
+      "stored_tokens",
+      "delta_tokens"
     ],
     "delta parser entry"
   );
@@ -665,6 +794,29 @@ fn training_validation_delta_flow_runs()
     .and_then(Value::as_u64)
     .expect("labeled should be numeric")
     as usize;
+  let delta_prepared_tokens =
+    delta_entry
+      .get("prepared_tokens")
+      .and_then(Value::as_u64)
+      .expect("prepared tokens numeric")
+      as usize;
+  let delta_labeled_tokens =
+    delta_entry
+      .get("labeled_tokens")
+      .and_then(Value::as_u64)
+      .expect("labeled tokens numeric")
+      as usize;
+  let delta_stored_tokens =
+    delta_entry
+      .get("stored_tokens")
+      .and_then(Value::as_u64)
+      .expect("stored tokens numeric")
+      as usize;
+  let delta_tokens =
+    delta_entry
+      .get("delta_tokens")
+      .and_then(Value::as_i64)
+      .expect("delta tokens numeric");
   let delta_kind = delta_entry
     .get("kind")
     .and_then(Value::as_str)
@@ -690,6 +842,26 @@ fn training_validation_delta_flow_runs()
     "delta report should read the \
      trained model counts"
   );
+  assert_eq!(
+    delta_prepared_tokens, expected_tokens,
+    "delta report should track \
+     prepared tokens"
+  );
+  assert_eq!(
+    delta_labeled_tokens, expected_tokens,
+    "delta report should track \
+     labeled tokens"
+  );
+  assert_eq!(
+    delta_stored_tokens, expected_tokens,
+    "delta report should track \
+     stored tokens"
+  );
+  assert_eq!(
+    delta_tokens, 0,
+    "delta report should track \
+     zero token delta"
+  );
 
   let delta_finder_entry =
     find_dataset_entry(
@@ -703,8 +875,16 @@ fn training_validation_delta_flow_runs()
   assert_report_keys(
     delta_finder_entry,
     &[
-      "path", "kind", "prepared",
-      "labeled", "stored", "delta"
+      "path",
+      "kind",
+      "prepared",
+      "labeled",
+      "stored",
+      "delta",
+      "prepared_tokens",
+      "labeled_tokens",
+      "stored_tokens",
+      "delta_tokens"
     ],
     "delta finder entry"
   );
@@ -724,6 +904,22 @@ fn training_validation_delta_flow_runs()
         "finder labeled should be \
          numeric"
       ) as usize;
+  let delta_finder_tokens =
+    delta_finder_entry
+      .get("labeled_tokens")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder labeled tokens should \
+         be numeric"
+      ) as usize;
+  let delta_finder_token_delta =
+    delta_finder_entry
+      .get("delta_tokens")
+      .and_then(Value::as_i64)
+      .expect(
+        "finder delta tokens should \
+         be numeric"
+      );
   let delta_finder_kind =
     delta_finder_entry
       .get("kind")
@@ -742,6 +938,18 @@ fn training_validation_delta_flow_runs()
     expected_finder_sequences,
     "delta report should match finder \
      label counts"
+  );
+  assert_eq!(
+    delta_finder_tokens,
+    expected_finder_tokens,
+    "delta report should include \
+     finder token counts"
+  );
+  assert_eq!(
+    delta_finder_token_delta,
+    expected_finder_tokens as i64,
+    "delta report should include \
+     finder token delta"
   );
   assert_eq!(
     delta_finder_kind, "finder",
