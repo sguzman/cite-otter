@@ -366,6 +366,15 @@ fn training_validation_delta_flow_runs()
     .and_then(Value::as_u64)
     .expect("stored should be numeric")
     as usize;
+  let delta_labeled = delta_entry
+    .get("labeled")
+    .and_then(Value::as_u64)
+    .expect("labeled should be numeric")
+    as usize;
+  let delta_kind = delta_entry
+    .get("kind")
+    .and_then(Value::as_str)
+    .expect("kind should be present");
 
   assert_eq!(
     delta_prepared, expected_sequences,
@@ -373,9 +382,69 @@ fn training_validation_delta_flow_runs()
      prep counts"
   );
   assert_eq!(
+    delta_labeled, expected_sequences,
+    "delta report should track parser \
+     labels"
+  );
+  assert_eq!(
+    delta_kind, "parser",
+    "delta report should tag parser \
+     entries"
+  );
+  assert_eq!(
     delta_stored, expected_sequences,
     "delta report should read the \
      trained model counts"
+  );
+
+  let delta_finder_entry =
+    find_dataset_entry(
+      delta_comparisons,
+      canonical_finder_path.as_path()
+    )
+    .expect(
+      "delta report should include \
+       the finder dataset"
+    );
+  let delta_finder_prepared =
+    delta_finder_entry
+      .get("prepared")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder prepared should be \
+         numeric"
+      ) as usize;
+  let delta_finder_labeled =
+    delta_finder_entry
+      .get("labeled")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder labeled should be \
+         numeric"
+      ) as usize;
+  let delta_finder_kind =
+    delta_finder_entry
+      .get("kind")
+      .and_then(Value::as_str)
+      .expect(
+        "finder kind should be present"
+      );
+  assert_eq!(
+    delta_finder_prepared,
+    expected_finder_sequences,
+    "delta report should match finder \
+     prep counts"
+  );
+  assert_eq!(
+    delta_finder_labeled,
+    expected_finder_sequences,
+    "delta report should match finder \
+     label counts"
+  );
+  assert_eq!(
+    delta_finder_kind, "finder",
+    "delta report should tag finder \
+     entries"
   );
 
   let parser_model_path =
