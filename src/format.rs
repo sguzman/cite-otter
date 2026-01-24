@@ -365,16 +365,25 @@ fn csl_entry(
       Value::String(title)
     );
   }
+  if let Some(value) =
+    extract_first_value_from_map(
+      &map,
+      "citation-number"
+    )
+  {
+    push(
+      "citation-number",
+      Value::String(value)
+    );
+  }
 
   for key in [
     "edition",
     "publisher",
     "note",
     "genre",
-    "container-title",
     "collection-title",
     "collection-number",
-    "journal",
     "volume",
     "issue",
     "isbn",
@@ -392,6 +401,25 @@ fn csl_entry(
         )
       );
     }
+  }
+
+  if let Some(value) =
+    extract_first_value_from_map(
+      &map,
+      "container-title"
+    )
+    .or_else(|| {
+      extract_first_value_from_map(
+        &map, "journal"
+      )
+    })
+  {
+    push(
+      "container-title",
+      Value::String(
+        sanitize_csl_value(&value)
+      )
+    );
   }
 
   if let Some(entry_type) =

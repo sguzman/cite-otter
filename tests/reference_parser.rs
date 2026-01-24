@@ -77,6 +77,10 @@ const ET_AL_REF: &str =
 const MONTH_NAME_PUNCT_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, Apr. 5, 1995.";
+const MONTH_RANGE_LONG_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, Sept. 12–14, \
+   2010.";
 
 const MULTI_AUTHOR_REF: &str =
   "Doe, J. and Smith, A. A Title. \
@@ -1073,6 +1077,34 @@ fn parse_handles_citation_number_author_lists()
 }
 
 #[test]
+fn parse_extracts_citation_numbers() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[CITATION_NUMBER_REF],
+    ParseFormat::Json
+  );
+
+  let value = references[0]
+    .fields()
+    .get("citation-number")
+    .expect("citation-number field");
+  let number = match value {
+    | FieldValue::Single(text) => text,
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  };
+  assert_eq!(
+    number, "60.",
+    "parser should capture citation \
+     numbers including punctuation"
+  );
+}
+
+#[test]
 fn parse_skips_et_al_in_author_lists()
  {
   let parser = Parser::new();
@@ -1140,6 +1172,38 @@ fn parse_captures_month_names_with_punctuation()
     ],
     "Parser should capture month names \
      with punctuation"
+  );
+}
+
+#[test]
+fn parse_handles_month_ranges_with_days_and_punctuation()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MONTH_RANGE_LONG_REF],
+    ParseFormat::Json
+  );
+
+  let date_values =
+    match references[0].fields().get("date") {
+      | Some(FieldValue::List(values)) => values,
+      | other => {
+        panic!(
+          "Expected list of date \
+           values, got {other:?}"
+        )
+      }
+    };
+
+  assert_eq!(
+    date_values,
+    &vec![
+      "2010".to_string(),
+      "09".to_string(),
+      "12".to_string()
+    ],
+    "Parser should capture month ranges \
+     with punctuation and days"
   );
 }
 

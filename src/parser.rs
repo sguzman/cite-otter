@@ -434,6 +434,29 @@ fn split_author_candidates(
   if parts.len() < 2 {
     return vec![trimmed.to_string()];
   }
+  if let Some(last) = parts.last()
+    && is_author_suffix(last)
+  {
+    if parts.len() == 3 {
+      return vec![trimmed.to_string()];
+    }
+    if parts.len() > 3
+      && looks_like_initials(parts[1])
+    {
+      let mut grouped = vec![format!(
+        "{}, {}, {}",
+        parts[0], parts[1], parts[2]
+      )];
+      let remainder =
+        parts[3..].join(", ");
+      if !remainder.is_empty() {
+        grouped.extend(
+          split_author_candidates(&remainder)
+        );
+      }
+      return grouped;
+    }
+  }
   if parts.len() % 2 == 0
     && parts.chunks(2).all(|pair| {
       pair.len() == 2
@@ -458,6 +481,19 @@ fn split_author_candidates(
       .collect();
   }
   vec![trimmed.to_string()]
+}
+
+fn is_author_suffix(
+  value: &str
+) -> bool {
+  let normalized = normalize_author_component(
+    value
+  )
+  .to_lowercase();
+  matches!(
+    normalized.as_str(),
+    "jr" | "sr" | "ii" | "iii" | "iv"
+  )
 }
 
 fn parse_author_chunk(
@@ -662,23 +698,25 @@ fn normalize_author_component(
 fn looks_like_initials(
   value: &str
 ) -> bool {
-  let trimmed = value
-    .trim_matches(|c: char| {
-      c == '.' || c == ',' || c == ';'
-    });
-  if trimmed.is_empty() {
+  let letters: String = value
+    .chars()
+    .filter(|c| c.is_alphabetic())
+    .collect();
+  if letters.is_empty() {
     return false;
   }
-  if trimmed.len() <= 3
-    && trimmed
+  if letters.len() <= 4
+    && letters
       .chars()
       .all(|c| c.is_uppercase())
   {
     return true;
   }
-  trimmed
-    .chars()
-    .all(|c| c.is_uppercase() || c == '-')
+  value.chars().all(|c| {
+    c.is_uppercase()
+      || c == '-'
+      || c == '.'
+  })
 }
 
 fn strip_et_al_suffix(
@@ -1409,6 +1447,14 @@ impl Parser {
             )
           );
         }
+        if let Some(number) =
+          extract_citation_number(reference)
+        {
+          mapped.insert(
+            "citation-number",
+            FieldValue::Single(number)
+          );
+        }
         mapped.insert(
           "title",
           FieldValue::List(vec![
@@ -1939,6 +1985,46 @@ fn strip_leading_citation_number(
   trimmed.to_string()
 }
 
+fn extract_citation_number(
+  reference: &str
+) -> Option<String> {
+  let trimmed = reference.trim();
+  let mut chars = trimmed.chars();
+  let mut prefix = String::new();
+  if let Some(first) = chars.next() {
+    if first == '[' || first == '(' {
+      prefix.push(first);
+    } else {
+      chars = trimmed.chars();
+    }
+  }
+  let mut digits = String::new();
+  for ch in chars.by_ref() {
+    if ch.is_ascii_digit() {
+      digits.push(ch);
+    } else {
+      if !digits.is_empty() {
+        let mut suffix = String::new();
+        if ch == '.'
+          || ch == ')'
+          || ch == ']'
+        {
+          suffix.push(ch);
+        }
+        let value = format!(
+          "{prefix}{digits}{suffix}"
+        );
+        return Some(value);
+      }
+      return None;
+    }
+  }
+  if digits.is_empty() {
+    None
+  } else {
+    Some(format!("{prefix}{digits}"))
+  }
+}
 fn title_from_first_segment(
   segment: &str
 ) -> Option<String> {

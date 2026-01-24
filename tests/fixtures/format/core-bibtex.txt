@@ -30,7 +30,8 @@
   volume = {9},
   date = {1477/1481},
   pages = {1477-81},
-  address = {1477-81}
+  address = {1477-81},
+  citation-number = {60}
 }
 @book{fischer2000a,
   author = {Fischer and Pompidou, Centre and Bauzeitung, Deutsche and No},
@@ -40,7 +41,7 @@
   issue = {134}
 }
 @book{brischoux2009a,
-  author = {Brischoux and F and Chakraborty and S and Brierley and D.I and Ungless, M.A},
+  author = {Brischoux, F. and Chakraborty, S. and Brierley, D.I and Ungless, M.A},
   title = {Phasic excitation of dopamine neurons in ventral VTA by noxious stimuli},
   date = {2009},
   address = {4894–4899}
@@ -50,6 +51,7 @@
   title = {[13] S. E},
   date = {2010/1012},
   address = {1012},
+  citation-number = {[13]},
   genre = {13}
 }
 @misc{adams1930a,
@@ -117,7 +119,7 @@
   translator = {Trans}
 }
 @misc{gmytrasiewicz1991a,
-  author = {Gmytrasiewicz and P, J. and Durfee and E, H. and Wehe, D. K.},
+  author = {Gmytrasiewicz, P. J. and Durfee, E. H. and Wehe, D. K.},
   title = {A decision theoretic approach to coordinating multiagent interaction},
   booktitle = {In Proceedings of the Twelfth International Joint Conference on Artificial Intelligence, pp},
   series = {Proceedings of the Twelfth International Joint Conference on Artificial Intelligence},
@@ -336,8 +338,8 @@
   pages = {1983-433},
   address = {433-439}
 }
-@misc{domingos1996a,
-  author = {Domingos, P.},
+@misc{in1996a,
+  author = {In Proceedings of the, AAAI-},
   title = {Using partitioning to speed up specific-to-general rule induction},
   booktitle = {In Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models, pp},
   series = {Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models},
@@ -513,10 +515,10 @@
   address = {1994},
   collection-number = {1994}
 }
-@book{mozer1988a,
-  author = {Mozer, M. C. and Smolensky, P.},
+@book{denver1988a,
+  author = {Denver, CO Morgan Kaufmann},
   date = {1988~},
-  title = {Skeletonization: A technique for trimming the fat from a network via relevance assessment},
+  title = {Advances in Neural Information Processing Systems. (Vol. 1), (pp. 107-115)},
   volume = {1},
   publisher = {A technique for trimming the fat from a network via relevance assessment. Advances in Neural Information Processing Systems. (Vol. 1)},
   pages = {107-115},
@@ -682,10 +684,10 @@
   address = {appear},
   date-circa = {true}
 }
-@misc{sterling1995a,
-  author = {Sterling, F.},
+@misc{boss1995a,
+  author = {Boss, "Multimedia Databases and Servers, " AT and T Technical Journal, Vol},
   date = {1995-09-5~},
-  title = {W. Carino and C},
+  title = {Carino and C},
   booktitle = {Boss, "Multimedia Databases and Servers," AT&T Technical Journal, Vol},
   volume = {74},
   pages = {54-67},
@@ -908,7 +910,7 @@
   address = {MA}
 }
 @misc{holte1989a,
-  author = {Holte and R, C. and Acker and L, E. and Porter, B. W.},
+  author = {Holte, R. C. and Acker, L. E. and Porter, B. W.},
   date = {1989~},
   title = {Concept learning and the problem of small disjuncts},
   booktitle = {In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, pp},
@@ -1022,7 +1024,7 @@
   collection-number = {1994}
 }
 @misc{gmytrasiewicz1991b,
-  author = {Gmytrasiewicz and P, J. and Durfee and E, H. and Wehe, D. K.},
+  author = {Gmytrasiewicz, P. J. and Durfee, E. H. and Wehe, D. K.},
   title = {The utility of communication in coordinating intelligent agents},
   booktitle = {In Proceedings of the Ninth National Conference on Artificial Intelligence, pp},
   series = {Proceedings of the Ninth National Conference on Artificial Intelligence},
@@ -1239,7 +1241,7 @@
   address = {Tread-Marks}
 }
 @book{srinivasan1996a,
-  author = {Srinivasan and A and Muggleton and S, H. and Sternberg and M J, E. and King, R. D.},
+  author = {Srinivasan, A. and Muggleton, S. H. and Sternberg, M. J. E. and King, R. D.},
   title = {Theories for mutagenicity: a study in first-order and feature-based induction},
   publisher = {a study in first-order and feature-based induction. Artificial Intelligence},
   date = {1996},
@@ -1547,8 +1549,8 @@
   address = {461-467},
   collection-number = {1}
 }
-@misc{selman1992a,
-  author = {Selman, B. and Levesque, H. and Mitchell, D.},
+@misc{in1992a,
+  author = {In Proceedings of, AAAI-},
   title = {A new method for solving hard satisfiability problems},
   booktitle = {In Proceedings of AAAI-92, pp},
   series = {Proceedings of AAAI-92},
