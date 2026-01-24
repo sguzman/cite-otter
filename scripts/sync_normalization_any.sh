@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_URL=${ANYSTYLE_DATA_REPO:-https://github.com/inukshuk/anystyle-data}
 TARGET_DIR=${ANYSTYLE_DATA_DIR:-tmp/anystyle-data}
 OUTPUT_DIR=${NORMALIZATION_OUTPUT_DIR:-tests/fixtures/normalization-any}
-NORMALIZATION_REPO=${ANYSTYLE_NORMALIZATION_REPO:-https://github.com/inukshuk/anystyle-data}
+NORMALIZATION_REPO=${ANYSTYLE_NORMALIZATION_REPO:-}
 NORMALIZATION_DIR=${ANYSTYLE_NORMALIZATION_DIR:-}
 NORMALIZATION_SUBDIR=${ANYSTYLE_NORMALIZATION_SUBDIR:-}
 
@@ -16,6 +16,11 @@ sync_from_dir() {
       --source-dir "$source" \
       --output-dir "$OUTPUT_DIR"
     echo "synced normalization assets from $source"
+    return 0
+  fi
+  if [ -d "$source" ] && compgen -G "$source/journals_*.txt" > /dev/null; then
+    scripts/build_normalization_any.sh "$source" "$OUTPUT_DIR"
+    echo "generated normalization assets from $source"
     return 0
   fi
   return 1
