@@ -412,8 +412,52 @@ fn parse_authors(
     .split(';')
     .map(str::trim)
     .filter(|piece| !piece.is_empty())
-    .filter_map(parse_author_chunk)
+    .flat_map(split_author_candidates)
+    .filter_map(|piece| {
+      parse_author_chunk(&piece)
+    })
     .collect::<Vec<_>>()
+}
+
+fn split_author_candidates(
+  piece: &str
+) -> Vec<String> {
+  let trimmed = piece.trim();
+  if !trimmed.contains(',') {
+    return vec![trimmed.to_string()];
+  }
+  let parts = trimmed
+    .split(',')
+    .map(str::trim)
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.len() < 2 {
+    return vec![trimmed.to_string()];
+  }
+  if parts.len() % 2 == 0
+    && parts.chunks(2).all(|pair| {
+      pair.len() == 2
+        && looks_like_initials(pair[1])
+    })
+  {
+    return parts
+      .chunks(2)
+      .map(|pair| {
+        format!("{}, {}", pair[0], pair[1])
+      })
+      .collect();
+  }
+  if parts.len() >= 3
+    && parts.iter().all(|part| {
+      !part.contains(',')
+    })
+  {
+    return parts
+      .into_iter()
+      .map(|part| part.to_string())
+      .collect();
+  }
+  vec![trimmed.to_string()]
 }
 
 fn parse_author_chunk(
@@ -507,9 +551,34 @@ fn parse_author_chunk(
         break;
       }
     }
+    let mut family_start = family_start;
     if family_start == family_end {
       family_start =
         family_end.saturating_sub(1);
+    }
+    if family_end >= 2
+      && looks_like_initials(
+        &tokens[family_end - 1]
+      )
+    {
+      let family =
+        tokens[..family_end - 1].join(" ");
+      let mut given_parts = vec![
+        tokens[family_end - 1].clone(),
+      ];
+      if let Some(token) = suffix {
+        given_parts.push(token);
+      }
+      return Some(Author {
+        family: normalize_author_component(
+          &family
+        ),
+        given:  normalize_author_component(
+          &strip_et_al_suffix(
+            &given_parts.join(" ")
+          )
+        )
+      });
     }
     let family =
       tokens[family_start..].join(" ");
@@ -588,6 +657,28 @@ fn normalize_author_component(
     .filter(|part| !part.is_empty())
     .collect::<Vec<_>>()
     .join(" ")
+}
+
+fn looks_like_initials(
+  value: &str
+) -> bool {
+  let trimmed = value
+    .trim_matches(|c: char| {
+      c == '.' || c == ',' || c == ';'
+    });
+  if trimmed.is_empty() {
+    return false;
+  }
+  if trimmed.len() <= 3
+    && trimmed
+      .chars()
+      .all(|c| c.is_uppercase())
+  {
+    return true;
+  }
+  trimmed
+    .chars()
+    .all(|c| c.is_uppercase() || c == '-')
 }
 
 fn strip_et_al_suffix(
@@ -1647,12 +1738,55 @@ impl ParsedDataset {
 fn extract_title(
   reference: &str
 ) -> String {
-  split_reference_segments(reference)
-    .get(1)
-    .map(|segment| {
-      clean_title_segment(segment)
-    })
-    .unwrap_or_default()
+  let cleaned =
+    strip_leading_citation_number(
+      reference
+    );
+  let segments =
+    split_reference_segments(&cleaned);
+  if segments.is_empty() {
+    return String::new();
+  }
+  let (author_index, author_segment) =
+    select_author_segment(&segments);
+  let mut candidate = if author_index > 0 {
+    segments[author_index - 1].clone()
+  } else if segments.len() > 1 {
+    segments[1].clone()
+  } else {
+    segments[0].clone()
+  };
+  if candidate == author_segment {
+    candidate = segments
+      .get(1)
+      .cloned()
+      .unwrap_or_else(|| segments[0].clone());
+  }
+  if candidate.split_whitespace().count() < 3
+    && author_index + 1 < segments.len()
+  {
+    let next = segments[author_index + 1]
+      .trim()
+      .to_string();
+    if !next.is_empty()
+      && !segment_is_container(&next)
+    {
+      candidate =
+        format!("{candidate}. {next}");
+    }
+  }
+  if candidate.split_whitespace().count() < 3
+    && author_index == 0
+  {
+    if let Some(title) =
+      title_from_first_segment(
+        &segments[0]
+      )
+    {
+      candidate = title;
+    }
+  }
+  clean_title_segment(&candidate)
 }
 
 fn extract_author(
@@ -1664,13 +1798,187 @@ fn extract_author(
 fn extract_author_segment(
   reference: &str
 ) -> String {
-  let segment = split_reference_segments(reference)
-    .into_iter()
+  let cleaned =
+    strip_leading_citation_number(
+      reference
+    );
+  let segments =
+    split_reference_segments(&cleaned);
+  if segments.is_empty() {
+    return strip_parenthetical_date(
+      cleaned.trim()
+    );
+  }
+  let (index, segment) =
+    select_author_segment(&segments);
+  let mut candidate =
+    trim_author_segment(&segment);
+  if candidate.is_empty() {
+    candidate = segments
+      .get(index)
+      .cloned()
+      .unwrap_or_default();
+  }
+  strip_parenthetical_date(&candidate)
+}
+
+fn select_author_segment(
+  segments: &[String]
+) -> (usize, String) {
+  let mut best_index = 0usize;
+  let mut best_score = i32::MIN;
+  for (idx, segment) in
+    segments.iter().take(4).enumerate()
+  {
+    let score =
+      author_segment_score(segment);
+    if score > best_score {
+      best_score = score;
+      best_index = idx;
+    }
+  }
+  (
+    best_index,
+    segments
+      .get(best_index)
+      .cloned()
+      .unwrap_or_default()
+  )
+}
+
+fn author_segment_score(
+  segment: &str
+) -> i32 {
+  let trimmed = segment.trim();
+  if trimmed.is_empty() {
+    return i32::MIN;
+  }
+  let mut score = 0;
+  if trimmed
+    .chars()
     .next()
-    .unwrap_or_else(|| {
-      reference.trim().to_string()
-    });
-  strip_parenthetical_date(&segment)
+    .map(|c| c.is_ascii_digit())
+    .unwrap_or(false)
+  {
+    score -= 3;
+  }
+  if trimmed.contains(',') {
+    score += 2;
+  }
+  if trimmed.contains(" and ")
+    || trimmed.contains(" & ")
+    || trimmed.contains('&')
+  {
+    score += 2;
+  }
+  if segment_has_year(trimmed) {
+    score -= 2;
+  }
+  if trimmed.to_lowercase().contains("http")
+    || trimmed.to_lowercase().contains("doi")
+  {
+    score -= 2;
+  }
+  if trimmed.split_whitespace().count() <= 6 {
+    score += 1;
+  }
+  if trimmed
+    .split_whitespace()
+    .any(|token| looks_like_initials(token))
+  {
+    score += 1;
+  }
+  score
+}
+
+fn trim_author_segment(
+  segment: &str
+) -> String {
+  if let Some((before, _)) =
+    segment.split_once('(')
+  {
+    if segment_has_year(segment) {
+      return before.trim().trim_end_matches(',').to_string();
+    }
+  }
+  if let Some(pos) = segment
+    .char_indices()
+    .find(|(_, c)| c.is_ascii_digit())
+    .map(|(idx, _)| idx)
+  {
+    let prefix = segment[..pos].trim();
+    if prefix.len() >= 3 {
+      return prefix.trim_end_matches(',').to_string();
+    }
+  }
+  segment.trim().to_string()
+}
+
+fn strip_leading_citation_number(
+  reference: &str
+) -> String {
+  let trimmed = reference.trim();
+  let mut chars = trimmed.chars();
+  let mut idx = 0usize;
+  while let Some(ch) = chars.next() {
+    if ch.is_ascii_digit() {
+      idx += ch.len_utf8();
+    } else {
+      break;
+    }
+  }
+  if idx == 0 {
+    return trimmed.to_string();
+  }
+  let remainder = trimmed[idx..].trim_start();
+  if remainder.starts_with('.')
+    || remainder.starts_with(']')
+  {
+    return remainder[1..].trim_start().to_string();
+  }
+  trimmed.to_string()
+}
+
+fn title_from_first_segment(
+  segment: &str
+) -> Option<String> {
+  let mut parts = segment
+    .split(',')
+    .map(str::trim)
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.len() < 3 {
+    return None;
+  }
+  let year_pos = parts.iter().position(|part| {
+    part.chars().filter(|c| c.is_ascii_digit()).count() >= 4
+  });
+  let Some(pos) = year_pos else {
+    return None;
+  };
+  let after = parts
+    .drain(pos + 1..)
+    .collect::<Vec<_>>();
+  let title = after
+    .first()
+    .map(|part| part.to_string())?;
+  if title.is_empty() {
+    None
+  } else {
+    Some(title)
+  }
+}
+
+fn segment_is_container(
+  segment: &str
+) -> bool {
+  let lower = segment.to_lowercase();
+  lower.contains("journal")
+    || lower.contains("proceedings")
+    || lower.contains("conference")
+    || lower.contains("symposium")
+    || lower.contains("meeting")
+    || lower.contains("presented")
 }
 fn resolve_type(
   reference: &str

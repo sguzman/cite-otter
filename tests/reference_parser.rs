@@ -107,6 +107,22 @@ const PARTICLE_NAME_REF: &str =
 const GENRE_REF: &str =
   "Doe, Jane. A Title. [PhD thesis]. \
    City: Pub, 2020.";
+const HEIDEGGER_REF: &str =
+  "Heidegger M., 1927, Être et temps, \
+   Gallimard, Ed. 1986, Paris.";
+const CITATION_NUMBER_REF: &str =
+  "60. Differences in cyclic fatigue \
+   resistance between ProTaper Next \
+   and ProTaper Universal instruments \
+   at different levels. Pérez-Higueras \
+   JJ, Arias A, de la Macorra JC, \
+   Peters OA. septembre 2014, J Endod, \
+   Vol. 9, pp. 1477-81.";
+const PAGE_RANGE_DATE_REF: &str =
+  "Solon, G. (1999). Chapter 29. \
+   Intergenerational mobility in the \
+   labor market. (Vol. 3, Part A, pp. \
+   1761–1800). London: Elsevier.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -277,6 +293,22 @@ fn parse_builds_structured_authors_for_variant_formats()
        consistently"
     );
   }
+}
+
+#[test]
+fn parse_extracts_title_from_author_date_segment()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[HEIDEGGER_REF],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Être et temps"
+  );
 }
 
 #[test]
@@ -1004,6 +1036,43 @@ fn parse_handles_punctuated_author_lists_with_ampersands()
 }
 
 #[test]
+fn parse_handles_citation_number_author_lists()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[CITATION_NUMBER_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(
+    authors.len(),
+    4,
+    "parser should split authors \
+     after citation numbers"
+  );
+  assert_eq!(
+    authors[0],
+    Author {
+      family: "Pérez-Higueras".into(),
+      given:  "JJ".into()
+    }
+  );
+}
+
+#[test]
 fn parse_skips_et_al_in_author_lists()
  {
   let parser = Parser::new();
@@ -1071,6 +1140,41 @@ fn parse_captures_month_names_with_punctuation()
     ],
     "Parser should capture month names \
      with punctuation"
+  );
+}
+
+#[test]
+fn parse_ignores_page_ranges_in_dates()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PAGE_RANGE_DATE_REF],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  let date_values =
+    match reference.get("date") {
+      | Some(FieldValue::List(
+        values
+      )) => values,
+      | other => {
+        panic!(
+          "Expected list of date \
+           values, got {other:?}"
+        )
+      }
+    };
+  assert!(
+    date_values.contains(&"1999".to_string()),
+    "Parser should keep the year \
+     from date segments"
+  );
+  assert!(
+    !date_values
+      .iter()
+      .any(|value| value == "1761"),
+    "Parser should ignore page ranges \
+     in date tokens"
   );
 }
 
