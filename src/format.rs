@@ -350,7 +350,7 @@ fn csl_entry(
         Value::Array(
           values
             .into_iter()
-            .map(Value::String)
+            .map(csl_name_value)
             .collect()
         )
       );
@@ -436,6 +436,71 @@ fn extract_values_from_map(
       })
     })
     .filter(|values| !values.is_empty())
+}
+
+fn csl_name_value(
+  name: String
+) -> Value {
+  let lower = name.to_lowercase();
+  if lower.contains(" by ") {
+    return Value::Object(
+      Map::from_iter([(
+        "literal".into(),
+        Value::String(name)
+      )])
+    );
+  }
+  if let Some((family, given)) =
+    split_name(&name)
+  {
+    let mut object = Map::new();
+    object.insert(
+      "family".into(),
+      Value::String(family)
+    );
+    if !given.is_empty() {
+      object.insert(
+        "given".into(),
+        Value::String(given)
+      );
+    }
+    Value::Object(object)
+  } else {
+    Value::Object(Map::from_iter([(
+      "literal".into(),
+      Value::String(name)
+    )]))
+  }
+}
+
+fn split_name(
+  name: &str
+) -> Option<(String, String)> {
+  let trimmed = name.trim();
+  if trimmed.is_empty() {
+    return None;
+  }
+  if let Some((family, given)) =
+    trimmed.split_once(',')
+  {
+    return Some((
+      family.trim().to_string(),
+      given.trim().to_string()
+    ));
+  }
+  let parts = trimmed
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if parts.len() < 2 {
+    return None;
+  }
+  let family = parts
+    .last()
+    .unwrap_or(&"")
+    .to_string();
+  let given =
+    parts[..parts.len() - 1].join(" ");
+  Some((family, given))
 }
 
 fn extract_date_parts(

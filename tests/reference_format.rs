@@ -120,6 +120,28 @@ fn csl_formatter_outputs_enriched_json()
 }
 
 #[test]
+fn csl_formatter_outputs_name_objects()
+{
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PEREC_REF],
+    ParseFormat::Csl
+  );
+  let formatter = Format::new();
+  let csl =
+    formatter.to_csl(&references);
+
+  assert!(
+    csl.contains(
+      "\"author\":[{\"family\":\"\
+       Perec\",\"given\":\"Georges\"}]"
+    ),
+    "CSL output should emit \
+     structured name objects"
+  );
+}
+
+#[test]
 fn csl_formatter_includes_collection_numbers_and_translators()
  {
   let parser = Parser::new();
@@ -143,8 +165,8 @@ fn csl_formatter_includes_collection_numbers_and_translators()
   );
   assert!(
     csl.contains(
-      "\"translator\":[\"Translated \
-       by Doe\"]"
+      "\"translator\":[{\"literal\":\"\
+       Translated by Doe\"}]"
     ),
     "CSL output should include \
      translator names"
