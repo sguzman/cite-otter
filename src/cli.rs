@@ -2,7 +2,11 @@ use std::fs::{
   self,
   File
 };
-use std::io::Read;
+use std::io::{
+  BufRead,
+  BufReader,
+  Read
+};
 use std::path::{
   Path,
   PathBuf
@@ -13,6 +17,7 @@ use clap::{
   Subcommand,
   ValueEnum
 };
+use flate2::read::GzDecoder;
 use glob::glob;
 use serde::Serialize;
 use serde_json::to_writer_pretty;
@@ -176,6 +181,12 @@ enum Command {
     #[arg(
       long,
       value_enum,
+      default_value_t = DictionaryImportFormat::Plain
+    )]
+    format:    DictionaryImportFormat,
+    #[arg(
+      long,
+      value_enum,
       default_value_t = DictionaryCodeArg::Place
     )]
     code:      DictionaryCodeArg,
@@ -212,7 +223,10 @@ enum DictionaryAdapterArg {
   Copy, Clone, Debug, ValueEnum,
 )]
 enum DictionaryCodeArg {
-  Place
+  Name,
+  Place,
+  Publisher,
+  Journal
 }
 
 impl From<DictionaryCodeArg>
@@ -222,11 +236,28 @@ impl From<DictionaryCodeArg>
     code: DictionaryCodeArg
   ) -> Self {
     match code {
+      | DictionaryCodeArg::Name => {
+        DictionaryCode::Name
+      }
       | DictionaryCodeArg::Place => {
         DictionaryCode::Place
       }
+      | DictionaryCodeArg::Publisher => {
+        DictionaryCode::Publisher
+      }
+      | DictionaryCodeArg::Journal => {
+        DictionaryCode::Journal
+      }
     }
   }
+}
+
+#[derive(
+  Copy, Clone, Debug, ValueEnum,
+)]
+enum DictionaryImportFormat {
+  Plain,
+  AnyStyle
 }
 
 impl From<DictionaryAdapterArg>
@@ -538,6 +569,7 @@ pub fn run() -> anyhow::Result<()> {
     | Command::DictionaryImport {
       inputs,
       adapter,
+      format,
       code,
       gdbm_path,
       lmdb_path,
@@ -578,12 +610,26 @@ pub fn run() -> anyhow::Result<()> {
       let code =
         DictionaryCode::from(code);
       for input in inputs {
-        let terms =
-          load_dictionary_terms(
-            &input
-          )?;
-        let inserted = dictionary
-          .import_terms(code, terms)?;
+        let inserted = match format {
+          | DictionaryImportFormat::Plain => {
+            let terms =
+              load_dictionary_terms(
+                &input
+              )?;
+            dictionary.import_terms(
+              code, terms
+            )?
+          }
+          | DictionaryImportFormat::AnyStyle => {
+            let entries =
+              load_anystyle_entries(
+                &input
+              )?;
+            dictionary.import_entries(
+              entries
+            )?
+          }
+        };
         println!(
           "imported {inserted} terms \
            from {}",
@@ -640,6 +686,101 @@ fn load_dictionary_terms(
     }
   }
   Ok(terms)
+}
+
+fn load_anystyle_entries(
+  path: &Path
+) -> anyhow::Result<Vec<(String, u32)>>
+{
+  let file = File::open(path)?;
+  let reader: Box<dyn BufRead> =
+    match path
+      .extension()
+      .and_then(|ext| ext.to_str())
+    {
+      | Some("gz") => {
+        Box::new(BufReader::new(
+          GzDecoder::new(file)
+        ))
+      }
+      | _ => {
+        Box::new(BufReader::new(file))
+      }
+    };
+
+  let mut entries = Vec::new();
+  let mut mode = 0u32;
+  for line in reader.lines() {
+    let line = line?;
+    let line = line.trim();
+    if line.is_empty() {
+      continue;
+    }
+    if let Some(tag) =
+      line.strip_prefix("#!")
+    {
+      mode =
+        DictionaryCode::from_tag(tag)
+          .map(|code| code.bit())
+          .unwrap_or(0);
+      continue;
+    }
+    if line.starts_with('#') {
+      continue;
+    }
+    if mode == 0 {
+      continue;
+    }
+    let key =
+      strip_trailing_score(line);
+    if key.is_empty() {
+      continue;
+    }
+    entries
+      .push((key.to_string(), mode));
+  }
+
+  Ok(entries)
+}
+
+fn strip_trailing_score(
+  line: &str
+) -> &str {
+  let trimmed = line.trim();
+  let Some(idx) =
+    trimmed.rfind(char::is_whitespace)
+  else {
+    return trimmed;
+  };
+  let (left, right) =
+    trimmed.split_at(idx);
+  let right = right.trim();
+  if is_score_token(right) {
+    left.trim_end()
+  } else {
+    trimmed
+  }
+}
+
+fn is_score_token(token: &str) -> bool {
+  let mut parts = token.split('.');
+  let Some(left) = parts.next() else {
+    return false;
+  };
+  let Some(right) = parts.next() else {
+    return false;
+  };
+  if parts.next().is_some() {
+    return false;
+  }
+  !left.is_empty()
+    && !right.is_empty()
+    && left
+      .chars()
+      .all(|c| c.is_ascii_digit())
+    && right
+      .chars()
+      .all(|c| c.is_ascii_digit())
 }
 
 fn run_training_with_config(

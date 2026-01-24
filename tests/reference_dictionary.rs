@@ -23,3 +23,39 @@ fn place_names_are_tagged() {
     );
   }
 }
+
+#[test]
+fn dictionary_imports_merge_codes() {
+  let mut dict = Dictionary::create(
+    DictionaryAdapter::Memory
+  )
+  .open();
+
+  dict
+    .import_entries(vec![
+      (
+        "Nature".to_string(),
+        DictionaryCode::Journal.bit()
+      ),
+      (
+        "Nature".to_string(),
+        DictionaryCode::Publisher.bit()
+      ),
+    ])
+    .expect("dictionary import");
+
+  let codes = dict.lookup("Nature");
+  assert!(
+    codes.contains(
+      &DictionaryCode::Journal
+    ),
+    "expected Nature to map to Journal"
+  );
+  assert!(
+    codes.contains(
+      &DictionaryCode::Publisher
+    ),
+    "expected Nature to map to \
+     Publisher"
+  );
+}

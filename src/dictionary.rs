@@ -1,7 +1,4 @@
-use std::collections::{
-  BTreeSet,
-  HashMap
-};
+use std::collections::HashMap;
 use std::path::{
   Path,
   PathBuf
@@ -48,19 +45,33 @@ impl DictionaryCode {
     }
   }
 
-  pub fn from_tag(tag: &str) -> Option<Self> {
-    match tag.trim().to_ascii_lowercase().as_str() {
-      | "name" => Some(DictionaryCode::Name),
-      | "place" => Some(DictionaryCode::Place),
+  pub fn from_tag(
+    tag: &str
+  ) -> Option<Self> {
+    match tag
+      .trim()
+      .to_ascii_lowercase()
+      .as_str()
+    {
+      | "name" => {
+        Some(DictionaryCode::Name)
+      }
+      | "place" => {
+        Some(DictionaryCode::Place)
+      }
       | "publisher" => {
         Some(DictionaryCode::Publisher)
       }
-      | "journal" => Some(DictionaryCode::Journal),
+      | "journal" => {
+        Some(DictionaryCode::Journal)
+      }
       | _ => None
     }
   }
 
-  pub fn from_value(value: u32) -> Vec<Self> {
+  pub fn from_value(
+    value: u32
+  ) -> Vec<Self> {
     let mut codes = Vec::new();
     for code in &[
       DictionaryCode::Name,
@@ -80,24 +91,32 @@ impl DictionaryCode {
 struct DictionaryValue(u32);
 
 impl DictionaryValue {
-  fn from_bytes(bytes: &[u8]) -> Option<Self> {
+  fn from_bytes(
+    bytes: &[u8]
+  ) -> Option<Self> {
     if bytes.len() == 4 {
       let mut buf = [0u8; 4];
       buf.copy_from_slice(bytes);
-      return Some(Self(u32::from_le_bytes(
-        buf
-      )));
+      return Some(Self(
+        u32::from_le_bytes(buf)
+      ));
     }
-    let parsed = std::str::from_utf8(bytes)
-      .ok()?
-      .trim()
-      .parse::<u32>()
-      .ok()?;
+    let parsed =
+      std::str::from_utf8(bytes)
+        .ok()?
+        .trim()
+        .parse::<u32>()
+        .ok()?;
     Some(Self(parsed))
   }
 
-  fn from_string(value: &str) -> Option<Self> {
-    let parsed = value.trim().parse::<u32>().ok()?;
+  fn from_string(
+    value: &str
+  ) -> Option<Self> {
+    let parsed = value
+      .trim()
+      .parse::<u32>()
+      .ok()?;
     Some(Self(parsed))
   }
 
@@ -231,9 +250,10 @@ impl DictionaryConfig {
     self.open().unwrap_or_else(|_| {
       Dictionary {
         adapter: self.adapter,
-        backend: DictionaryBackend::Memory(
-          MemoryBackend::new()
-        )
+        backend:
+          DictionaryBackend::Memory(
+            MemoryBackend::new()
+          )
       }
     })
   }
@@ -270,9 +290,8 @@ impl Dictionary {
     let terms = normalized_terms(term);
     let mut value = 0u32;
     for term in terms {
-      if let Some(found) = self
-        .backend
-        .get_value(&term)
+      if let Some(found) =
+        self.backend.get_value(&term)
       {
         value |= found;
       }
@@ -299,22 +318,32 @@ impl Dictionary {
 
   pub fn import_entries(
     &mut self,
-    entries: impl IntoIterator<Item = (String, u32)>
+    entries: impl IntoIterator<
+      Item = (String, u32)
+    >
   ) -> Result<usize> {
-    let mut normalized = BTreeSet::new();
-    let mut prepared = Vec::new();
+    let mut prepared =
+      HashMap::<String, u32>::new();
     for (term, value) in entries {
       let term = term.trim();
       if term.is_empty() || value == 0 {
         continue;
       }
-      for token in normalized_terms(term) {
-        if normalized.insert(token.clone()) {
-          prepared.push((token, value));
-        }
+      for token in
+        normalized_terms(term)
+      {
+        let entry = prepared
+          .entry(token)
+          .or_insert(0);
+        *entry |= value;
       }
     }
-    self.backend.merge_entries(&prepared)
+    let prepared = prepared
+      .into_iter()
+      .collect::<Vec<_>>();
+    self
+      .backend
+      .merge_entries(&prepared)
   }
 }
 
@@ -353,7 +382,10 @@ impl DictionaryBackend {
   ) -> Result<usize> {
     match self {
       | Self::Memory(backend) => {
-        Ok(backend.merge_entries(entries))
+        Ok(
+          backend
+            .merge_entries(entries)
+        )
       }
       | Self::Gdbm(backend) => {
         backend.merge_entries(entries)
@@ -382,7 +414,9 @@ impl MemoryBackend {
         DictionaryCode::Place.bit()
       );
     }
-    Self { entries }
+    Self {
+      entries
+    }
   }
 
   fn get_value(
@@ -465,9 +499,13 @@ impl LmdbBackend {
     &self,
     term: &str
   ) -> Option<u32> {
-    let txn = self.env.begin_ro_txn().ok()?;
-    let bytes = txn.get(self.db, term).ok()?;
-    DictionaryValue::from_bytes(bytes).map(|v| v.0)
+    let txn =
+      self.env.begin_ro_txn().ok()?;
+    let key = term.to_string();
+    let bytes =
+      txn.get(self.db, &key).ok()?;
+    DictionaryValue::from_bytes(bytes)
+      .map(|v| v.0)
   }
 
   fn merge_entries(
@@ -479,17 +517,20 @@ impl LmdbBackend {
     let mut inserted = 0usize;
     for (term, value) in entries {
       let existing = txn
-        .get(self.db, term.as_str())
+        .get(self.db, term)
         .ok()
         .and_then(|bytes| {
-          DictionaryValue::from_bytes(bytes)
-            .map(|v| v.0)
+          DictionaryValue::from_bytes(
+            bytes
+          )
+          .map(|v| v.0)
         })
         .unwrap_or(0);
       let merged = existing | *value;
       if merged != existing {
         let encoded =
-          DictionaryValue(merged).bytes();
+          DictionaryValue(merged)
+            .bytes();
         txn.put(
           self.db,
           term,
@@ -536,7 +577,9 @@ impl GdbmBackend {
         DictionaryCode::Place.bit()
       )
       .bytes();
-      let _ = self.handle.store(place, &value);
+      let _ = self
+        .handle
+        .store(place, &value);
     }
     Ok(())
   }
@@ -547,10 +590,14 @@ impl GdbmBackend {
   ) -> Option<u32> {
     match self.handle.fetch(term) {
       | Ok(bytes) => {
-        DictionaryValue::from_bytes(&bytes)
-          .map(|v| v.0)
+        DictionaryValue::from_bytes(
+          &bytes
+        )
+        .map(|v| v.0)
       }
-      | Err(GdbmError::NoRecord) => None,
+      | Err(GdbmError::NoRecord) => {
+        None
+      }
       | Err(_) => None
     }
   }
@@ -561,21 +608,28 @@ impl GdbmBackend {
   ) -> Result<usize> {
     let mut updated = 0usize;
     for (term, value) in entries {
-      let existing = match self.handle.fetch(term) {
-        | Ok(bytes) => DictionaryValue::from_bytes(
-          &bytes,
-        )
-        .map(|v| v.0)
-        .unwrap_or(0),
+      let existing = match self
+        .handle
+        .fetch(term)
+      {
+        | Ok(bytes) => {
+          DictionaryValue::from_bytes(
+            &bytes
+          )
+          .map(|v| v.0)
+          .unwrap_or(0)
+        }
         | Err(GdbmError::NoRecord) => 0,
         | Err(_) => 0
       };
       let merged = existing | *value;
       if merged != existing {
         let encoded =
-          DictionaryValue(merged).bytes();
-        let _ =
-          self.handle.store(term, &encoded);
+          DictionaryValue(merged)
+            .bytes();
+        let _ = self
+          .handle
+          .store(term, &encoded);
         updated += 1;
       }
     }
@@ -643,51 +697,58 @@ impl RedisBackend {
       self.client.get_connection()?;
     for place in PLACE_NAMES {
       let key = self.key(place);
+      let value =
+        DictionaryCode::Place.bit();
       let _: () = redis::cmd("SETNX")
         .arg(&key)
-        .arg("1")
+        .arg(value.to_string())
         .query(&mut conn)?;
     }
     Ok(())
   }
 
-  fn contains_any(
+  fn get_value(
     &self,
-    terms: &[String]
-  ) -> bool {
-    let mut conn = match self
+    term: &str
+  ) -> Option<u32> {
+    let mut conn = self
       .client
       .get_connection()
-    {
-      | Ok(conn) => conn,
-      | Err(_) => return false
-    };
-    for term in terms {
-      let key = self.key(term);
-      if let Ok(true) =
-        conn.exists(&key)
-      {
-        return true;
-      }
-    }
-    false
+      .ok()?;
+    let key = self.key(term);
+    let value: Option<String> =
+      conn.get(&key).ok()?;
+    DictionaryValue::from_string(
+      value.as_deref().unwrap_or("")
+    )
+    .map(|v| v.0)
   }
 
-  fn insert_places(
+  fn merge_entries(
     &mut self,
-    terms: &[String]
+    entries: &[(String, u32)]
   ) -> Result<usize> {
     let mut conn =
       self.client.get_connection()?;
     let mut inserted = 0usize;
-    for term in terms {
+    for (term, value) in entries {
       let key = self.key(term);
-      let created: i32 =
-        redis::cmd("SETNX")
+      let existing: Option<String> =
+        conn.get(&key)?;
+      let existing_value = existing
+        .as_deref()
+        .and_then(
+          DictionaryValue::from_string
+        )
+        .map(|v| v.0)
+        .unwrap_or(0);
+      let merged =
+        existing_value | *value;
+      if merged != existing_value {
+        let _: () = redis::cmd("SET")
           .arg(&key)
-          .arg("1")
+          .arg(merged.to_string())
           .query(&mut conn)?;
-      if created == 1 {
         inserted += 1;
       }
     }
