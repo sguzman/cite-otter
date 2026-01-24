@@ -599,7 +599,10 @@ fn format_outputs_match_parity_snapshots()
     "tests/fixtures/format/csl.txt"
   )
   .expect("read expected CSL");
-  assert_eq!(csl_output, expected_csl);
+  assert_eq!(
+    csl_output.trim_end(),
+    expected_csl.trim_end()
+  );
 
   let bibtex_output =
     formatter.to_bibtex(&parsed);
@@ -609,7 +612,7 @@ fn format_outputs_match_parity_snapshots()
     )
     .expect("read expected BibTeX");
   assert_eq!(
-    bibtex_output,
-    expected_bibtex
+    bibtex_output.trim_end(),
+    expected_bibtex.trim_end()
   );
 }

@@ -263,11 +263,22 @@ fn split_reference_segments(
 ) -> Vec<String> {
   let mut segments = Vec::new();
   let mut last_start = 0usize;
+  let mut depth = 0usize;
 
   for (idx, ch) in
     reference.char_indices()
   {
+    if ch == '(' {
+      depth = depth.saturating_add(1);
+    } else if ch == ')'
+      && depth > 0
+    {
+      depth = depth.saturating_sub(1);
+    }
     if ch != '.' {
+      continue;
+    }
+    if depth > 0 {
       continue;
     }
     let mut next_chars = reference
@@ -1472,12 +1483,13 @@ fn extract_author(
 fn extract_author_segment(
   reference: &str
 ) -> String {
-  split_reference_segments(reference)
+  let segment = split_reference_segments(reference)
     .into_iter()
     .next()
     .unwrap_or_else(|| {
       reference.trim().to_string()
-    })
+    });
+  strip_parenthetical_date(&segment)
 }
 fn resolve_type(
   reference: &str
@@ -1567,12 +1579,6 @@ fn extract_pages(
       pos + 2
     )
     .unwrap_or_default();
-  }
-
-  if let Some(range) =
-    capture_page_range(reference, 0)
-  {
-    return range;
   }
 
   reference
@@ -1815,6 +1821,42 @@ fn extract_editor(
   }
 
   None
+}
+
+fn strip_parenthetical_date(
+  segment: &str
+) -> String {
+  let mut output = String::new();
+  let mut chars = segment.chars().peekable();
+  while let Some(ch) = chars.next() {
+    if ch == '(' {
+      let mut contents = String::new();
+      while let Some(inner) = chars.next() {
+        if inner == ')' {
+          break;
+        }
+        contents.push(inner);
+      }
+      let lower = contents.to_lowercase();
+      let has_year = contents
+        .chars()
+        .any(|c| c.is_ascii_digit());
+      let is_date = has_year
+        && (lower.contains("c.")
+          || lower.contains("ca.")
+          || lower.contains("circa")
+          || lower.contains("ed")
+          || lower.contains("éd"));
+      if !is_date {
+        output.push('(');
+        output.push_str(contents.trim());
+        output.push(')');
+      }
+      continue;
+    }
+    output.push(ch);
+  }
+  output.trim().to_string()
 }
 
 fn extract_translator(
