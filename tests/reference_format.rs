@@ -35,6 +35,10 @@ const TRANSLATOR_REF: &str =
   "Roe, Jane. Title. Translated by \
    Doe, J. ISBN 978-1-2345-6789-0 \
    ISSN 1234-5678.";
+const DERRIDA_REF: &str =
+  "Derrida, J. (c.1967). \
+   L’écriture et la différence (1 \
+   éd.). Paris: Éditions du Seuil.";
 
 #[test]
 fn bibtex_formatter_round_trips_reference()
@@ -287,6 +291,74 @@ fn csl_includes_issued_page_and_volume_issue()
 }
 
 #[test]
+fn csl_includes_circa_for_approximate_dates()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[DERRIDA_REF],
+    ParseFormat::Csl
+  );
+  let formatter = Format::new();
+  let csl =
+    formatter.to_csl(&references);
+
+  assert!(
+    csl.contains("\"circa\":true"),
+    "CSL output should flag circa \
+     dates"
+  );
+  assert!(
+    csl.contains(
+      "\"issued\":{\"date-parts\":[[1967]]}"
+    ),
+    "CSL output should include \
+     date-parts for circa dates"
+  );
+}
+
+#[test]
+fn bibtex_includes_edition_from_parser()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[DERRIDA_REF],
+    ParseFormat::BibTeX
+  );
+  let formatter = Format::new();
+  let bibtex =
+    formatter.to_bibtex(&references);
+
+  assert!(
+    bibtex.contains("edition = {1}"),
+    "BibTeX output should include \
+     edition"
+  );
+}
+
+#[test]
+fn bibtex_maps_date_to_year() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PEREC_REF],
+    ParseFormat::BibTeX
+  );
+  let formatter = Format::new();
+  let bibtex =
+    formatter.to_bibtex(&references);
+
+  assert!(
+    bibtex.contains("year = {1995}"),
+    "BibTeX output should map date \
+     to year"
+  );
+  assert!(
+    !bibtex.contains("date = {1995}"),
+    "BibTeX output should omit date \
+     after mapping to year"
+  );
+}
+
+#[test]
 fn bibtex_maps_article_issue_to_number() {
   let formatter = Format::new();
   let mut reference = Reference::new();
@@ -492,5 +564,52 @@ fn formatter_expands_publisher_and_container_abbrev()
     ),
     "Formatter should expand \
      container abbreviations"
+  );
+}
+
+#[test]
+fn format_outputs_match_parity_snapshots()
+ {
+  let refs_text = fs::read_to_string(
+    "tests/fixtures/format/refs.txt"
+  )
+  .expect("read format refs");
+  let references = refs_text
+    .lines()
+    .map(str::trim)
+    .filter(|line| !line.is_empty())
+    .map(|line| line.to_string())
+    .collect::<Vec<_>>();
+  let ref_slices =
+    references.iter().map(|line| {
+      line.as_str()
+    })
+    .collect::<Vec<_>>();
+
+  let parser = Parser::new();
+  let parsed = parser.parse(
+    &ref_slices,
+    ParseFormat::Json
+  );
+  let formatter = Format::new();
+
+  let csl_output =
+    formatter.to_csl(&parsed);
+  let expected_csl = fs::read_to_string(
+    "tests/fixtures/format/csl.txt"
+  )
+  .expect("read expected CSL");
+  assert_eq!(csl_output, expected_csl);
+
+  let bibtex_output =
+    formatter.to_bibtex(&parsed);
+  let expected_bibtex =
+    fs::read_to_string(
+      "tests/fixtures/format/bibtex.txt"
+    )
+    .expect("read expected BibTeX");
+  assert_eq!(
+    bibtex_output,
+    expected_bibtex
   );
 }

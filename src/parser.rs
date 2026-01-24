@@ -1402,6 +1402,12 @@ impl Parser {
           "date",
           FieldValue::List(year_values)
         );
+        if detect_circa(reference) {
+          mapped.insert(
+            "date-circa",
+            FieldValue::Single("true".into())
+          );
+        }
         mapped.insert(
           "pages",
           FieldValue::List(vec![
@@ -1451,7 +1457,9 @@ fn extract_title(
 ) -> String {
   split_reference_segments(reference)
     .get(1)
-    .map(|segment| segment.to_string())
+    .map(|segment| {
+      clean_title_segment(segment)
+    })
     .unwrap_or_default()
 }
 
@@ -2087,6 +2095,13 @@ fn extract_edition(
     if let Some(pos) =
       lower.find(keyword)
     {
+      if let Some(found) =
+        edition_number_before(
+          reference, pos
+        )
+      {
+        return Some(found);
+      }
       let start = pos + keyword.len();
       let remainder = reference
         .get(start..)
@@ -2110,6 +2125,73 @@ fn extract_edition(
     }
   }
   None
+}
+
+fn detect_circa(reference: &str) -> bool {
+  let lower = reference.to_lowercase();
+  lower.contains("c.")
+    || lower.contains("ca.")
+    || lower.contains("circa")
+}
+
+fn edition_number_before(
+  reference: &str,
+  keyword_pos: usize
+) -> Option<String> {
+  let prefix =
+    reference.get(..keyword_pos)?;
+  let token = prefix
+    .split_whitespace()
+    .last()
+    .unwrap_or("")
+    .trim_matches(|c: char| {
+      c == '(' || c == ')' || c == ','
+    });
+  let digits: String = token
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .collect();
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
+  }
+}
+
+fn clean_title_segment(
+  segment: &str
+) -> String {
+  let mut output = String::new();
+  let mut chars = segment.chars().peekable();
+  while let Some(ch) = chars.next() {
+    if ch == '(' {
+      let mut contents = String::new();
+      while let Some(inner) = chars.next() {
+        if inner == ')' {
+          break;
+        }
+        contents.push(inner);
+      }
+      let lower = contents.to_lowercase();
+      let is_edition = lower.contains("ed")
+        || lower.contains("édition")
+        || lower.contains("ed.")
+        || lower.contains("éd");
+      if !is_edition {
+        output.push('(');
+        output.push_str(contents.trim());
+        output.push(')');
+      }
+      continue;
+    }
+    output.push(ch);
+  }
+  output
+    .trim_matches(|c: char| {
+      c == '"' || c == '\'' || c == '.'
+    })
+    .trim()
+    .to_string()
 }
 
 fn expand_token(token: &str) -> String {

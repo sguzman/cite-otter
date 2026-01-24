@@ -146,10 +146,18 @@ fn field_value_strings(
 ) -> Vec<String> {
   match value {
     | FieldValue::Single(text) => {
-      vec![text.clone()]
+      if text.trim().is_empty() {
+        Vec::new()
+      } else {
+        vec![text.clone()]
+      }
     }
     | FieldValue::List(items) => {
-      items.clone()
+      items
+        .iter()
+        .filter(|item| !item.trim().is_empty())
+        .cloned()
+        .collect()
     }
     | FieldValue::Authors(authors) => {
       authors
@@ -177,6 +185,31 @@ fn normalize_bibtex_entry(
     map.remove("type")
   {
     map.insert("type".into(), value);
+  }
+
+  map.remove("date-circa");
+  map.remove("scripts");
+  map.remove("language");
+
+  if let Some(value) = map.remove("date")
+  {
+    if !map.contains_key("year") {
+      if let Some(year) = value
+        .as_array()
+        .and_then(|items| {
+          items
+            .first()
+            .and_then(Value::as_str)
+        })
+      {
+        map.insert(
+          "year".into(),
+          Value::Array(vec![Value::String(
+            year.to_string()
+          )])
+        );
+      }
+    }
   }
 
   if let Some(value) =
@@ -219,6 +252,8 @@ fn normalize_bibtex_entry(
       "publisher-place",
       "address"
     );
+  } else {
+    map.remove("publisher-place");
   }
 
   if let Some(value) =
@@ -294,8 +329,7 @@ fn fields_to_bibtex(
     .join("\n");
 
   format!(
-    "@{entry_type}{{citeotter{idx},\\
-     n{fields}\n}}"
+    "@{entry_type}{{citeotter{idx},\n{fields}\n}}"
   )
 }
 
@@ -355,6 +389,17 @@ fn csl_entry(
           )])
         )])
       )
+    );
+  }
+  if extract_first_value_from_map(
+    &map,
+    "date-circa"
+  )
+  .is_some()
+  {
+    record.insert(
+      "circa".into(),
+      Value::Bool(true)
     );
   }
 

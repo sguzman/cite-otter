@@ -83,6 +83,10 @@ const TRANSLATOR_REF: &str =
   "Roe, Jane. Title. Translated by \
    Doe, J. ISBN 978-1-2345-6789-0 \
    ISSN 1234-5678.";
+const DERRIDA_REF: &str =
+  "Derrida, J. (c.1967). \
+   L’écriture et la différence (1 \
+   éd.). Paris: Éditions du Seuil.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -312,6 +316,43 @@ fn parse_captures_translator_and_identifiers()
     reference,
     "issn",
     "1234-5678"
+  );
+}
+
+#[test]
+fn parse_extracts_edition_from_parenthetical()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[DERRIDA_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "edition",
+    "1"
+  );
+  assert_list_field(
+    reference,
+    "title",
+    "L’écriture et la différence"
+  );
+  let circa = reference
+    .get("date-circa")
+    .and_then(|value| {
+      match value {
+        | FieldValue::Single(text) => {
+          Some(text.as_str())
+        }
+        | _ => None
+      }
+    });
+  assert_eq!(
+    circa,
+    Some("true"),
+    "parser should flag circa dates"
   );
 }
 
