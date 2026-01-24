@@ -342,6 +342,65 @@ fn parse_applies_normalization_to_container()
 }
 
 #[test]
+fn parse_uses_normalization_dir_assets()
+{
+  let config =
+    NormalizationConfig::load_from_dir(
+      std::path::Path::new(
+        "tests/fixtures/\
+         normalization-dir"
+      )
+    )
+    .expect("load normalization dir");
+  let parser =
+    Parser::with_normalization(config);
+
+  let references = parser.parse(
+    &["Doe, J. Proc. Test. \
+       Proceedings of Testing. City: \
+       Univ. Press, 2020."],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  let publisher = reference
+    .get("publisher")
+    .and_then(|value| {
+      match value {
+        | FieldValue::List(items) => {
+          items.first().cloned()
+        }
+        | FieldValue::Single(text) => {
+          Some(text.clone())
+        }
+        | _ => None
+      }
+    });
+  assert_eq!(
+    publisher.as_deref(),
+    Some("University Press")
+  );
+  let container_values = reference
+    .get("container-title")
+    .and_then(|value| {
+      match value {
+        | FieldValue::List(items) => {
+          Some(items.clone())
+        }
+        | FieldValue::Single(text) => {
+          Some(vec![text.clone()])
+        }
+        | _ => None
+      }
+    })
+    .unwrap_or_default();
+  assert!(container_values.iter().any(
+    |value| {
+      value == "Proceedings of Testing"
+    }
+  ));
+}
+
+#[test]
 fn parse_prefers_first_year_in_multi_year_tokens()
  {
   let parser = Parser::new();

@@ -182,3 +182,67 @@ fn normalization_config_expands_publisher_and_container()
     Some("Proceedings of Testing")
   );
 }
+
+#[test]
+fn normalization_config_loads_from_dir()
+{
+  let dir = std::path::Path::new(
+    "tests/fixtures/normalization-dir"
+  );
+  let config =
+    NormalizationConfig::load_from_dir(
+      dir
+    )
+    .expect("load normalization dir");
+
+  let mut map = Map::new();
+  map.insert(
+    "journal".into(),
+    Value::Array(vec![Value::String(
+      "J. Test.".into()
+    )])
+  );
+  map.insert(
+    "publisher".into(),
+    Value::String("Univ. Press".into())
+  );
+  map.insert(
+    "container-title".into(),
+    Value::Array(vec![Value::String(
+      "Proc. Test.".into()
+    )])
+  );
+
+  config.apply_to_map(&mut map);
+
+  let container_values = map
+    .get("container-title")
+    .and_then(|value| value.as_array())
+    .map(|array| {
+      array
+        .iter()
+        .filter_map(|value| {
+          value.as_str()
+        })
+        .collect::<Vec<_>>()
+    })
+    .unwrap_or_default();
+  assert!(
+    container_values
+      .contains(&"Journal of Testing"),
+    "expected expanded journal"
+  );
+  assert!(
+    container_values.contains(
+      &"Proceedings of Testing"
+    ),
+    "expected expanded container title"
+  );
+  let publisher = map
+    .get("publisher")
+    .and_then(|value| value.as_str());
+  assert_eq!(
+    publisher,
+    Some("University Press")
+  );
+}
