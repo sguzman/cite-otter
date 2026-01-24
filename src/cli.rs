@@ -20,6 +20,7 @@ use serde_json::to_writer_pretty;
 use crate::dictionary::{
   Dictionary,
   DictionaryAdapter,
+  DictionaryCode,
   DictionaryConfig
 };
 use crate::finder::Finder;
@@ -158,6 +159,34 @@ enum Command {
     redis_url: Option<String>,
     #[arg(long)]
     namespace: Option<String>
+  },
+
+  /// Import terms into dictionary
+  /// adapters
+  #[command(name = "dictionary-import")]
+  DictionaryImport {
+    /// Dictionary file paths
+    inputs:    Vec<PathBuf>,
+    #[arg(
+      long,
+      value_enum,
+      default_value_t = DictionaryAdapterArg::Memory
+    )]
+    adapter:   DictionaryAdapterArg,
+    #[arg(
+      long,
+      value_enum,
+      default_value_t = DictionaryCodeArg::Place
+    )]
+    code:      DictionaryCodeArg,
+    #[arg(long)]
+    gdbm_path: Option<PathBuf>,
+    #[arg(long)]
+    lmdb_path: Option<PathBuf>,
+    #[arg(long)]
+    redis_url: Option<String>,
+    #[arg(long)]
+    namespace: Option<String>
   }
 }
 
@@ -177,6 +206,27 @@ enum DictionaryAdapterArg {
   Redis,
   Lmdb,
   Gdbm
+}
+
+#[derive(
+  Copy, Clone, Debug, ValueEnum,
+)]
+enum DictionaryCodeArg {
+  Place
+}
+
+impl From<DictionaryCodeArg>
+  for DictionaryCode
+{
+  fn from(
+    code: DictionaryCodeArg
+  ) -> Self {
+    match code {
+      | DictionaryCodeArg::Place => {
+        DictionaryCode::Place
+      }
+    }
+  }
 }
 
 impl From<DictionaryAdapterArg>
@@ -485,6 +535,66 @@ pub fn run() -> anyhow::Result<()> {
         println!("{labels}");
       }
     }
+    | Command::DictionaryImport {
+      inputs,
+      adapter,
+      code,
+      gdbm_path,
+      lmdb_path,
+      redis_url,
+      namespace
+    } => {
+      if inputs.is_empty() {
+        anyhow::bail!(
+          "dictionary import requires \
+           at least one input file"
+        );
+      }
+      let mut config =
+        DictionaryConfig::new(
+          DictionaryAdapter::from(
+            adapter
+          )
+        );
+      if let Some(path) = gdbm_path {
+        config =
+          config.with_gdbm_path(path);
+      }
+      if let Some(path) = lmdb_path {
+        config =
+          config.with_lmdb_path(path);
+      }
+      if let Some(url) = redis_url {
+        config =
+          config.with_redis_url(url);
+      }
+      if let Some(name) = namespace {
+        config =
+          config.with_namespace(name);
+      }
+      let mut dictionary =
+        Dictionary::try_create(config)?;
+      let mut total = 0usize;
+      let code =
+        DictionaryCode::from(code);
+      for input in inputs {
+        let terms =
+          load_dictionary_terms(
+            &input
+          )?;
+        let inserted = dictionary
+          .import_terms(code, terms)?;
+        println!(
+          "imported {inserted} terms \
+           from {}",
+          input.display()
+        );
+        total += inserted;
+      }
+      println!(
+        "total imported: {total}"
+      );
+    }
   }
 
   Ok(())
@@ -505,6 +615,31 @@ fn load_input(
   } else {
     Ok(input.to_string())
   }
+}
+
+fn load_dictionary_terms(
+  path: &Path
+) -> anyhow::Result<Vec<String>> {
+  let content =
+    fs::read_to_string(path)?;
+  let mut terms = Vec::new();
+  for raw_line in content.lines() {
+    let line = raw_line.trim();
+    if line.is_empty()
+      || line.starts_with('#')
+    {
+      continue;
+    }
+    let term = line
+      .split(|c| c == '\t' || c == ',')
+      .next()
+      .unwrap_or("")
+      .trim();
+    if !term.is_empty() {
+      terms.push(term.to_string());
+    }
+  }
+  Ok(terms)
 }
 
 fn run_training_with_config(

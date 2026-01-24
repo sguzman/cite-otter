@@ -1,19 +1,20 @@
+use std::collections::BTreeSet;
 use std::path::{
   Path,
   PathBuf
 };
 
 use anyhow::{
-  anyhow,
   Context,
-  Result
+  Result,
+  anyhow
 };
-use lmdb::Transaction;
 #[cfg(feature = "gdbm")]
 use gnudbm::{
   Error as GdbmError,
   GdbmOpener
 };
+use lmdb::Transaction;
 use redis::Commands;
 
 #[derive(Debug, Clone, Copy)]
@@ -100,12 +101,11 @@ impl DictionaryConfig {
         DictionaryBackend::Memory
       }
       | DictionaryAdapter::Gdbm => {
-        let path =
-          resolve_backend_path(
-            self.gdbm_path.as_ref(),
-            "gdbm",
-            "places.db"
-          );
+        let path = resolve_backend_path(
+          self.gdbm_path.as_ref(),
+          "gdbm",
+          "places.db"
+        );
         DictionaryBackend::Gdbm(
           GdbmBackend::open(&path)?
         )
@@ -206,6 +206,35 @@ impl Dictionary {
   ) -> DictionaryAdapter {
     self.adapter
   }
+
+  pub fn import_terms(
+    &mut self,
+    code: DictionaryCode,
+    terms: impl IntoIterator<Item = String>
+  ) -> Result<usize> {
+    let mut normalized =
+      BTreeSet::new();
+    for term in terms {
+      let term = term.trim();
+      if term.is_empty() {
+        continue;
+      }
+      for token in
+        normalized_terms(term)
+      {
+        normalized.insert(token);
+      }
+    }
+    let terms: Vec<String> =
+      normalized.into_iter().collect();
+    match code {
+      | DictionaryCode::Place => {
+        self
+          .backend
+          .insert_places(&terms)
+      }
+    }
+  }
 }
 
 #[derive(Debug)]
@@ -237,6 +266,24 @@ impl DictionaryBackend {
       }
       | Self::Redis(backend) => {
         backend.contains_any(terms)
+      }
+    }
+  }
+
+  fn insert_places(
+    &mut self,
+    terms: &[String]
+  ) -> Result<usize> {
+    match self {
+      | Self::Memory => Ok(0),
+      | Self::Gdbm(backend) => {
+        backend.insert_places(terms)
+      }
+      | Self::Lmdb(backend) => {
+        backend.insert_places(terms)
+      }
+      | Self::Redis(backend) => {
+        backend.insert_places(terms)
       }
     }
   }
@@ -304,6 +351,33 @@ impl LmdbBackend {
     }
     false
   }
+
+  fn insert_places(
+    &mut self,
+    terms: &[String]
+  ) -> Result<usize> {
+    let mut txn =
+      self.env.begin_rw_txn()?;
+    let mut inserted = 0usize;
+    for term in terms {
+      match txn.put(
+        self.db,
+        term,
+        b"1",
+        lmdb::WriteFlags::NO_OVERWRITE
+      ) {
+        | Ok(()) => inserted += 1,
+        | Err(
+          lmdb::Error::KeyExist
+        ) => {}
+        | Err(err) => {
+          return Err(err.into())
+        }
+      }
+    }
+    txn.commit()?;
+    Ok(inserted)
+  }
 }
 
 #[cfg(feature = "gdbm")]
@@ -315,21 +389,27 @@ struct GdbmBackend {
 #[cfg(feature = "gdbm")]
 impl GdbmBackend {
   fn open(path: &Path) -> Result<Self> {
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path.parent()
+    {
       std::fs::create_dir_all(parent)?;
     }
     let handle = GdbmOpener::new()
       .create(true)
       .readwrite(path)
       .context("open gdbm database")?;
-    let mut backend = Self { handle };
+    let mut backend = Self {
+      handle
+    };
     backend.seed_places()?;
     Ok(backend)
   }
 
-  fn seed_places(&mut self) -> Result<()> {
+  fn seed_places(
+    &mut self
+  ) -> Result<()> {
     for place in PLACE_NAMES {
-      let _ = self.handle.store(place, &1u8);
+      let _ =
+        self.handle.store(place, &1u8);
     }
     Ok(())
   }
@@ -340,12 +420,23 @@ impl GdbmBackend {
   ) -> bool {
     for term in terms {
       match self.handle.fetch(term) {
-        Ok(_) => return true,
-        Err(GdbmError::NoRecord) => {}
-        Err(_) => return false
+        | Ok(_) => return true,
+        | Err(GdbmError::NoRecord) => {}
+        | Err(_) => return false
       }
     }
     false
+  }
+
+  fn insert_places(
+    &mut self,
+    terms: &[String]
+  ) -> Result<usize> {
+    for term in terms {
+      let _ =
+        self.handle.store(term, &1u8);
+    }
+    Ok(terms.len())
   }
 }
 
@@ -355,7 +446,9 @@ struct GdbmBackend;
 
 #[cfg(not(feature = "gdbm"))]
 impl GdbmBackend {
-  fn open(_path: &Path) -> Result<Self> {
+  fn open(
+    _path: &Path
+  ) -> Result<Self> {
     Err(anyhow!(
       "gdbm support not enabled; \
        recompile with --features gdbm"
@@ -367,6 +460,16 @@ impl GdbmBackend {
     _terms: &[String]
   ) -> bool {
     false
+  }
+
+  fn insert_places(
+    &mut self,
+    _terms: &[String]
+  ) -> Result<usize> {
+    Err(anyhow!(
+      "gdbm support not enabled; \
+       recompile with --features gdbm"
+    ))
   }
 }
 
@@ -425,6 +528,27 @@ impl RedisBackend {
       }
     }
     false
+  }
+
+  fn insert_places(
+    &mut self,
+    terms: &[String]
+  ) -> Result<usize> {
+    let mut conn =
+      self.client.get_connection()?;
+    let mut inserted = 0usize;
+    for term in terms {
+      let key = self.key(term);
+      let created: i32 =
+        redis::cmd("SETNX")
+          .arg(&key)
+          .arg("1")
+          .query(&mut conn)?;
+      if created == 1 {
+        inserted += 1;
+      }
+    }
+    Ok(inserted)
   }
 
   fn key(
