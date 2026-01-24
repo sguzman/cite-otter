@@ -29,5 +29,18 @@
       "output": "<redacted>",
       "references": 2
     }
-  ]
+  ],
+  "summary": {
+    "parser": {
+      "datasets": 1,
+      "sequences": 2,
+      "tokens": 2
+    },
+    "finder": {
+      "datasets": 1,
+      "sequences": 2,
+      "tokens": 2
+    },
+    "samples": 3
+  }
 }

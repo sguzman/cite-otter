@@ -415,17 +415,39 @@ struct SampleEntry {
   references: usize
 }
 
+#[derive(Clone, Serialize)]
+struct ReportSummary {
+  datasets: usize,
+  sequences: usize,
+  tokens:    usize
+}
+
+#[derive(Serialize)]
+struct TrainingSummary {
+  parser:  ReportSummary,
+  finder:  ReportSummary,
+  samples: usize
+}
+
+#[derive(Serialize)]
+struct ValidationSummary {
+  parser: ReportSummary,
+  finder: ReportSummary
+}
+
 #[derive(Serialize)]
 struct TrainingReport {
   parser:  Vec<DatasetStat>,
   finder:  Vec<DatasetStat>,
-  samples: Vec<SampleEntry>
+  samples: Vec<SampleEntry>,
+  summary: TrainingSummary
 }
 
 #[derive(Serialize)]
 struct ValidationReport {
   parser: Vec<DatasetStat>,
-  finder: Vec<DatasetStat>
+  finder: Vec<DatasetStat>,
+  summary: ValidationSummary
 }
 
 #[derive(Clone, Serialize)]
@@ -439,8 +461,16 @@ struct DeltaEntry {
 }
 
 #[derive(Serialize)]
+struct DeltaSummary {
+  comparisons: usize,
+  parser:      usize,
+  finder:      usize
+}
+
+#[derive(Serialize)]
 struct DeltaReport {
-  comparisons: Vec<DeltaEntry>
+  comparisons: Vec<DeltaEntry>,
+  summary: DeltaSummary
 }
 
 pub fn run() -> anyhow::Result<()> {
@@ -1699,7 +1729,12 @@ fn run_training_with_config(
         .iter()
         .map(|(_, stat)| stat.clone())
         .collect(),
-      samples: sample_outputs
+      samples: sample_outputs,
+      summary: TrainingSummary {
+        parser: summarize_stats(&parser_pairs),
+        finder: summarize_stats(&finder_pairs),
+        samples: SAMPLE_FORMATS.len()
+      }
     }
   )?;
   Ok(())
@@ -1813,7 +1848,11 @@ fn run_validation_with_config(
       finder: finder_stats
         .iter()
         .map(|(_, stat)| stat.clone())
-        .collect()
+        .collect(),
+      summary: ValidationSummary {
+        parser: summarize_stats(&parser_stats),
+        finder: summarize_stats(&finder_stats)
+      }
     }
   )?;
 
@@ -1915,6 +1954,14 @@ fn run_delta_with_config(
     .collect::<Result<Vec<_>, anyhow::Error>>()?;
 
   delta_entries.extend(finder_entries);
+  let parser_count = delta_entries
+    .iter()
+    .filter(|entry| entry.kind == "parser")
+    .count();
+  let finder_count = delta_entries
+    .iter()
+    .filter(|entry| entry.kind == "finder")
+    .count();
 
   persist_report(
     report_path(
@@ -1922,7 +1969,12 @@ fn run_delta_with_config(
       "delta-report.json"
     ),
     &DeltaReport {
-      comparisons: delta_entries
+      comparisons: delta_entries,
+      summary: DeltaSummary {
+        comparisons: parser_count + finder_count,
+        parser: parser_count,
+        finder: finder_count
+      }
     }
   )?;
 
@@ -2002,6 +2054,22 @@ fn gather_finder_stats(
       }))
     })
     .collect()
+}
+
+fn summarize_stats(
+  stats: &[(PathBuf, DatasetStat)]
+) -> ReportSummary {
+  let mut sequences = 0usize;
+  let mut tokens = 0usize;
+  for (_, stat) in stats {
+    sequences += stat.sequences;
+    tokens += stat.tokens;
+  }
+  ReportSummary {
+    datasets: stats.len(),
+    sequences,
+    tokens
+  }
 }
 
 fn persist_report(
