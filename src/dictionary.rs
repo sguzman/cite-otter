@@ -1,4 +1,7 @@
-use std::collections::BTreeSet;
+use std::collections::{
+  BTreeSet,
+  HashMap
+};
 use std::path::{
   Path,
   PathBuf
@@ -29,7 +32,78 @@ pub enum DictionaryAdapter {
   Debug, Clone, Copy, PartialEq, Eq,
 )]
 pub enum DictionaryCode {
-  Place
+  Name,
+  Place,
+  Publisher,
+  Journal
+}
+
+impl DictionaryCode {
+  pub fn bit(self) -> u32 {
+    match self {
+      | DictionaryCode::Name => 1,
+      | DictionaryCode::Place => 2,
+      | DictionaryCode::Publisher => 4,
+      | DictionaryCode::Journal => 8
+    }
+  }
+
+  pub fn from_tag(tag: &str) -> Option<Self> {
+    match tag.trim().to_ascii_lowercase().as_str() {
+      | "name" => Some(DictionaryCode::Name),
+      | "place" => Some(DictionaryCode::Place),
+      | "publisher" => {
+        Some(DictionaryCode::Publisher)
+      }
+      | "journal" => Some(DictionaryCode::Journal),
+      | _ => None
+    }
+  }
+
+  pub fn from_value(value: u32) -> Vec<Self> {
+    let mut codes = Vec::new();
+    for code in &[
+      DictionaryCode::Name,
+      DictionaryCode::Place,
+      DictionaryCode::Publisher,
+      DictionaryCode::Journal
+    ] {
+      if value & code.bit() != 0 {
+        codes.push(*code);
+      }
+    }
+    codes
+  }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct DictionaryValue(u32);
+
+impl DictionaryValue {
+  fn from_bytes(bytes: &[u8]) -> Option<Self> {
+    if bytes.len() == 4 {
+      let mut buf = [0u8; 4];
+      buf.copy_from_slice(bytes);
+      return Some(Self(u32::from_le_bytes(
+        buf
+      )));
+    }
+    let parsed = std::str::from_utf8(bytes)
+      .ok()?
+      .trim()
+      .parse::<u32>()
+      .ok()?;
+    Some(Self(parsed))
+  }
+
+  fn from_string(value: &str) -> Option<Self> {
+    let parsed = value.trim().parse::<u32>().ok()?;
+    Some(Self(parsed))
+  }
+
+  fn bytes(self) -> [u8; 4] {
+    self.0.to_le_bytes()
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -98,7 +172,9 @@ impl DictionaryConfig {
   ) -> Result<Dictionary> {
     let backend = match self.adapter {
       | DictionaryAdapter::Memory => {
-        DictionaryBackend::Memory
+        DictionaryBackend::Memory(
+          MemoryBackend::new()
+        )
       }
       | DictionaryAdapter::Gdbm => {
         let path = resolve_backend_path(
@@ -155,8 +231,9 @@ impl DictionaryConfig {
     self.open().unwrap_or_else(|_| {
       Dictionary {
         adapter: self.adapter,
-        backend:
-          DictionaryBackend::Memory
+        backend: DictionaryBackend::Memory(
+          MemoryBackend::new()
+        )
       }
     })
   }
@@ -191,14 +268,16 @@ impl Dictionary {
     term: &str
   ) -> Vec<DictionaryCode> {
     let terms = normalized_terms(term);
-    if self
-      .backend
-      .contains_place(&terms)
-    {
-      vec![DictionaryCode::Place]
-    } else {
-      Vec::new()
+    let mut value = 0u32;
+    for term in terms {
+      if let Some(found) = self
+        .backend
+        .get_value(&term)
+      {
+        value |= found;
+      }
     }
+    DictionaryCode::from_value(value)
   }
 
   pub fn adapter(
@@ -212,80 +291,124 @@ impl Dictionary {
     code: DictionaryCode,
     terms: impl IntoIterator<Item = String>
   ) -> Result<usize> {
-    let mut normalized =
-      BTreeSet::new();
-    for term in terms {
+    let entries = terms
+      .into_iter()
+      .map(|term| (term, code.bit()));
+    self.import_entries(entries)
+  }
+
+  pub fn import_entries(
+    &mut self,
+    entries: impl IntoIterator<Item = (String, u32)>
+  ) -> Result<usize> {
+    let mut normalized = BTreeSet::new();
+    let mut prepared = Vec::new();
+    for (term, value) in entries {
       let term = term.trim();
-      if term.is_empty() {
+      if term.is_empty() || value == 0 {
         continue;
       }
-      for token in
-        normalized_terms(term)
-      {
-        normalized.insert(token);
+      for token in normalized_terms(term) {
+        if normalized.insert(token.clone()) {
+          prepared.push((token, value));
+        }
       }
     }
-    let terms: Vec<String> =
-      normalized.into_iter().collect();
-    match code {
-      | DictionaryCode::Place => {
-        self
-          .backend
-          .insert_places(&terms)
-      }
-    }
+    self.backend.merge_entries(&prepared)
   }
 }
 
 #[derive(Debug)]
 enum DictionaryBackend {
-  Memory,
+  Memory(MemoryBackend),
   Gdbm(GdbmBackend),
   Lmdb(LmdbBackend),
   Redis(RedisBackend)
 }
 
 impl DictionaryBackend {
-  fn contains_place(
+  fn get_value(
     &self,
-    terms: &[String]
-  ) -> bool {
+    term: &str
+  ) -> Option<u32> {
     match self {
-      | Self::Memory => {
-        terms.iter().any(|term| {
-          PLACE_NAMES
-            .iter()
-            .any(|&name| term == name)
-        })
+      | Self::Memory(backend) => {
+        backend.get_value(term)
       }
       | Self::Gdbm(backend) => {
-        backend.contains_any(terms)
+        backend.get_value(term)
       }
       | Self::Lmdb(backend) => {
-        backend.contains_any(terms)
+        backend.get_value(term)
       }
       | Self::Redis(backend) => {
-        backend.contains_any(terms)
+        backend.get_value(term)
       }
     }
   }
 
-  fn insert_places(
+  fn merge_entries(
     &mut self,
-    terms: &[String]
+    entries: &[(String, u32)]
   ) -> Result<usize> {
     match self {
-      | Self::Memory => Ok(0),
+      | Self::Memory(backend) => {
+        Ok(backend.merge_entries(entries))
+      }
       | Self::Gdbm(backend) => {
-        backend.insert_places(terms)
+        backend.merge_entries(entries)
       }
       | Self::Lmdb(backend) => {
-        backend.insert_places(terms)
+        backend.merge_entries(entries)
       }
       | Self::Redis(backend) => {
-        backend.insert_places(terms)
+        backend.merge_entries(entries)
       }
     }
+  }
+}
+
+#[derive(Debug)]
+struct MemoryBackend {
+  entries: HashMap<String, u32>
+}
+
+impl MemoryBackend {
+  fn new() -> Self {
+    let mut entries = HashMap::new();
+    for place in PLACE_NAMES {
+      entries.insert(
+        place.to_string(),
+        DictionaryCode::Place.bit()
+      );
+    }
+    Self { entries }
+  }
+
+  fn get_value(
+    &self,
+    term: &str
+  ) -> Option<u32> {
+    self.entries.get(term).copied()
+  }
+
+  fn merge_entries(
+    &mut self,
+    entries: &[(String, u32)]
+  ) -> usize {
+    let mut updated = 0usize;
+    for (term, value) in entries {
+      let entry = self
+        .entries
+        .entry(term.clone())
+        .or_insert(0);
+      let next = *entry | *value;
+      if next != *entry {
+        *entry = next;
+        updated += 1;
+      }
+    }
+    updated
   }
 }
 
@@ -323,10 +446,14 @@ impl LmdbBackend {
     let mut txn =
       self.env.begin_rw_txn()?;
     for place in PLACE_NAMES {
+      let value = DictionaryValue(
+        DictionaryCode::Place.bit()
+      )
+      .bytes();
       let _ = txn.put(
         self.db,
         place,
-        b"1",
+        &value,
         lmdb::WriteFlags::NO_OVERWRITE
       );
     }
@@ -334,45 +461,42 @@ impl LmdbBackend {
     Ok(())
   }
 
-  fn contains_any(
+  fn get_value(
     &self,
-    terms: &[String]
-  ) -> bool {
-    let txn =
-      match self.env.begin_ro_txn() {
-        | Ok(txn) => txn,
-        | Err(_) => return false
-      };
-    for term in terms {
-      if txn.get(self.db, term).is_ok()
-      {
-        return true;
-      }
-    }
-    false
+    term: &str
+  ) -> Option<u32> {
+    let txn = self.env.begin_ro_txn().ok()?;
+    let bytes = txn.get(self.db, term).ok()?;
+    DictionaryValue::from_bytes(bytes).map(|v| v.0)
   }
 
-  fn insert_places(
+  fn merge_entries(
     &mut self,
-    terms: &[String]
+    entries: &[(String, u32)]
   ) -> Result<usize> {
     let mut txn =
       self.env.begin_rw_txn()?;
     let mut inserted = 0usize;
-    for term in terms {
-      match txn.put(
-        self.db,
-        term,
-        b"1",
-        lmdb::WriteFlags::NO_OVERWRITE
-      ) {
-        | Ok(()) => inserted += 1,
-        | Err(
-          lmdb::Error::KeyExist
-        ) => {}
-        | Err(err) => {
-          return Err(err.into())
-        }
+    for (term, value) in entries {
+      let existing = txn
+        .get(self.db, term.as_str())
+        .ok()
+        .and_then(|bytes| {
+          DictionaryValue::from_bytes(bytes)
+            .map(|v| v.0)
+        })
+        .unwrap_or(0);
+      let merged = existing | *value;
+      if merged != existing {
+        let encoded =
+          DictionaryValue(merged).bytes();
+        txn.put(
+          self.db,
+          term,
+          &encoded,
+          lmdb::WriteFlags::empty()
+        )?;
+        inserted += 1;
       }
     }
     txn.commit()?;
@@ -408,35 +532,54 @@ impl GdbmBackend {
     &mut self
   ) -> Result<()> {
     for place in PLACE_NAMES {
-      let _ =
-        self.handle.store(place, &1u8);
+      let value = DictionaryValue(
+        DictionaryCode::Place.bit()
+      )
+      .bytes();
+      let _ = self.handle.store(place, &value);
     }
     Ok(())
   }
 
-  fn contains_any(
+  fn get_value(
     &self,
-    terms: &[String]
-  ) -> bool {
-    for term in terms {
-      match self.handle.fetch(term) {
-        | Ok(_) => return true,
-        | Err(GdbmError::NoRecord) => {}
-        | Err(_) => return false
+    term: &str
+  ) -> Option<u32> {
+    match self.handle.fetch(term) {
+      | Ok(bytes) => {
+        DictionaryValue::from_bytes(&bytes)
+          .map(|v| v.0)
       }
+      | Err(GdbmError::NoRecord) => None,
+      | Err(_) => None
     }
-    false
   }
 
-  fn insert_places(
+  fn merge_entries(
     &mut self,
-    terms: &[String]
+    entries: &[(String, u32)]
   ) -> Result<usize> {
-    for term in terms {
-      let _ =
-        self.handle.store(term, &1u8);
+    let mut updated = 0usize;
+    for (term, value) in entries {
+      let existing = match self.handle.fetch(term) {
+        | Ok(bytes) => DictionaryValue::from_bytes(
+          &bytes,
+        )
+        .map(|v| v.0)
+        .unwrap_or(0),
+        | Err(GdbmError::NoRecord) => 0,
+        | Err(_) => 0
+      };
+      let merged = existing | *value;
+      if merged != existing {
+        let encoded =
+          DictionaryValue(merged).bytes();
+        let _ =
+          self.handle.store(term, &encoded);
+        updated += 1;
+      }
     }
-    Ok(terms.len())
+    Ok(updated)
   }
 }
 
@@ -455,16 +598,16 @@ impl GdbmBackend {
     ))
   }
 
-  fn contains_any(
+  fn get_value(
     &self,
-    _terms: &[String]
-  ) -> bool {
-    false
+    _term: &str
+  ) -> Option<u32> {
+    None
   }
 
-  fn insert_places(
+  fn merge_entries(
     &mut self,
-    _terms: &[String]
+    _entries: &[(String, u32)]
   ) -> Result<usize> {
     Err(anyhow!(
       "gdbm support not enabled; \
