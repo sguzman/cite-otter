@@ -24,6 +24,17 @@ const COMPLEX_REF: &str =
    Testing. Edited by Doe, J. \
    (Note: Preprint release). \
    doi:10.1000/test https://example.org.";
+const COMPLEX_REF_WITH_NUMBER: &str =
+  "Smith, Alice. On heuristics for \
+   mixing metadata. Lecture Notes \
+   in Computer Science, 4050. Journal \
+   of Testing. Edited by Doe, J. \
+   (Note: Preprint release). \
+   doi:10.1000/test https://example.org.";
+const TRANSLATOR_REF: &str =
+  "Roe, Jane. Title. Translated by \
+   Doe, J. ISBN 978-1-2345-6789-0 \
+   ISSN 1234-5678.";
 
 #[test]
 fn bibtex_formatter_round_trips_reference()
@@ -105,6 +116,75 @@ fn csl_formatter_outputs_enriched_json()
       "\"doi\":\"doi:10.1000/test\""
     ),
     "CSL output should expose DOI"
+  );
+}
+
+#[test]
+fn csl_formatter_includes_collection_numbers_and_translators()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[
+      COMPLEX_REF_WITH_NUMBER,
+      TRANSLATOR_REF
+    ],
+    ParseFormat::Csl
+  );
+  let formatter = Format::new();
+  let csl =
+    formatter.to_csl(&references);
+
+  assert!(
+    csl.contains(
+      "\"collection-number\":\"4050\""
+    ),
+    "CSL output should include \
+     collection numbers"
+  );
+  assert!(
+    csl.contains(
+      "\"translator\":[\"Translated \
+       by Doe\"]"
+    ),
+    "CSL output should include \
+     translator names"
+  );
+  assert!(
+    csl.contains(
+      "\"isbn\":\"978-1-2345-6789-0\""
+    ),
+    "CSL output should include ISBN"
+  );
+  assert!(
+    csl.contains(
+      "\"issn\":\"1234-5678\""
+    ),
+    "CSL output should include ISSN"
+  );
+}
+
+#[test]
+fn bibtex_uses_publisher_place_when_missing_location()
+ {
+  let formatter = Format::new();
+  let mut reference = Reference::new();
+  reference.insert(
+    "publisher-place",
+    FieldValue::List(vec![
+      "Paris".into(),
+    ])
+  );
+  reference.insert(
+    "type",
+    FieldValue::Single("book".into())
+  );
+  let bibtex =
+    formatter.to_bibtex(&[reference]);
+  assert!(
+    bibtex
+      .contains("address = {Paris}"),
+    "BibTeX should map \
+     publisher-place to address"
   );
 }
 

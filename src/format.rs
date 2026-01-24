@@ -192,6 +192,13 @@ fn normalize_bibtex_entry(
   rename_field(
     map, "location", "address"
   );
+  if !map.contains_key("address") {
+    rename_field(
+      map,
+      "publisher-place",
+      "address"
+    );
+  }
 
   if let Some(value) =
     map.remove("volume")
@@ -294,14 +301,36 @@ fn csl_entry(
     );
   }
 
+  for key in
+    ["author", "editor", "translator"]
+  {
+    if let Some(values) =
+      extract_values_from_map(&map, key)
+    {
+      record.insert(
+        key.into(),
+        Value::Array(
+          values
+            .into_iter()
+            .map(Value::String)
+            .collect()
+        )
+      );
+    }
+  }
+
   for key in [
     "container-title",
     "collection-title",
+    "collection-number",
     "journal",
     "publisher",
+    "publisher-place",
     "address",
     "doi",
-    "url"
+    "url",
+    "isbn",
+    "issn"
   ] {
     if let Some(value) =
       extract_first_value_from_map(
@@ -347,6 +376,26 @@ fn extract_first_value_from_map(
         .map(|s| s.to_string())
     })
   })
+}
+
+fn extract_values_from_map(
+  map: &Map<String, Value>,
+  key: &str
+) -> Option<Vec<String>> {
+  map
+    .get(key)
+    .and_then(|value| {
+      value.as_array().map(|items| {
+        items
+          .iter()
+          .filter_map(Value::as_str)
+          .map(|value| {
+            value.to_string()
+          })
+          .collect::<Vec<_>>()
+      })
+    })
+    .filter(|values| !values.is_empty())
 }
 
 fn rename_field(
