@@ -441,6 +441,7 @@ pub fn run() -> anyhow::Result<()> {
   let cli = Cli::parse();
   let formatter =
     formatter_for_cli(&cli)?;
+  let parser = parser_for_cli(&cli)?;
   let paths = CliPaths::from_cli(&cli);
 
   match cli.command {
@@ -449,7 +450,6 @@ pub fn run() -> anyhow::Result<()> {
       output_format
     } => {
       let text = load_input(&input)?;
-      let parser = Parser::new();
       let references = parser.parse(
         &[text.as_str()],
         output_format
@@ -489,7 +489,6 @@ pub fn run() -> anyhow::Result<()> {
         segments.len()
       );
       if !segments.is_empty() {
-        let parser = Parser::new();
         let references = segments
           .iter()
           .map(|segment| {
@@ -548,7 +547,6 @@ pub fn run() -> anyhow::Result<()> {
     | Command::Sample {
       format
     } => {
-      let parser = Parser::new();
       let references = parser.parse(
         &SAMPLE_REFERENCES,
         format
@@ -834,6 +832,24 @@ fn formatter_for_cli(
     ))
   } else {
     Ok(Format::new())
+  }
+}
+
+fn parser_for_cli(
+  cli: &Cli
+) -> anyhow::Result<Parser> {
+  if let Some(dir) =
+    cli.normalization_dir.as_ref()
+  {
+    let config =
+      NormalizationConfig::load_from_dir(
+        dir
+      )?;
+    Ok(Parser::with_normalization(
+      config
+    ))
+  } else {
+    Ok(Parser::new())
   }
 }
 

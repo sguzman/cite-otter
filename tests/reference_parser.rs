@@ -9,6 +9,7 @@ use cite_otter::dictionary::{
   DictionaryCode
 };
 use cite_otter::format::ParseFormat;
+use std::fs;
 use cite_otter::normalizer::{
   abbreviations::AbbreviationMap,
   NormalizationConfig
@@ -292,6 +293,51 @@ fn parse_applies_normalization_to_publisher()
   assert_eq!(
     publisher.as_deref(),
     Some("University Press")
+  );
+}
+
+#[test]
+fn parse_applies_normalization_to_container()
+ {
+  let container_text =
+    fs::read_to_string(
+      "tests/fixtures/\
+       container-abbrev-sample.txt"
+    )
+    .expect("container fixture");
+  let config =
+    NormalizationConfig::default()
+      .with_container_abbrev(
+        AbbreviationMap::load_from_str(
+          &container_text
+        )
+      );
+  let parser =
+    Parser::with_normalization(config);
+
+  let references = parser.parse(
+    &["Doe, J. Proc. Test. \
+       Proceedings of Testing. City: \
+       Pub, 2020."],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  let container = reference
+    .get("container-title")
+    .and_then(|value| {
+      match value {
+        | FieldValue::List(items) => {
+          items.first().cloned()
+        }
+        | FieldValue::Single(text) => {
+          Some(text.clone())
+        }
+        | _ => None
+      }
+    });
+  assert_eq!(
+    container.as_deref(),
+    Some("Proceedings of Testing")
   );
 }
 
