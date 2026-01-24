@@ -1858,6 +1858,15 @@ fn extract_title(
   if segments.is_empty() {
     return String::new();
   }
+  if let Some((_, title)) =
+    split_author_title_segment(
+      &segments[0]
+    )
+  {
+    if !title.is_empty() {
+      return clean_title_segment(&title);
+    }
+  }
   let (author_index, author_segment) =
     select_author_segment(&segments);
   let mut candidate = if author_index > 0 {
@@ -1940,6 +1949,13 @@ fn extract_author_segment(
   }
   let (index, segment) =
     select_author_segment(&segments);
+  if let Some((authors, _)) =
+    split_author_title_segment(&segment)
+  {
+    if !authors.is_empty() {
+      return authors;
+    }
+  }
   let mut candidate =
     trim_author_segment(&segment);
   if candidate.is_empty() {
@@ -1991,6 +2007,12 @@ fn author_segment_score(
   }
   if trimmed.to_lowercase().contains("proc.") {
     score -= 2;
+  }
+  if trimmed.contains('(')
+    && trimmed.contains(')')
+    && segment_has_year(trimmed)
+  {
+    score += 2;
   }
   if trimmed
     .chars()
@@ -2202,6 +2224,41 @@ fn extract_citation_number(
   } else {
     Some(format!("{prefix}{digits}"))
   }
+}
+
+fn split_author_title_segment(
+  segment: &str
+) -> Option<(String, String)> {
+  let open = segment.find('(')?;
+  let close = segment[open + 1..]
+    .find(')')?
+    + open
+    + 1;
+  let inside = &segment[open + 1..close];
+  if inside
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .count()
+    < 4
+  {
+    return None;
+  }
+  let author = segment[..open]
+    .trim()
+    .trim_end_matches(',')
+    .trim()
+    .to_string();
+  let title = segment[close + 1..]
+    .trim_start()
+    .trim_start_matches(|c: char| {
+      c == '.' || c == ':' || c == ';'
+    })
+    .trim()
+    .to_string();
+  if author.is_empty() || title.len() < 3 {
+    return None;
+  }
+  Some((author, title))
 }
 fn title_from_first_segment(
   segment: &str
@@ -2703,6 +2760,9 @@ fn extract_container_title(
     .map(strip_numeric_suffix)
     .map(|segment| clean_segment(&segment))
     .map(|segment| {
+      strip_trailing_location(&segment)
+    })
+    .map(|segment| {
       strip_container_prefix(&segment)
     })
     .next()
@@ -2757,6 +2817,7 @@ fn extract_journal_with_dictionary(
       trimmed
     );
     let cleaned = clean_segment(&cleaned);
+    let cleaned = strip_trailing_location(&cleaned);
     let cleaned = strip_container_prefix(&cleaned);
     if cleaned.is_empty() {
       continue;
@@ -2783,6 +2844,41 @@ fn strip_container_prefix(
         .trim()
         .to_string();
     }
+  }
+  trimmed.to_string()
+}
+
+fn strip_trailing_location(
+  segment: &str
+) -> String {
+  let trimmed = segment.trim();
+  let Some((before, after)) =
+    trimmed.rsplit_once(',')
+  else {
+    return trimmed.to_string();
+  };
+  let tail = after.trim();
+  if tail.is_empty() {
+    return before.trim().to_string();
+  }
+  if tail.chars().any(|c| c.is_ascii_digit()) {
+    return trimmed.to_string();
+  }
+  let word_count = tail.split_whitespace().count();
+  if word_count > 4 {
+    return trimmed.to_string();
+  }
+  if tail
+    .split_whitespace()
+    .all(|word| {
+      word
+        .chars()
+        .next()
+        .map(|c| c.is_uppercase())
+        .unwrap_or(false)
+    })
+  {
+    return before.trim().to_string();
   }
   trimmed.to_string()
 }

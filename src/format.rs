@@ -448,6 +448,7 @@ fn csl_entry(
     )
   {
     if !pages.is_empty() {
+      let pages = normalize_page_range(&pages);
       push(
         "page",
         Value::String(pages)
@@ -708,7 +709,16 @@ fn bibtex_fields(
             })
             .map(sanitize_bibtex_value)
         };
-      content.map(|value| (key.clone(), value))
+      content.map(|value| {
+        if key == "pages" {
+          (
+            key.clone(),
+            normalize_page_range(&value)
+          )
+        } else {
+          (key.clone(), value)
+        }
+      })
     })
     .collect::<Vec<_>>();
   let order = [
@@ -787,6 +797,27 @@ fn sanitize_csl_value(
     .split_whitespace()
     .collect::<Vec<_>>()
     .join(" ")
+}
+
+fn normalize_page_range(
+  value: &str
+) -> String {
+  let trimmed = value.trim();
+  if trimmed.contains('-')
+    && !trimmed.contains("://")
+  {
+    let parts = trimmed
+      .split('-')
+      .map(str::trim)
+      .collect::<Vec<_>>();
+    if parts.len() == 2
+      && parts[0].chars().all(|c| c.is_ascii_digit())
+      && parts[1].chars().all(|c| c.is_ascii_digit())
+    {
+      return format!("{}–{}", parts[0], parts[1]);
+    }
+  }
+  trimmed.to_string()
 }
 
 fn strip_terminal_punct(

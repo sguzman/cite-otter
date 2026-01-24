@@ -199,6 +199,14 @@ fn training_validation_delta_flow_runs()
     ],
     "delta comparison entry"
   );
+  let delta_summary = delta_json
+    .get("summary")
+    .expect("delta summary");
+  assert_report_keys(
+    delta_summary,
+    &["comparisons", "parser", "finder"],
+    "delta summary"
+  );
 
   let dataset_path = Path::new(env!(
     "CARGO_MANIFEST_DIR"

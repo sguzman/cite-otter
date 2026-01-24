@@ -1395,6 +1395,11 @@ fn parse_extracts_romero_authors_and_title()
       given:  "C".into()
     }
   );
+  assert_list_field(
+    reference,
+    "container-title",
+    "Poster session presented at Society for Research in Child Development Biennial Meeting"
+  );
 }
 
 #[test]
