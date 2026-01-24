@@ -229,6 +229,23 @@ enum Command {
     redis_url:  Option<String>,
     #[arg(long)]
     namespace:  Option<String>
+  },
+
+  /// Sync normalization assets
+  #[command(
+    name = "normalization-sync"
+  )]
+  NormalizationSync {
+    #[arg(
+      long,
+      default_value = "tmp/anystyle/\
+                       data"
+    )]
+    source_dir: PathBuf,
+    #[arg(long)]
+    pattern:    Vec<String>,
+    #[arg(long)]
+    output_dir: Option<PathBuf>
   }
 }
 
@@ -741,6 +758,45 @@ pub fn run() -> anyhow::Result<()> {
       }
       println!("total synced: {total}");
     }
+    | Command::NormalizationSync {
+      source_dir,
+      pattern,
+      output_dir
+    } => {
+      let patterns = if pattern
+        .is_empty()
+      {
+        vec![
+          "**/*abbrev*.txt".to_string(),
+          "**/*abbrev*.txt.gz"
+            .to_string(),
+          "**/*locale*.txt".to_string(),
+          "**/*locale*.txt.gz"
+            .to_string(),
+        ]
+      } else {
+        pattern
+      };
+      let out_dir = output_dir
+        .or_else(|| {
+          cli.normalization_dir.clone()
+        })
+        .unwrap_or_else(|| {
+          Path::new("target")
+            .join("normalization")
+        });
+      let count =
+        sync_normalization_files(
+          &source_dir,
+          &patterns,
+          &out_dir
+        )?;
+      println!(
+        "synced {count} normalization \
+         files to {}",
+        out_dir.display()
+      );
+    }
   }
 
   Ok(())
@@ -827,6 +883,45 @@ fn collect_dictionary_files(
   files.sort();
   files.dedup();
   Ok(files)
+}
+
+fn collect_normalization_files(
+  source_dir: &Path,
+  patterns: &[String]
+) -> anyhow::Result<Vec<PathBuf>> {
+  collect_dictionary_files(
+    source_dir, patterns
+  )
+}
+
+fn sync_normalization_files(
+  source_dir: &Path,
+  patterns: &[String],
+  output_dir: &Path
+) -> anyhow::Result<usize> {
+  let files =
+    collect_normalization_files(
+      source_dir, patterns
+    )?;
+  if files.is_empty() {
+    anyhow::bail!(
+      "no normalization assets found \
+       in {}",
+      source_dir.display()
+    );
+  }
+  fs::create_dir_all(output_dir)?;
+  let mut copied = 0usize;
+  for file in files {
+    let Some(name) = file.file_name()
+    else {
+      continue;
+    };
+    let dest = output_dir.join(name);
+    fs::copy(&file, &dest)?;
+    copied += 1;
+  }
+  Ok(copied)
 }
 
 fn load_anystyle_entries(
@@ -927,6 +1022,7 @@ fn is_score_token(token: &str) -> bool {
 #[cfg(test)]
 mod tests {
   use std::collections::HashMap;
+  use std::fs;
 
   use super::*;
 
@@ -960,6 +1056,43 @@ mod tests {
         | DictionaryCode::Publisher
           .bit();
     assert_eq!(nature, Some(expected));
+  }
+
+  #[test]
+  fn normalization_sync_copies_files() {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("src");
+    let output =
+      temp_dir.path().join("out");
+    fs::create_dir_all(&source)
+      .expect("create source");
+
+    let journal =
+      source.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let count = sync_normalization_files(
+      &source,
+      &["**/*abbrev*.txt".to_string()],
+      &output
+    )
+    .expect("sync");
+
+    assert_eq!(count, 1);
+    let copied = fs::read_to_string(
+      output.join("journal-abbrev.txt")
+    )
+    .expect("read copy");
+    assert!(
+      copied
+        .contains("Journal of Testing")
+    );
   }
 }
 
