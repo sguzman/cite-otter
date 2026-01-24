@@ -22,8 +22,10 @@ pub fn assert_snapshot_eq(
     return;
   }
 
-  let diff = diff_lines(expected, actual);
-  let header = snapshot_header(label);
+  let (diff, summary) =
+    diff_lines(expected, actual);
+  let header =
+    snapshot_header(label, &summary);
   let report = format!("{header}\n{diff}");
   let report_path = Path::new("target")
     .join("reports")
@@ -43,12 +45,14 @@ pub fn assert_snapshot_eq(
 fn diff_lines(
   expected: &str,
   actual: &str
-) -> String {
+) -> (String, DiffSummary) {
   let expected_lines =
     expected.lines().collect::<Vec<_>>();
   let actual_lines =
     actual.lines().collect::<Vec<_>>();
   let mut out = Vec::new();
+  let mut removed = 0usize;
+  let mut added = 0usize;
   out.push("--- expected".to_string());
   out.push("+++ actual".to_string());
 
@@ -67,18 +71,46 @@ fn diff_lines(
     if left == right {
       continue;
     }
-    out.push(format!("-{left}"));
-    out.push(format!("+{right}"));
+    if !left.is_empty() {
+      out.push(format!("-{left}"));
+      removed += 1;
+    }
+    if !right.is_empty() {
+      out.push(format!("+{right}"));
+      added += 1;
+    }
   }
-  out.join("\n")
+  (
+    out.join("\n"),
+    DiffSummary {
+      expected_lines: expected_lines.len(),
+      actual_lines: actual_lines.len(),
+      removed,
+      added
+    }
+  )
 }
 
-fn snapshot_header(label: &str) -> String {
+struct DiffSummary {
+  expected_lines: usize,
+  actual_lines: usize,
+  removed: usize,
+  added: usize
+}
+
+fn snapshot_header(
+  label: &str,
+  summary: &DiffSummary
+) -> String {
   let timestamp = std::time::SystemTime::now()
     .duration_since(std::time::UNIX_EPOCH)
     .map(|duration| duration.as_secs())
     .unwrap_or(0);
   format!(
-    "snapshot: {label}\nupdated: {timestamp}"
+    "snapshot: {label}\nupdated: {timestamp}\nexpected_lines: {}\nactual_lines: {}\nremoved: {}\nadded: {}",
+    summary.expected_lines,
+    summary.actual_lines,
+    summary.removed,
+    summary.added
   )
 }

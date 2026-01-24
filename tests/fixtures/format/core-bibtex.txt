@@ -62,12 +62,12 @@
 @misc{citeotter7,
   address = {Himself}
   author = {Adams, Nicholson B “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera ”}
-  booktitle = {Proceedings of the Modern Language Association, 45 (1930), pp}
+  booktitle = {Proceedings of the Modern Language Association, 45, (1930), pp}
   number = {45}
   pages = {573-77}
   publisher = {Los Hijos del Tı́o Tronera}
   series = {Proceedings of the Modern Language Association}
-  title = {Proceedings of the Modern Language Association, 45 (1930), pp}
+  title = {Proceedings of the Modern Language Association, 45, (1930), pp}
   year = {1930}
 }
 
@@ -242,11 +242,12 @@
 }
 
 @misc{citeotter27,
-  address = {Press}
+  address = {CA}
   author = {Bylander, T (1992)}
   booktitle = {In Proceedings of National Conference on Artificial Intelligence, pp}
   number = {729}
   pages = {729-734}
+  publisher = {AAAI Press.}
   series = {Proceedings of National Conference on Artificial Intelligence}
   title = {Complexity results for serial decomposability}
   year = {1992}
@@ -1018,11 +1019,12 @@
 }
 
 @misc{citeotter115,
-  address = {415}
+  address = {Detroit}
   author = {Holte, R C Acker L E}
   booktitle = {In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, pp}
   number = {813}
   pages = {813-818}
+  publisher = {Morgan Kaufmann. 415.}
   series = {Proceedings of the Eleventh International Joint Conference on Artificial Intelligence}
   title = {Concept learning and the problem of small disjuncts}
   year = {1989}
@@ -1305,7 +1307,7 @@
 @book{citeotter147,
   address = {1977}
   author = {Raab, F H "Remote object position locator"}
-  title = {US patent 4 0054 881 October 18, 1977}
+  title = {US patent 4 0054 881, October 18, 1977}
   year = {0054}
 }
 
@@ -1487,9 +1489,10 @@
 }
 
 @book{citeotter169,
-  address = {Press}
+  address = {MA}
   author = {Umrigar, Zerksis D}
-  booktitle = {In Symposium of Logic Programming, Boston, MA}
+  booktitle = {In Symposium of Logic Programming, Boston, MA.: IEEE Computer Society Press}
+  publisher = {IEEE Computer Society Press.}
   series = {Symposium of Logic Programming}
   title = {An experiment in programming with full first-order logic}
   year = {1985}
@@ -1573,12 +1576,13 @@
 }
 
 @misc{citeotter179,
-  address = {Kaufmann}
+  address = {C}
   author = {Peot, M A}
   booktitle = {In Proceedings of the Eleventh National Conference of the American Association for Artificial Intelligence (AAAI-93), pp}
   collection-number = {492}
   issue = {93}
   pages = {492-499}
+  publisher = {Morgan Kaufmann.}
   series = {Proceedings of the Eleventh National Conference of the American Association for Artificial Intelligence (AAAI-93)}
   title = {Threat-removal strategies for partial-order planning}
   year = {1993}
@@ -1697,8 +1701,9 @@
 }
 
 @book{citeotter193,
-  address = {1989}
+  address = {London}
   author = {M}
+  publisher = {MIT Press}
   title = {Wolfe, ``Optimizing supercompilers for supercomputers,}
   year = {1989}
 }

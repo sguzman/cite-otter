@@ -625,7 +625,7 @@ fn format_outputs_match_parity_snapshots()
   )
   .expect("read expected CSL");
   assert_snapshot_eq(
-    "sample csl",
+    "sample:csl",
     &csl_output,
     &expected_csl
   );
@@ -638,7 +638,7 @@ fn format_outputs_match_parity_snapshots()
     )
     .expect("read expected BibTeX");
   assert_snapshot_eq(
-    "sample bibtex",
+    "sample:bibtex",
     &bibtex_output,
     &expected_bibtex
   );
@@ -677,7 +677,7 @@ fn format_core_outputs_match_snapshots()
   )
   .expect("read core CSL");
   assert_snapshot_eq(
-    "core csl",
+    "core:csl",
     &csl_output,
     &expected_csl
   );
@@ -690,7 +690,7 @@ fn format_core_outputs_match_snapshots()
     )
     .expect("read core BibTeX");
   assert_snapshot_eq(
-    "core bibtex",
+    "core:bibtex",
     &bibtex_output,
     &expected_bibtex
   );

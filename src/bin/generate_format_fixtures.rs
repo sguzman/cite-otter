@@ -146,6 +146,7 @@ fn render_reference(
 ) -> String {
   let mut output = String::new();
   let mut previous = String::new();
+  let mut previous_tag = String::new();
   for (tag, text) in parts {
     let text = normalize_tag_text(tag, text);
     let text = text.trim();
@@ -155,12 +156,17 @@ fn render_reference(
     if output.is_empty() {
       output.push_str(text);
       previous = text.to_string();
+      previous_tag = tag.to_string();
       continue;
     }
-    let needs_space = !ends_with_punct(&previous)
-      && !starts_with_punct(text);
-    if needs_space {
-      output.push(' ');
+    let separator = separator_for(
+      &previous_tag,
+      &previous,
+      tag,
+      text
+    );
+    if !separator.is_empty() {
+      output.push_str(&separator);
     } else if !output.ends_with(' ')
       && !starts_with_punct(text)
     {
@@ -168,6 +174,7 @@ fn render_reference(
     }
     output.push_str(text);
     previous = text.to_string();
+    previous_tag = tag.to_string();
   }
   output
 }
@@ -220,6 +227,34 @@ fn starts_with_punct(
     .starts_with(|c: char| {
       matches!(c, '.' | ',' | ';' | ':' | ')')
     })
+}
+
+fn separator_for(
+  previous_tag: &str,
+  previous_text: &str,
+  tag: &str,
+  text: &str
+) -> String {
+  if tag == "publisher"
+    && previous_tag == "location"
+    && !previous_text.trim_end().ends_with(':')
+  {
+    return ": ".to_string();
+  }
+  if matches!(
+    tag,
+    "date" | "pages" | "issue" | "volume"
+  ) && !ends_with_punct(previous_text)
+  {
+    return ", ".to_string();
+  }
+  if ends_with_punct(previous_text) {
+    return " ".to_string();
+  }
+  if starts_with_punct(text) {
+    return String::new();
+  }
+  " ".to_string()
 }
 
 fn normalize_reference(
