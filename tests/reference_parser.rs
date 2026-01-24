@@ -130,6 +130,13 @@ const PAGE_RANGE_DATE_REF: &str =
    Intergenerational mobility in the \
    labor market. (Vol. 3, Part A, pp. \
    1761–1800). London: Elsevier.";
+const CHAPTER_IN_REF: &str =
+  "Solon, G. (1999). Chapter 29. \
+   Intergenerational mobility in the \
+   labor market. In O. C. Ashenfelter \
+   and D. Card (Eds.), Handbook of \
+   labor economics (Vol. 3, Part A, \
+   pp. 1761–1800). London: Elsevier.";
 const VOLUME_ISSUE_REF: &str =
   "Ghezzi, C., Mandriolli, D., \
    Morzenti, A. Trio: A logic \
@@ -1314,6 +1321,48 @@ fn parse_ignores_page_ranges_in_dates()
     "Parser should ignore page ranges \
      in date tokens"
   );
+}
+
+#[test]
+fn parse_captures_chapter_container_and_editors()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[CHAPTER_IN_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "container-title",
+    "Handbook of labor economics"
+  );
+  assert_list_field(
+    reference,
+    "editor",
+    "O. C. Ashenfelter"
+  );
+  assert_list_field(
+    reference, "editor", "D. Card"
+  );
+  match reference.get("type") {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(
+        value, "chapter",
+        "chapter references should be \
+         typed as chapters"
+      );
+    }
+    | other => {
+      panic!(
+        "Expected chapter type, got \
+         {other:?}"
+      )
+    }
+  }
 }
 
 #[test]

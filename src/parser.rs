@@ -1689,14 +1689,12 @@ impl Parser {
           );
         }
 
-        if let Some(editor) =
-          extract_editor(reference)
-        {
+        let editors =
+          extract_editor_list(reference);
+        if !editors.is_empty() {
           mapped.insert(
             "editor",
-            FieldValue::List(vec![
-              editor,
-            ])
+            FieldValue::List(editors)
           );
         }
 
@@ -2841,6 +2839,12 @@ fn resolve_type(
   reference: &str
 ) -> String {
   let lower = reference.to_lowercase();
+  if lower.contains("chapter")
+    || lower.contains("chap.")
+    || lower.contains("ch.")
+  {
+    return "chapter".into();
+  }
   if lower.contains("thesis")
     || lower.contains("dissertation")
   {
@@ -2875,6 +2879,13 @@ fn resolve_type_with_dictionary(
   reference: &str,
   dictionary: &Dictionary
 ) -> String {
+  let lower = reference.to_lowercase();
+  if lower.contains("chapter")
+    || lower.contains("chap.")
+    || lower.contains("ch.")
+  {
+    return "chapter".into();
+  }
   for token in
     reference.split(|c: char| {
       !c.is_alphanumeric()
@@ -3384,6 +3395,11 @@ fn extract_container_title(
       strip_container_prefix(&segment)
     })
     .next()
+    .or_else(|| {
+      extract_container_from_in_segment(
+        reference
+      )
+    })
 }
 
 fn capture_number_after(
@@ -3634,6 +3650,115 @@ fn extract_editor(
   }
 
   None
+}
+
+fn extract_editor_list(
+  reference: &str
+) -> Vec<String> {
+  let editors = extract_editor(
+    reference
+  )
+  .or_else(|| {
+    extract_editors_from_in_segment(
+      reference
+    )
+  });
+  let Some(editors) = editors else {
+    return Vec::new();
+  };
+  split_editor_names(&editors)
+}
+
+fn split_editor_names(
+  editors: &str
+) -> Vec<String> {
+  let normalized = editors
+    .replace('&', ";")
+    .replace(" and ", ";")
+    .replace(" AND ", ";")
+    .replace(" / ", ";")
+    .replace("/", ";")
+    .replace('|', ";");
+  normalized
+    .split(';')
+    .map(str::trim)
+    .filter(|piece| !piece.is_empty())
+    .map(|piece| piece.to_string())
+    .collect()
+}
+
+fn extract_editors_from_in_segment(
+  reference: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  let in_pos =
+    if lower.starts_with("in ") {
+      Some(0)
+    } else {
+      lower.find(" in ")
+    }?;
+  let after_in =
+    reference.get(in_pos + 3..)?;
+  let lower_after =
+    after_in.to_lowercase();
+  let ed_pos =
+    lower_after.find("(ed")?;
+  let editor_segment =
+    after_in[..ed_pos].trim();
+  let cleaned = editor_segment
+    .trim_matches(|c: char| {
+      c == ',' || c == ';'
+    })
+    .trim();
+  if cleaned.is_empty() {
+    None
+  } else {
+    Some(cleaned.to_string())
+  }
+}
+
+fn extract_container_from_in_segment(
+  reference: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  let in_pos =
+    if lower.starts_with("in ") {
+      Some(0)
+    } else {
+      lower.find(" in ")
+    }?;
+  let after_in =
+    reference.get(in_pos + 3..)?;
+  let after_in = after_in.trim_start();
+  let container_section =
+    if let Some(close) =
+      after_in.find(')')
+    {
+      after_in[close + 1..].trim_start()
+    } else {
+      after_in
+    };
+  let container_section =
+    container_section
+      .trim_start_matches(|c: char| {
+        c == ',' || c == ';' || c == '.'
+      })
+      .trim_start();
+  if container_section.is_empty() {
+    return None;
+  }
+  let segment = container_section
+    .split(|c: char| {
+      c == '.' || c == ';'
+    })
+    .next()
+    .unwrap_or("")
+    .trim();
+  if segment.is_empty() {
+    None
+  } else {
+    Some(clean_segment(segment))
+  }
 }
 
 fn strip_parenthetical_date(

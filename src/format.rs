@@ -746,6 +746,7 @@ fn bibtex_fields(
   let order = [
     "author",
     "title",
+    "chapter",
     "edition",
     "booktitle",
     "journal",

@@ -92,6 +92,14 @@ pub mod abbreviations {
         .insert(key, value.into());
     }
 
+    pub fn len(&self) -> usize {
+      self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+      self.entries.is_empty()
+    }
+
     pub fn expand(
       &self,
       value: &str

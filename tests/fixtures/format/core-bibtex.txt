@@ -10,18 +10,20 @@
   booktitle = {Poster session presented at Society for Research in Child Development Biennial Meeting},
   date = {2011}\
      n}
-@book{solon1999a,
+@incollection{solon1999a,
   author = {Solon, G.},
   title = {Intergenerational mobility in the labor market},
+  booktitle = {Handbook of labor economics},
   volume = {3, Part A},
   date = {1999},
   pages = {1761–1800},
-  url = {http://www.sciencedirect.com/science/article/pii/S1573446399030102}\
+  url = {http://www.sciencedirect.com/science/article/pii/S1573446399030102},
+  editor = {the labor market. In O. C. A. and D. Card}\
      n}
 @misc{prezhigueras2014a,
   author = {Pérez-Higueras JJ, Arias A. and de la Macorra JC, Peters OA},
   title = {Differences in cyclic fatigue resistance between ProTaper Next and ProTaper Universal instruments at different levels},
-  booktitle = {Pérez-Higueras JJ, Arias A, de la Macorra JC, Peters OA. septembre 2014},
+  booktitle = {cyclic fatigue resistance between ProTaper Next and ProTaper Universal instruments at different levels},
   volume = {9},
   date = {2014-09},
   pages = {1477–81},
@@ -36,7 +38,7 @@
 @misc{brischoux2009a,
   author = {Brischoux, F.},
   title = {Phasic excitation of dopamine neurons in ventral VTA by noxious stimuli},
-  booktitle = {Proc Natl Acad Sci U S A},
+  booktitle = {ventral VTA by noxious stimuli},
   volume = {106},
   date = {2009}\
      n}
@@ -102,7 +104,7 @@
 @misc{enright1271a,
   author = {Enright},
   title = {W. H. Improving the efficiency of matrix operations in the numerical solution of stiff ordinary differential equations},
-  booktitle = {W. H},
+  booktitle = {127-136, June 1978},
   volume = {4},
   date = {1271-06-12},
   pages = {127–136},
@@ -191,7 +193,7 @@
 @misc{pearl1988a,
   author = {Pearl, J.},
   title = {Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference},
-  booktitle = {Morgan Kaufmann},
+  booktitle = {Intelligent Systems: Networks of Plausible Inference},
   date = {1988}\
      n}
 @misc{wittie1992a,
@@ -377,7 +379,7 @@
 @misc{mozer1990a,
   author = {Mozer and G, E.},
   title = {TRAFFIC: Recognizing objects using hierarchical reference frame transformations},
-  booktitle = {R. S},
+  booktitle = {D},
   volume = {2},
   publisher = {Recognizing objects using hierarchical reference frame transformations. In D. S. Touretzky},
   date = {1990},
@@ -419,14 +421,14 @@
      n}
 @misc{bershad1122a,
   author = {Bershad and E, D.},
-  booktitle = {T. E},
+  booktitle = {ASPLOS IV, pages 108-122, 1991},
   date = {1122/1991},
   pages = {108–122}\
      n}
 @misc{ieee8909a,
   author = {IEEE Transactions on Software Engineering, 12},
   title = {Safety analysis of timing properties in real-time systems},
-  booktitle = {IEEE Transactions on Software Engineering},
+  booktitle = {890-904, September 1986},
   volume = {12},
   date = {8909-09-89},
   pages = {890–904},
@@ -451,6 +453,7 @@
 @book{pagallo1990a,
   author = {Pagallo, G.},
   title = {Boolean feature discovery in empirical learning},
+  booktitle = {71-99},
   volume = {5},
   date = {1990},
   issue = {1}\
@@ -486,6 +489,7 @@
 @book{mozer1988a,
   author = {Mozer, M.},
   title = {Skeletonization: A technique for trimming the fat from a network via relevance assessment},
+  booktitle = {(pp},
   volume = {1},
   publisher = {Morgan Kaufmann},
   date = {1988},
@@ -511,7 +515,7 @@
 @misc{witkin1019a,
   author = {Witkin},
   title = {A. P. Scale-space filtering},
-  booktitle = {A. P},
+  booktitle = {Proc},
   date = {1019-1023-1983},
   pages = {1019–1023}\
      n}
@@ -629,7 +633,7 @@
 @misc{rivest1989a,
   author = {Rivest, R.},
   title = {Inference of Finite Automata Using Homing Sequences},
-  booktitle = {Proceedings of the 21th ACM Symp. on Theory of Computing},
+  booktitle = {Proceedings of the 21th ACM Symp},
   series = {Proceedings of the 21th ACM Symp},
   volume = {21},
   date = {1989},
@@ -652,7 +656,7 @@
      n}
 @misc{salomons1994a,
   author = {Salomons, O.},
-  booktitle = {Computer support in the design of mechanical products},
+  booktitle = {the design of mechanical products},
   date = {1994}\
      n}
 @misc{torrie2436a,
@@ -669,7 +673,7 @@
 @misc{dennis1983a,
   author = {Dennis and R, B.},
   title = {Dennis and R. B},
-  booktitle = {J. E},
+  booktitle = {Computational Mathematics},
   series = {Series in Computational Mathematics},
   date = {1983},
   collection-number = {1983}\
@@ -735,7 +739,7 @@
 @misc{et1246a,
   author = {et al, In Keane},
   title = {A new representation technique for genetic algorithms},
-  booktitle = {Tim Watson},
+  booktitle = {Keane et al},
   date = {1246},
   pages = {233–246},
   genre = {4}\
@@ -763,7 +767,7 @@
 @misc{meyer1985a,
   author = {Meyer and Wand, Mitchell},
   title = {Albert R. Continuation semantics in typed lambda calculi (summary)},
-  booktitle = {Albert R},
+  booktitle = {In Rohit Parikh, editor, Logics of Programs, volume 193, of Lecture Notes in Computer Science, pages 219-224},
   series = {Lecture Notes in Computer Science},
   volume = {193},
   date = {1985},
@@ -841,6 +845,7 @@
 @book{w1990a,
   author = {W},
   title = {Learning from textbook knowledge: A case study},
+  booktitle = {AAAI-90, 1990},
   date = {1990}\
      n}
 @book{reiman1988a,
@@ -865,7 +870,8 @@
   title = {Implementing inner drive by competence reflection},
   booktitle = {Roitblat, H. (Ed.), Proceedings of the 2nd International Conference on Simulation of Adaptive Behavior},
   series = {Proceedings of the 2nd International Conference on Simulation of Adaptive Behavior},
-  date = {1993}\
+  date = {1993},
+  editor = {Roitblat, H.}\
      n}
 @inproceedings{holte1989a,
   author = {Holte, R.},
@@ -876,7 +882,7 @@
   pages = {813–818},
   collection-number = {813}\
      n}
-@inproceedings{meilijson1977a,
+@incollection{meilijson1977a,
   author = {Meilijson and U},
   title = {Meilijson and U},
   booktitle = {Proc. and their Appl},
@@ -900,7 +906,7 @@
 @misc{keller1994a,
   author = {Keller and Basu, Julie},
   title = {Arthur M. A predicate-based caching scheme for client-server database architectures},
-  booktitle = {Arthur M},
+  booktitle = {Proceedings of PDIS-94, 1994},
   series = {Proceedings of PDIS-94},
   date = {1994},
   collection-number = {1994}\
@@ -937,11 +943,13 @@
 @book{gardenfors1988a,
   author = {Gardenfors, Peter},
   title = {Knowledge in Flux},
+  booktitle = {Flux},
   date = {1988}\
      n}
 @book{de1990a,
   author = {De Raedt, L.},
   title = {Indirect relevance and bias in inductive concept learning},
+  booktitle = {inductive concept learning},
   date = {1990},
   pages = {365–390}\
      n}
@@ -1026,6 +1034,7 @@
 @book{citeotter135,
   author = {Eds, Richter},
   title = {Berlin: Springer-Verlag, pp},
+  booktitle = {Case-Based Reasoning},
   publisher = {Springer-Verlag},
   pages = {167–181},
   address = {Berlin},
@@ -1034,7 +1043,7 @@
 @misc{scott1990a,
   author = {Scott, D.},
   title = {1990. 1990},
-  booktitle = {New York: Academic Press},
+  booktitle = {RST-based text generation},
   publisher = {Academic Press. 47-73},
   date = {1990},
   address = {New York},
@@ -1074,7 +1083,7 @@
 @misc{eager1988a,
   author = {Eager and R},
   title = {Scheduling in Multiprogrammed Parallel Systems},
-  booktitle = {Majumdar},
+  booktitle = {104-113},
   volume = {1},
   date = {1988-05-1},
   pages = {104–113}\
@@ -1087,9 +1096,10 @@
   date = {1994-10},
   collection-number = {1994}\
      n}
-@book{fikes1971a,
+@incollection{fikes1971a,
   author = {Fikes, R.},
   title = {STRIPS: A new approach to the application of theorem proving to problem solving},
+  booktitle = {Planning for Contingencies: A Decision-based Approach},
   date = {1971},
   pages = {189–208}\
      n}
@@ -1141,6 +1151,7 @@
 @techreport{vander1992a,
   author = {Vander Linden, K.},
   title = {1992. 1992},
+  booktitle = {instructional text},
   date = {1992}\
      n}
 @misc{witten1987a,
@@ -1169,7 +1180,7 @@
 @misc{romanow1995a,
   author = {Romanow and S},
   title = {Romanow and S},
-  booktitle = {IEEE Journal on Selected Areas in Communication},
+  booktitle = {May 1995},
   volume = {13},
   date = {1995-05},
   issue = {4}\
@@ -1203,6 +1214,7 @@
 @book{srinivasan1996a,
   author = {Srinivasan, A.},
   title = {Theories for mutagenicity: a study in first-order and feature-based induction},
+  booktitle = {first-order and feature-based induction},
   date = {1996},
   pages = {277–299}\
      n}
@@ -1271,7 +1283,7 @@
 @misc{adorni1993a,
   author = {Adorni, G.},
   title = {A self-tuning system for real-time Optical Flow detection},
-  booktitle = {Proceedings IEEE System, Man, and Cybernetics Conf},
+  booktitle = {Proceedings IEEE System, Man, and Cybernetics Conf, Vol},
   series = {Proceedings IEEE System},
   volume = {3},
   date = {1993},
@@ -1414,6 +1426,7 @@
 @book{mostow1987a,
   author = {Mostow, J.},
   title = {Failsafe: A floor planner that uses ebg to learn from its failures},
+  booktitle = {Proceedings IJCAI-87},
   series = {Proceedings IJCAI-87},
   publisher = {A floor planner that uses ebg to learn from its failures. In Proceedings IJCAI-87},
   date = {1987},
@@ -1458,7 +1471,7 @@
      n}
 @misc{card1811a,
   author = {Card, S.},
-  booktitle = {Card, S. K., Robertson, G. G., Mackinlay, J. D., The Information Visualizer, an Information Workspace, Proceedings of Human Factors in Computing Systems (CHI91), 181188},
+  booktitle = {181188, ACM, New York, 1991},
   series = {Proceedings of Human Factors in Computing Systems (CHI91)},
   date = {1811/1991},
   collection-number = {181188},
@@ -1471,6 +1484,7 @@
 @book{plunkett1991a,
   author = {Plunkett, K.},
   title = {U-shaped learning and frequency effects in a multilayered perceptron: Implications for child language acquisition},
+  booktitle = {a multilayered perceptron: Implications for child language acquisition},
   volume = {1991},
   date = {1991},
   pages = {102}\
@@ -1495,7 +1509,7 @@
 @misc{selman1992a,
   author = {Selman, B.},
   title = {A new method for solving hard satisfiability problems},
-  booktitle = {AAAI/MIT Press},
+  booktitle = {Proceedings of AAAI-92, pp},
   series = {Proceedings of AAAI-92},
   date = {1992},
   pages = {440–446},

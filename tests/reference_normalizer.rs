@@ -476,3 +476,62 @@ fn abbreviations_last_entry_wins() {
      win for duplicates"
   );
 }
+
+#[test]
+fn normalization_any_assets_are_populated()
+ {
+  let dir = std::path::Path::new(
+    "tests/fixtures/normalization-any"
+  );
+  let journal =
+    AbbreviationMap::load_from_file(
+      &dir.join("journal-abbrev.txt")
+    )
+    .expect("journal abbrev");
+  let container =
+    AbbreviationMap::load_from_file(
+      &dir.join("container-abbrev.txt")
+    )
+    .expect("container abbrev");
+  let publisher =
+    AbbreviationMap::load_from_file(
+      &dir.join("publisher-abbrev.txt")
+    )
+    .expect("publisher abbrev");
+  let language =
+    AbbreviationMap::load_from_file(
+      &dir.join("language-locale.txt")
+    )
+    .expect("language locale");
+  let scripts =
+    AbbreviationMap::load_from_file(
+      &dir.join("script-locale.txt")
+    )
+    .expect("script locale");
+
+  assert!(
+    !journal.is_empty(),
+    "journal abbreviations should be \
+     populated"
+  );
+  assert!(
+    !container.is_empty(),
+    "container abbreviations should \
+     be populated"
+  );
+  assert!(
+    !publisher.is_empty(),
+    "publisher abbreviations should \
+     be populated"
+  );
+  assert!(
+    !language.is_empty(),
+    "language locale mapping should \
+     be populated"
+  );
+  assert!(
+    !scripts.is_empty(),
+    "script locale mapping should be \
+     populated"
+  );
+}
