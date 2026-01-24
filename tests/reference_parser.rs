@@ -3,6 +3,11 @@ use std::collections::{
   BTreeSet
 };
 
+use cite_otter::dictionary::{
+  Dictionary,
+  DictionaryAdapter,
+  DictionaryCode
+};
 use cite_otter::format::ParseFormat;
 use cite_otter::parser::{
   Author,
@@ -202,6 +207,47 @@ fn parse_builds_structured_authors_for_variant_formats()
        normalize author components \
        consistently"
     );
+  }
+}
+
+#[test]
+fn parse_uses_dictionary_for_type_resolution()
+ {
+  let mut dictionary =
+    Dictionary::create(
+      DictionaryAdapter::Memory
+    )
+    .open();
+  dictionary
+    .import_entries(vec![(
+      "Nature".to_string(),
+      DictionaryCode::Journal.bit()
+    )])
+    .expect("dictionary import");
+  let parser =
+    Parser::with_dictionary(dictionary);
+
+  let references = parser.parse(
+    &["Doe, J. Nature. 2020."],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  let parsed = reference
+    .get("type")
+    .expect("type field");
+  match parsed {
+    | FieldValue::Single(value) => {
+      assert_eq!(
+        value, "article",
+        "dictionary journal tag \
+         should set article type"
+      );
+    }
+    | _ => {
+      panic!(
+        "expected single type value"
+      )
+    }
   }
 }
 

@@ -5,6 +5,11 @@ use std::collections::{
 
 use serde::Serialize;
 
+use crate::dictionary::{
+  Dictionary,
+  DictionaryAdapter,
+  DictionaryCode
+};
 use crate::format::ParseFormat;
 use crate::language::{
   detect_language,
@@ -169,6 +174,62 @@ impl FieldTokens {
           .unwrap_or_default()
           .as_str()
       )
+    }
+  }
+
+  fn from_reference_with_dictionary(
+    reference: &str,
+    dictionary: &Dictionary
+  ) -> Self {
+    let mut tokens =
+      Self::from_reference(reference);
+    tokens.apply_dictionary(
+      reference, dictionary
+    );
+    tokens
+  }
+
+  fn apply_dictionary(
+    &mut self,
+    reference: &str,
+    dictionary: &Dictionary
+  ) {
+    for term in
+      reference.split(|c: char| {
+        !c.is_alphanumeric()
+      })
+    {
+      let term = term.trim();
+      if term.is_empty() {
+        continue;
+      }
+      let normalized =
+        normalize_token(term);
+      if normalized.is_empty() {
+        continue;
+      }
+      for code in
+        dictionary.lookup(term)
+      {
+        match code {
+          | DictionaryCode::Name => {
+            self.author
+              .insert(normalized.clone());
+          }
+          | DictionaryCode::Place => {
+            self.location
+              .insert(normalized.clone());
+          }
+          | DictionaryCode::Publisher => {
+            self.publisher
+              .insert(normalized.clone());
+          }
+          | DictionaryCode::Journal => {
+            self.journal
+              .insert(normalized.clone());
+          }
+        }
+      }
     }
   }
 }
@@ -488,8 +549,10 @@ fn matches_field(
   })
 }
 
-#[derive(Debug, Clone)]
-pub struct Parser;
+#[derive(Debug)]
+pub struct Parser {
+  dictionary: Dictionary
+}
 
 impl Default for Parser {
   fn default() -> Self {
@@ -504,7 +567,20 @@ pub struct ParsedDataset(
 
 impl Parser {
   pub fn new() -> Self {
-    Self
+    Self {
+      dictionary: Dictionary::create(
+        DictionaryAdapter::Memory
+      )
+      .open()
+    }
+  }
+
+  pub fn with_dictionary(
+    dictionary: Dictionary
+  ) -> Self {
+    Self {
+      dictionary
+    }
   }
 
   pub fn default_instance() -> Self {
@@ -560,8 +636,9 @@ impl Parser {
       references
         .iter()
         .map(|reference| {
-          FieldTokens::from_reference(
-            reference
+          FieldTokens::from_reference_with_dictionary(
+            reference,
+            &self.dictionary
           )
         })
         .collect();
@@ -623,7 +700,10 @@ impl Parser {
         mapped.insert(
           "type",
           FieldValue::Single(
-            resolve_type(reference)
+            resolve_type_with_dictionary(
+              reference,
+              &self.dictionary
+            )
           )
         );
         mapped.insert(
@@ -871,6 +951,30 @@ fn resolve_type(
   } else {
     "book".into()
   }
+}
+
+fn resolve_type_with_dictionary(
+  reference: &str,
+  dictionary: &Dictionary
+) -> String {
+  for token in
+    reference.split(|c: char| {
+      !c.is_alphanumeric()
+    })
+  {
+    if token.is_empty() {
+      continue;
+    }
+    if dictionary
+      .lookup(token)
+      .contains(
+        &DictionaryCode::Journal
+      )
+    {
+      return "article".into();
+    }
+  }
+  resolve_type(reference)
 }
 
 fn extract_location(
