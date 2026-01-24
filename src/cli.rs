@@ -432,8 +432,11 @@ fn run_training_with_config(
       &parser_model_path
     )?;
   for (path, stat) in &parser_pairs {
-    parser_model
-      .record(path, stat.sequences);
+    parser_model.record(
+      path,
+      stat.sequences,
+      stat.tokens
+    );
   }
   parser_model
     .save(&parser_model_path)?;
@@ -539,18 +542,41 @@ fn run_validation_with_config(
     &parser_model_path
   )?;
   for (path, stat) in &parser_stats {
-    if let Some(stored) =
-      parser_model.sequences(path)
-      && stored != stat.sequences
-    {
-      println!(
-        "  validation mismatch {}: \
-         stored {} vs current {}",
-        path.display(),
-        stored,
-        stat.sequences
-      );
-    }
+    let stored_sequences = parser_model
+      .sequences(path)
+      .unwrap_or(0);
+    let stored_tokens = parser_model
+      .tokens(path)
+      .unwrap_or(0);
+    let seq_delta = (stored_sequences
+      as isize
+      - stat.sequences as isize)
+      .unsigned_abs();
+    let token_delta =
+      if stored_tokens == 0 {
+        0
+      } else {
+        (stored_tokens as isize
+          - stat.tokens as isize)
+          .unsigned_abs()
+      };
+    let seq_rate = percent_delta(
+      seq_delta,
+      stat.sequences
+    );
+    let token_rate = percent_delta(
+      token_delta,
+      stat.tokens
+    );
+    println!(
+      "checking {}... {:>4} seq \
+       {:>5.2}% {:>4} tok {:>5.2}%",
+      path.display(),
+      seq_delta,
+      seq_rate,
+      token_delta,
+      token_rate
+    );
   }
   let finder_model_path =
     paths.finder_model.clone();
@@ -558,18 +584,24 @@ fn run_validation_with_config(
     &finder_model_path
   )?;
   for (path, stat) in &finder_stats {
-    if let Some(stored) =
-      finder_model.sequences(path)
-      && stored != stat.sequences
-    {
-      println!(
-        "  validation mismatch {}: \
-         stored {} vs current {}",
-        path.display(),
-        stored,
-        stat.sequences
-      );
-    }
+    let stored_sequences = finder_model
+      .sequences(path)
+      .unwrap_or(0);
+    let seq_delta = (stored_sequences
+      as isize
+      - stat.sequences as isize)
+      .unsigned_abs();
+    let seq_rate = percent_delta(
+      seq_delta,
+      stat.sequences
+    );
+    println!(
+      "checking {}... {:>4} seq \
+       {:>5.2}%",
+      path.display(),
+      seq_delta,
+      seq_rate
+    );
   }
 
   persist_report(
@@ -912,6 +944,18 @@ fn report_path(
   filename: &str
 ) -> PathBuf {
   report_dir.join(filename)
+}
+
+fn percent_delta(
+  delta: usize,
+  total: usize
+) -> f64 {
+  if total == 0 {
+    0.0
+  } else {
+    (delta as f64 / total as f64)
+      * 100.0
+  }
 }
 
 const SAMPLE_REFERENCES: [&str; 2] = [
