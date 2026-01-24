@@ -39,6 +39,115 @@ pub mod names {
   }
 }
 
+pub mod abbreviations {
+  use std::collections::HashMap;
+  use std::fs;
+  use std::path::Path;
+
+  #[derive(Debug, Clone, Default)]
+  pub struct AbbreviationMap {
+    entries: HashMap<String, String>
+  }
+
+  impl AbbreviationMap {
+    pub fn new() -> Self {
+      Self {
+        entries: HashMap::new()
+      }
+    }
+
+    pub fn load_from_str(
+      text: &str
+    ) -> Self {
+      let mut map = Self::new();
+      for line in text.lines() {
+        if let Some((key, value)) =
+          parse_line(line)
+        {
+          map
+            .entries
+            .insert(key, value);
+        }
+      }
+      map
+    }
+
+    pub fn load_from_file(
+      path: &Path
+    ) -> std::io::Result<Self> {
+      let content =
+        fs::read_to_string(path)?;
+      Ok(Self::load_from_str(&content))
+    }
+
+    pub fn insert(
+      &mut self,
+      key: impl Into<String>,
+      value: impl Into<String>
+    ) {
+      let key =
+        normalize_key(&key.into());
+      self
+        .entries
+        .insert(key, value.into());
+    }
+
+    pub fn expand(
+      &self,
+      value: &str
+    ) -> String {
+      let key = normalize_key(value);
+      self
+        .entries
+        .get(&key)
+        .cloned()
+        .unwrap_or_else(|| {
+          value.trim().to_string()
+        })
+    }
+  }
+
+  fn parse_line(
+    line: &str
+  ) -> Option<(String, String)> {
+    let trimmed = line.trim();
+    if trimmed.is_empty()
+      || trimmed.starts_with('#')
+    {
+      return None;
+    }
+    let mut parts =
+      trimmed.splitn(2, |c| {
+        c == '\t'
+          || c == ','
+          || c == '='
+      });
+    let key = parts.next()?.trim();
+    let value = parts.next()?.trim();
+    if key.is_empty()
+      || value.is_empty()
+    {
+      return None;
+    }
+    Some((
+      normalize_key(key),
+      value.to_string()
+    ))
+  }
+
+  fn normalize_key(
+    value: &str
+  ) -> String {
+    value
+      .trim()
+      .trim_end_matches('.')
+      .split_whitespace()
+      .collect::<Vec<_>>()
+      .join(" ")
+      .to_lowercase()
+  }
+}
+
 pub mod location {
   #[derive(Debug, Clone)]
   pub struct Normalizer;
@@ -124,6 +233,8 @@ pub mod journal {
     Value
   };
 
+  use super::abbreviations::AbbreviationMap;
+
   #[derive(Debug, Clone)]
   pub struct Normalizer;
 
@@ -142,6 +253,17 @@ pub mod journal {
       &self,
       map: &mut Map<String, Value>
     ) {
+      self.normalize_with_abbrev(
+        map,
+        &AbbreviationMap::default()
+      );
+    }
+
+    pub fn normalize_with_abbrev(
+      &self,
+      map: &mut Map<String, Value>,
+      abbreviations: &AbbreviationMap
+    ) {
       if let Some(value) =
         map.remove("journal")
       {
@@ -154,10 +276,12 @@ pub mod journal {
         let journals =
           extract_strings(value);
         for journal in journals {
+          let expanded = abbreviations
+            .expand(&journal);
           append_field(
             map,
             "container-title",
-            journal
+            expanded
           );
         }
       }
