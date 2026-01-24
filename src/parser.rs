@@ -375,6 +375,12 @@ fn parse_author_chunk(
   if trimmed.is_empty() {
     return None;
   }
+  let lowered = trimmed
+    .trim_end_matches('.')
+    .to_lowercase();
+  if lowered == "et al" {
+    return None;
+  }
 
   let (family, given) = if trimmed
     .contains(',')
@@ -471,7 +477,9 @@ fn parse_author_chunk(
   let normalized_family =
     normalize_author_component(&family);
   let normalized_given =
-    normalize_author_component(&given);
+    normalize_author_component(
+      &strip_et_al_suffix(&given)
+    );
   if normalized_family.is_empty()
     && normalized_given.is_empty()
   {
@@ -524,6 +532,29 @@ fn normalize_author_component(
     .to_string()
 }
 
+fn strip_et_al_suffix(
+  value: &str
+) -> String {
+  let parts = value
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if parts.len() < 2 {
+    return value.to_string();
+  }
+  let len = parts.len();
+  let last = parts[len - 1]
+    .trim_end_matches('.')
+    .to_lowercase();
+  let prior = parts[len - 2]
+    .trim_end_matches('.')
+    .to_lowercase();
+  if prior == "et" && last == "al" {
+    parts[..len - 2].join(" ")
+  } else {
+    value.to_string()
+  }
+}
+
 fn tokens_from_authors(
   reference: &str
 ) -> BTreeSet<String> {
@@ -539,6 +570,12 @@ fn tokens_from_authors(
   for part in normalized.split(';') {
     let name = part.trim();
     if !name.is_empty() {
+      let lowered = name
+        .trim_end_matches('.')
+        .to_lowercase();
+      if lowered == "et al" {
+        continue;
+      }
       tokens.extend(
         tokens_from_segment(name)
       );

@@ -60,6 +60,12 @@ const MONTH_RANGE_DAY_REF: &str =
 const PUNCTUATED_AUTHORS_REF: &str =
   "Doe, J.; Smith, A., Jr.; O'Neil, \
    M.-J. Title. City: Pub, 2020.";
+const ET_AL_REF: &str =
+  "Doe, J., et al. Title. City: \
+   Pub, 2020.";
+const MONTH_NAME_PUNCT_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, Apr. 5, 1995.";
 
 const MULTI_AUTHOR_REF: &str =
   "Doe, J. and Smith, A. A Title. \
@@ -473,6 +479,43 @@ fn parse_uses_normalization_dir_assets()
     publisher.as_deref(),
     Some("University Press")
   );
+  let language = reference
+    .get("language")
+    .and_then(|value| {
+      match value {
+        | FieldValue::Single(text) => {
+          Some(text.as_str())
+        }
+        | _ => None
+      }
+    });
+  assert_eq!(
+    language,
+    Some("en-US"),
+    "locale overrides should update \
+     language"
+  );
+  let scripts = reference
+    .get("scripts")
+    .and_then(|value| {
+      match value {
+        | FieldValue::List(items) => {
+          Some(items.clone())
+        }
+        | FieldValue::Single(text) => {
+          Some(vec![text.clone()])
+        }
+        | _ => None
+      }
+    })
+    .unwrap_or_default();
+  assert!(
+    scripts.iter().any(|value| {
+      value == "Latn"
+    }),
+    "locale overrides should update \
+     script names"
+  );
   let container_values = reference
     .get("container-title")
     .and_then(|value| {
@@ -730,6 +773,77 @@ fn parse_handles_punctuated_author_lists()
     3,
     "parser should split \
      punctuation-heavy author lists"
+  );
+}
+
+#[test]
+fn parse_skips_et_al_in_author_lists()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[ET_AL_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(
+    authors.len(),
+    1,
+    "parser should ignore et al \
+     placeholders"
+  );
+  assert_eq!(
+    authors[0],
+    Author {
+      family: "Doe".into(),
+      given:  "J".into()
+    }
+  );
+}
+
+#[test]
+fn parse_captures_month_names_with_punctuation()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MONTH_NAME_PUNCT_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  let date_values =
+    match reference.get("date") {
+      | Some(FieldValue::List(
+        values
+      )) => values,
+      | other => {
+        panic!(
+          "Expected list of date \
+           values, got {other:?}"
+        )
+      }
+    };
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string(),
+      "5".to_string()
+    ],
+    "Parser should capture month names \
+     with punctuation"
   );
 }
 

@@ -320,6 +320,72 @@ fn normalization_config_handles_missing_assets()
 }
 
 #[test]
+fn normalization_config_applies_locale_overrides()
+ {
+  let dir =
+    tempdir().expect("temp dir");
+  fs::write(
+    dir
+      .path()
+      .join("language-locale.txt"),
+    "en\ten-US\n"
+  )
+  .expect("write language locale");
+  fs::write(
+    dir
+      .path()
+      .join("script-locale.txt"),
+    "Latin\tLatn\n"
+  )
+  .expect("write script locale");
+
+  let config =
+    NormalizationConfig::load_from_dir(
+      dir.path()
+    )
+    .expect("load normalization dir");
+
+  let mut map = Map::new();
+  map.insert(
+    "language".into(),
+    Value::String("en".into())
+  );
+  map.insert(
+    "scripts".into(),
+    Value::Array(vec![Value::String(
+      "Latin".into()
+    )])
+  );
+
+  config.apply_to_map(&mut map);
+
+  let language = map
+    .get("language")
+    .and_then(Value::as_str);
+  assert_eq!(
+    language,
+    Some("en-US"),
+    "locale overrides should map \
+     language codes"
+  );
+
+  let scripts = map
+    .get("scripts")
+    .and_then(Value::as_array)
+    .and_then(|array| {
+      array
+        .first()
+        .and_then(Value::as_str)
+    });
+  assert_eq!(
+    scripts,
+    Some("Latn"),
+    "locale overrides should map \
+     script names"
+  );
+}
+
+#[test]
 fn abbreviations_last_entry_wins() {
   let abbreviations =
     AbbreviationMap::load_from_str(

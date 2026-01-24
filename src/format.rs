@@ -399,6 +399,20 @@ fn csl_entry(
     }
   }
 
+  if let Some(values) =
+    extract_values_from_map(&map, "scripts")
+  {
+    record.insert(
+      "scripts".into(),
+      Value::Array(
+        values
+          .into_iter()
+          .map(Value::String)
+          .collect()
+      )
+    );
+  }
+
   for key in [
     "note",
     "genre",

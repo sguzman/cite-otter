@@ -371,6 +371,29 @@ fn csl_includes_type_note_genre_edition_and_language()
 }
 
 #[test]
+fn csl_includes_scripts_array() {
+  let formatter = Format::new();
+  let mut reference = Reference::new();
+  reference.insert(
+    "scripts",
+    FieldValue::List(vec![
+      "Latin".into(),
+      "Common".into()
+    ])
+  );
+
+  let csl =
+    formatter.to_csl(&[reference]);
+
+  assert!(
+    csl.contains(
+      "\"scripts\":[\"Latin\",\"Common\"]"
+    ),
+    "CSL output should include scripts"
+  );
+}
+
+#[test]
 fn formatter_expands_journal_abbrev() {
   let contents = fs::read_to_string(
     "tests/fixtures/abbrev-sample.txt"

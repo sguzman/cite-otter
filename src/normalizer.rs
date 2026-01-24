@@ -347,7 +347,9 @@ use crate::parser::FieldValue;
 pub struct NormalizationConfig {
   journal:   AbbreviationMap,
   publisher: AbbreviationMap,
-  container: AbbreviationMap
+  container: AbbreviationMap,
+  language:  AbbreviationMap,
+  scripts:   AbbreviationMap
 }
 
 impl Default for NormalizationConfig {
@@ -358,6 +360,10 @@ impl Default for NormalizationConfig {
       publisher:
         AbbreviationMap::default(),
       container:
+        AbbreviationMap::default(),
+      language:
+        AbbreviationMap::default(),
+      scripts:
         AbbreviationMap::default()
     }
   }
@@ -379,6 +385,14 @@ impl NormalizationConfig {
       container: load_abbrev(
         dir,
         "container-abbrev.txt"
+      )?,
+      language:  load_abbrev(
+        dir,
+        "language-locale.txt"
+      )?,
+      scripts:   load_abbrev(
+        dir,
+        "script-locale.txt"
       )?
     })
   }
@@ -407,6 +421,22 @@ impl NormalizationConfig {
     self
   }
 
+  pub fn with_language_locale(
+    mut self,
+    abbreviations: AbbreviationMap
+  ) -> Self {
+    self.language = abbreviations;
+    self
+  }
+
+  pub fn with_script_locale(
+    mut self,
+    abbreviations: AbbreviationMap
+  ) -> Self {
+    self.scripts = abbreviations;
+    self
+  }
+
   pub fn apply_to_map(
     &self,
     map: &mut Map<String, Value>
@@ -425,6 +455,16 @@ impl NormalizationConfig {
       map,
       "container-title",
       &self.container
+    );
+    expand_field(
+      map,
+      "language",
+      &self.language
+    );
+    expand_field(
+      map,
+      "scripts",
+      &self.scripts
     );
   }
 
@@ -449,6 +489,16 @@ impl NormalizationConfig {
       map,
       "container-title",
       &self.container
+    );
+    expand_field_value(
+      map,
+      "language",
+      &self.language
+    );
+    expand_field_value(
+      map,
+      "scripts",
+      &self.scripts
     );
   }
 }
