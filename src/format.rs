@@ -189,6 +189,16 @@ fn normalize_bibtex_entry(
   {
     map.insert("issn".into(), value);
   }
+  if !map.contains_key("number")
+    && !map.contains_key("issue")
+  {
+    if let Some(value) =
+      map.remove("collection-number")
+    {
+      map
+        .insert("number".into(), value);
+    }
+  }
 
   rename_field(
     map,

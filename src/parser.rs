@@ -355,7 +355,10 @@ fn parse_authors(
   let normalized = segment
     .replace('&', ";")
     .replace(" and ", ";")
-    .replace(" AND ", ";");
+    .replace(" AND ", ";")
+    .replace(" / ", ";")
+    .replace("/", ";")
+    .replace('|', ";");
 
   normalized
     .split(';')
@@ -751,15 +754,7 @@ fn collect_month_name_parts(
   if let Some(token) =
     tokens.get(month_index + 1)
   {
-    let digits: String = token
-      .chars()
-      .filter(|c| c.is_ascii_digit())
-      .collect();
-    if !digits.is_empty()
-      && digits.len() <= 2
-    {
-      day = Some(digits);
-    }
+    day = extract_day_token(token);
   }
 
   let mut parts =
@@ -778,6 +773,39 @@ fn parse_month_token(
   });
   let first = parts.next()?.trim();
   month_number(first)
+}
+
+fn extract_day_token(
+  token: &str
+) -> Option<String> {
+  let total_digits = token
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .count();
+  if total_digits > 2 {
+    return None;
+  }
+  let mut digits = String::new();
+  for ch in token.chars() {
+    if ch.is_ascii_digit() {
+      digits.push(ch);
+      if digits.len() >= 2 {
+        break;
+      }
+    } else if ch == '-'
+      || ch == '–'
+      || ch == '—'
+    {
+      break;
+    } else if !digits.is_empty() {
+      break;
+    }
+  }
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
+  }
 }
 
 fn month_number(

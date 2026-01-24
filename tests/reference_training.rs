@@ -196,12 +196,28 @@ fn training_validation_delta_flow_runs()
       .expect(
         "sequences must be numeric"
       ) as usize;
+  let recorded_tokens = training_entry
+    .get("tokens")
+    .and_then(Value::as_u64)
+    .expect("tokens must be numeric")
+    as usize;
 
   assert_eq!(
     recorded_sequences,
     expected_sequences,
     "parser sequencing stats should \
      match the training data"
+  );
+  let expected_tokens: usize = parser
+    .prepare(&content, true)
+    .0
+    .iter()
+    .map(|sequence| sequence.len())
+    .sum();
+  assert_eq!(
+    recorded_tokens, expected_tokens,
+    "parser token counts should match \
+     training data"
   );
 
   assert!(
@@ -242,11 +258,23 @@ fn training_validation_delta_flow_runs()
         "finder sequences must be \
          numeric"
       ) as usize;
+  let recorded_finder_tokens =
+    finder_entry
+      .get("tokens")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder tokens must be numeric"
+      ) as usize;
   assert_eq!(
     recorded_finder_sequences,
     expected_finder_sequences,
     "finder training stats should \
      reflect parser labels"
+  );
+  assert_eq!(
+    recorded_finder_tokens, 0,
+    "finder token counts should be \
+     zero"
   );
 
   let samples = training_json
@@ -295,6 +323,67 @@ fn training_validation_delta_flow_runs()
       &["format", "output"],
       "sample entry"
     );
+    if let Some(format) = entry
+      .get("format")
+      .and_then(Value::as_str)
+    {
+      if let Some(output) = entry
+        .get("output")
+        .and_then(Value::as_str)
+      {
+        match format {
+          | "json" => {
+            let parsed: Value =
+              serde_json::from_str(
+                output
+              )
+              .expect(
+                "json sample should \
+                 parse"
+              );
+            assert!(
+              parsed.is_array(),
+              "json sample should be \
+               an array"
+            );
+          }
+          | "csl" => {
+            let first = output
+              .lines()
+              .find(|line| {
+                !line.trim().is_empty()
+              })
+              .expect(
+                "csl sample should \
+                 have lines"
+              );
+            let parsed: Value =
+              serde_json::from_str(
+                first
+              )
+              .expect(
+                "csl sample line \
+                 should parse"
+              );
+            assert!(
+              parsed.is_object(),
+              "csl sample should be \
+               JSON objects"
+            );
+          }
+          | "bibtex" => {
+            assert!(
+              output
+                .trim_start()
+                .starts_with('@'),
+              "bibtex sample should \
+               start with @"
+            );
+          }
+          | _ => {}
+        }
+      }
+    }
   }
 
   let validation_parser =
@@ -326,12 +415,23 @@ fn training_validation_delta_flow_runs()
       .expect(
         "sequences must be numeric"
       ) as usize;
+  let validation_tokens =
+    validation_entry
+      .get("tokens")
+      .and_then(Value::as_u64)
+      .expect("tokens must be numeric")
+      as usize;
 
   assert_eq!(
     validation_sequences,
     expected_sequences,
     "validation stats should follow \
      the training numbers"
+  );
+  assert_eq!(
+    validation_tokens, expected_tokens,
+    "validation token counts should \
+     match training data"
   );
 
   assert!(
@@ -373,11 +473,23 @@ fn training_validation_delta_flow_runs()
         "finder sequences must be \
          numeric"
       ) as usize;
+  let validation_finder_tokens =
+    validation_finder_entry
+      .get("tokens")
+      .and_then(Value::as_u64)
+      .expect(
+        "finder tokens must be numeric"
+      ) as usize;
   assert_eq!(
     validation_finder_sequences,
     expected_finder_sequences,
     "finder validation stats should \
      match the training numbers"
+  );
+  assert_eq!(
+    validation_finder_tokens, 0,
+    "finder validation token counts \
+     should be zero"
   );
 
   let delta_comparisons = delta_json

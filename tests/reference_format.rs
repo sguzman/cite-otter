@@ -60,7 +60,10 @@ fn bibtex_includes_container_series_and_doi()
  {
   let parser = Parser::new();
   let references = parser.parse(
-    &[COMPLEX_REF, TRANSLATOR_REF],
+    &[
+      COMPLEX_REF_WITH_NUMBER,
+      TRANSLATOR_REF
+    ],
     ParseFormat::BibTeX
   );
   let formatter = Format::new();
@@ -82,6 +85,11 @@ fn bibtex_includes_container_series_and_doi()
     ),
     "Series metadata should become \
      the BibTeX series field"
+  );
+  assert!(
+    bibtex.contains("number = {4050}"),
+    "Series number should map to \
+     BibTeX number"
   );
   assert!(
     bibtex.contains(
