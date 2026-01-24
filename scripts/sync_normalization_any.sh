@@ -4,8 +4,9 @@ set -euo pipefail
 REPO_URL=${ANYSTYLE_DATA_REPO:-https://github.com/inukshuk/anystyle-data}
 TARGET_DIR=${ANYSTYLE_DATA_DIR:-tmp/anystyle-data}
 OUTPUT_DIR=${NORMALIZATION_OUTPUT_DIR:-tests/fixtures/normalization-any}
-NORMALIZATION_REPO=${ANYSTYLE_NORMALIZATION_REPO:-}
+NORMALIZATION_REPO=${ANYSTYLE_NORMALIZATION_REPO:-https://github.com/inukshuk/anystyle-data}
 NORMALIZATION_DIR=${ANYSTYLE_NORMALIZATION_DIR:-}
+NORMALIZATION_SUBDIR=${ANYSTYLE_NORMALIZATION_SUBDIR:-}
 
 sync_from_dir() {
   local source="$1"
@@ -28,9 +29,16 @@ if [ -n "$NORMALIZATION_DIR" ]; then
 fi
 
 if [ -n "$NORMALIZATION_REPO" ]; then
-  if [ ! -d "$NORMALIZATION_REPO/.git" ]; then
-    git clone --depth 1 "$NORMALIZATION_REPO" "$TARGET_DIR-normalization"
+  if [[ "$NORMALIZATION_REPO" == http* ]]; then
+    if [ ! -d "$TARGET_DIR-normalization/.git" ]; then
+      git clone --depth 1 "$NORMALIZATION_REPO" "$TARGET_DIR-normalization"
+    else
+      git -C "$TARGET_DIR-normalization" pull --ff-only
+    fi
     NORMALIZATION_REPO="$TARGET_DIR-normalization"
+  fi
+  if [ -n "$NORMALIZATION_SUBDIR" ]; then
+    NORMALIZATION_REPO="$NORMALIZATION_REPO/$NORMALIZATION_SUBDIR"
   fi
   if sync_from_dir "$NORMALIZATION_REPO"; then
     exit 0

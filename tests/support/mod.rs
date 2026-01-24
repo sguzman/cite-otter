@@ -23,13 +23,15 @@ pub fn assert_snapshot_eq(
   }
 
   let diff = diff_lines(expected, actual);
+  let header = snapshot_header(label);
+  let report = format!("{header}\n{diff}");
   let report_path = Path::new("target")
     .join("reports")
     .join("format-diff.txt");
   if let Some(parent) = report_path.parent() {
     let _ = std::fs::create_dir_all(parent);
   }
-  let _ = std::fs::write(&report_path, &diff);
+  let _ = std::fs::write(&report_path, &report);
   eprintln!(
     "\nsnapshot mismatch: {label}\n{diff}\n(diff saved to {})",
     report_path.display()
@@ -69,4 +71,14 @@ fn diff_lines(
     out.push(format!("+{right}"));
   }
   out.join("\n")
+}
+
+fn snapshot_header(label: &str) -> String {
+  let timestamp = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|duration| duration.as_secs())
+    .unwrap_or(0);
+  format!(
+    "snapshot: {label}\nupdated: {timestamp}"
+  )
 }
