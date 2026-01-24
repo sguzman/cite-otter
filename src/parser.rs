@@ -6,6 +6,10 @@ use std::collections::{
 use serde::Serialize;
 
 use crate::format::ParseFormat;
+use crate::language::{
+  detect_language,
+  detect_scripts
+};
 
 const PREPARED_LINES: [&str; 2] = [
   "Hello, hello Lu P H He , o, \
@@ -805,8 +809,7 @@ impl Parser {
         mapped.insert(
           "language",
           FieldValue::Single(
-            guess_language(reference)
-              .into()
+            detect_language(reference)
           )
         );
         mapped.insert(
@@ -1303,65 +1306,6 @@ fn normalize_token(
     })
     .collect::<String>()
     .to_lowercase()
-}
-
-fn detect_scripts(
-  reference: &str
-) -> Vec<String> {
-  let mut scripts = BTreeSet::new();
-  scripts.insert("Common".to_string());
-  scripts.insert("Latin".to_string());
-  for c in reference.chars() {
-    match c as u32 {
-      | 0x0370..=0x03ff => {
-        scripts
-          .insert("Greek".to_string());
-      }
-      | 0x0400..=0x04ff => {
-        scripts.insert(
-          "Cyrillic".to_string()
-        );
-      }
-      | 0x0590..=0x05ff => {
-        scripts
-          .insert("Hebrew".to_string());
-      }
-      | 0x0600..=0x06ff => {
-        scripts
-          .insert("Arabic".to_string());
-      }
-      | 0x0900..=0x097f => {
-        scripts.insert(
-          "Devanagari".to_string()
-        );
-      }
-      | 0x3040..=0x30ff
-      | 0x31f0..=0x31ff => {
-        scripts.insert(
-          "Katakana".to_string()
-        );
-      }
-      | 0x4e00..=0x9fff => {
-        scripts
-          .insert("Han".to_string());
-      }
-      | _ => {}
-    }
-  }
-  scripts.into_iter().collect()
-}
-
-fn guess_language(
-  reference: &str
-) -> &'static str {
-  if reference
-    .chars()
-    .any(|c| c as u32 > 0x007f)
-  {
-    "fr"
-  } else {
-    "en"
-  }
 }
 
 fn casing_flag(

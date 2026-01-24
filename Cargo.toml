@@ -10,6 +10,8 @@ clap = { features = [
 ], version = "4.3" }
 glob = "0.3"
 lmdb = "0.8"
+whatlang = "0.18"
+unicode-script = "0.5"
 redis = "0.27"
 serde = { features = [
   "derive",

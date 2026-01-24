@@ -4,6 +4,7 @@ pub mod document;
 pub mod feature;
 pub mod finder;
 pub mod format;
+pub mod language;
 pub mod model;
 pub mod normalizer;
 pub mod parser;
