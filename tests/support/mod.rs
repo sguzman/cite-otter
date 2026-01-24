@@ -86,7 +86,9 @@ fn diff_lines(
       expected_lines: expected_lines.len(),
       actual_lines: actual_lines.len(),
       removed,
-      added
+      added,
+      expected_bytes: expected.len(),
+      actual_bytes: actual.len()
     }
   )
 }
@@ -95,7 +97,9 @@ struct DiffSummary {
   expected_lines: usize,
   actual_lines: usize,
   removed: usize,
-  added: usize
+  added: usize,
+  expected_bytes: usize,
+  actual_bytes: usize
 }
 
 fn snapshot_header(
@@ -106,11 +110,41 @@ fn snapshot_header(
     .duration_since(std::time::UNIX_EPOCH)
     .map(|duration| duration.as_secs())
     .unwrap_or(0);
-  format!(
-    "snapshot: {label}\nupdated: {timestamp}\nexpected_lines: {}\nactual_lines: {}\nremoved: {}\nadded: {}",
-    summary.expected_lines,
-    summary.actual_lines,
-    summary.removed,
-    summary.added
-  )
+  let mut lines = vec![
+    format!("snapshot: {label}"),
+    format!("updated: {timestamp}")
+  ];
+  if let Some((group, format)) =
+    split_label(label)
+  {
+    lines.push(format!("group: {group}"));
+    lines.push(format!("format: {format}"));
+  }
+  lines.extend([
+    format!(
+      "expected_lines: {}",
+      summary.expected_lines
+    ),
+    format!(
+      "actual_lines: {}",
+      summary.actual_lines
+    ),
+    format!(
+      "expected_bytes: {}",
+      summary.expected_bytes
+    ),
+    format!(
+      "actual_bytes: {}",
+      summary.actual_bytes
+    ),
+    format!("removed: {}", summary.removed),
+    format!("added: {}", summary.added)
+  ]);
+  lines.join("\n")
+}
+
+fn split_label(
+  label: &str
+) -> Option<(&str, &str)> {
+  label.split_once(':')
 }

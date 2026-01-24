@@ -201,22 +201,47 @@ fn normalize_tag_text(
       | "date"
       | "pages"
   );
-  if needs_period && !ends_with_punct(trimmed)
-  {
-    format!("{trimmed}.")
+  if needs_period {
+    ensure_trailing_period(trimmed)
   } else {
     trimmed.to_string()
   }
 }
 
-fn ends_with_punct(
+fn ensure_trailing_period(
+  value: &str
+) -> String {
+  if has_terminal_punct(value) {
+    return value.to_string();
+  }
+  format!("{value}.")
+}
+
+fn has_terminal_punct(
   value: &str
 ) -> bool {
-  value
-    .trim_end()
-    .ends_with(|c: char| {
-      matches!(c, '.' | ',' | ';' | ':' | ')')
-    })
+  let Some(ch) = terminal_char(value) else {
+    return false;
+  };
+  matches!(ch, '.' | ',' | ';' | ':' | '?' | '!')
+}
+
+fn terminal_char(
+  value: &str
+) -> Option<char> {
+  for ch in value.trim_end().chars().rev() {
+    if is_closing_wrapper(ch) {
+      continue;
+    }
+    return Some(ch);
+  }
+  None
+}
+
+fn is_closing_wrapper(
+  ch: char
+) -> bool {
+  matches!(ch, ')' | ']' | '}' | '"' | '\'')
 }
 
 fn starts_with_punct(
@@ -225,7 +250,11 @@ fn starts_with_punct(
   value
     .trim_start()
     .starts_with(|c: char| {
-      matches!(c, '.' | ',' | ';' | ':' | ')')
+      matches!(
+        c,
+        '.' | ',' | ';' | ':' | '?' | '!' | ')'
+          | ']' | '}'
+      )
     })
 }
 
@@ -244,11 +273,11 @@ fn separator_for(
   if matches!(
     tag,
     "date" | "pages" | "issue" | "volume"
-  ) && !ends_with_punct(previous_text)
+  ) && !has_terminal_punct(previous_text)
   {
     return ", ".to_string();
   }
-  if ends_with_punct(previous_text) {
+  if has_terminal_punct(previous_text) {
     return " ".to_string();
   }
   if starts_with_punct(text) {

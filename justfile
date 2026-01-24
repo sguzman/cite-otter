@@ -97,6 +97,10 @@ refresh-fixtures:
 	CITE_OTTER_CORE_LIMIT=200 cargo run --quiet --bin generate_format_fixtures
 	cargo test
 
+refresh-fixtures-fast:
+	scripts/sync_normalization_any.sh
+	CITE_OTTER_CORE_LIMIT=200 cargo run --quiet --bin generate_format_fixtures
+
 # Security (Rust)
 audit:
 	cargo audit
