@@ -1298,6 +1298,64 @@ mod tests {
       .expect("clone repo");
     assert!(cloned.exists());
   }
+
+  #[test]
+  fn collect_files_rejects_invalid_glob()
+   {
+    let result = collect_files("[");
+    assert!(
+      result.is_err(),
+      "invalid glob patterns should \
+       error"
+    );
+  }
+
+  #[test]
+  fn training_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        "[",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_err(),
+      "training should error on \
+       invalid glob"
+    );
+  }
+
+  #[test]
+  fn validation_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        "[",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_err(),
+      "validation should error on \
+       invalid glob"
+    );
+  }
+
+  #[test]
+  fn delta_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      "[",
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    assert!(
+      result.is_err(),
+      "delta should error on invalid \
+       glob"
+    );
+  }
 }
 
 fn run_training_with_config(
