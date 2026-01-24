@@ -10,7 +10,7 @@ use cite_otter::parser::Parser;
 const CORE_XML: &str =
   "tmp/anystyle/res/parser/core.xml";
 const OUT_DIR: &str = "tests/fixtures/format";
-const LIMIT: usize = 50;
+const LIMIT: usize = 100;
 
 fn main() -> anyhow::Result<()> {
   let refs = extract_core_refs(
@@ -62,34 +62,34 @@ fn extract_core_refs(
 ) -> anyhow::Result<Vec<String>> {
   let content = fs::read_to_string(path)?;
   let mut refs = Vec::new();
-  for chunk in content
-    .split("<sequence>")
-    .skip(1)
+  let mut cursor = content.as_str();
+  while let Some(start) =
+    cursor.find("<sequence>")
   {
-    if let Some(end) =
-      chunk.find("</sequence>")
-    {
-      let segment = &chunk[..end];
-      let mut parts = Vec::new();
-      for line in segment.lines() {
-        if let Some(text) =
-          extract_tag_text(line)
-        {
-          parts.push(text);
-        }
-      }
-      let reference = parts
-        .join(" ")
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-      if !reference.is_empty() {
-        refs.push(reference);
-      }
-      if refs.len() >= limit {
-        break;
+    cursor = &cursor[start + 10..];
+    let Some(end) =
+      cursor.find("</sequence>")
+    else {
+      break;
+    };
+    let segment = &cursor[..end];
+    let mut parts = Vec::new();
+    for line in segment.lines() {
+      if let Some(text) =
+        extract_tag_text(line)
+      {
+        parts.push(text);
       }
     }
+    let reference =
+      normalize_reference(parts.join(" "));
+    if !reference.is_empty() {
+      refs.push(reference);
+    }
+    if refs.len() >= limit {
+      break;
+    }
+    cursor = &cursor[end + 11..];
   }
   Ok(refs)
 }
@@ -110,5 +110,30 @@ fn extract_tag_text(
     text
       .replace("&amp;", "&")
       .replace("&#39;", "'")
+      .replace("&quot;", "\"")
+      .replace("&apos;", "'")
+      .replace("&nbsp;", " ")
   )
+}
+
+fn normalize_reference(
+  raw: String
+) -> String {
+  let mut reference =
+    raw.replace('\u{a0}', " ");
+  reference = reference
+    .split_whitespace()
+    .collect::<Vec<_>>()
+    .join(" ");
+  for (from, to) in [
+    (" ,", ","),
+    (" .", "."),
+    (" ;", ";"),
+    (" :", ":"),
+    (" )", ")"),
+    ("( ", "(")
+  ] {
+    reference = reference.replace(from, to);
+  }
+  reference.trim().to_string()
 }

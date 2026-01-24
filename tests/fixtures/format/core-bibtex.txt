@@ -444,3 +444,441 @@
   title = {Chandra, S}
   year = {1224}
 }
+
+@book{citeotter50,
+  address = {TRAFFIC}
+  author = {S, R}
+  editor = {editor}
+  publisher = {Recognizing objects using hierarchical reference frame transformations. In D. S. Touretzky}
+  title = {Zemel, M. C}
+  volume = {2}
+  year = {1273}
+}
+
+@misc{citeotter51,
+  address = {Tokyo}
+  author = {Corkill, D D (1979)}
+  booktitle = {In Proceedings of the Sixth International Joint Conference on Artificial Intelligence, pp}
+  number = {168}
+  pages = {168-175}
+  series = {Proceedings of the Sixth International Joint Conference on Artificial Intelligence}
+  title = {Hierarchical planning in a distributed environment}
+  year = {1979}
+}
+
+@misc{citeotter52,
+  address = {1990}
+  author = {D}
+  booktitle = {In Proceedings of the SIGPLAN '90 Conference on Program Language Design and Implementation, White Plains, NY, June 1990}
+  number = {1990}
+  series = {Proceedings of the SIGPLAN '90 Conference on Program Language Design and Implementation}
+  title = {Callahan, S}
+  year = {1990}
+}
+
+@book{citeotter53,
+  address = {York}
+  author = {Forsyth, C H Implementation of the Worst-Case Execution Time Analyser June 1992 York Software Engineering Ltd University of York: Task 8 Volume E Deliverable on ESTEC contract 9198}
+  publisher = {Task 8 Volume E Deliverable on ESTEC contract 9198/90/NL/SF}
+  series = {Volume E Deliverable on ESTEC contract 9198/90/NL/SF}
+  volume = {9198}
+  year = {1992}
+}
+
+@misc{citeotter54,
+  address = {292-302}
+  author = {J}
+  booktitle = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science 392, Springer Verlag, 1989, pp}
+  number = {1989}
+  pages = {292-302}
+  series = {Lecture Notes in Computer Science 392}
+  title = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science 392, Springer Verlag, 1989, pp}
+  year = {1989}
+}
+
+@book{citeotter55,
+  address = {1991}
+  author = {E, T}
+  title = {Anderson, H. M}
+  year = {1122}
+}
+
+@book{citeotter56,
+  address = {1986}
+  author = {F}
+  title = {Jahanian and Al Mok}
+  year = {8909}
+}
+
+@book{citeotter57,
+  address = {Ltd}
+  author = {Hughes, G E}
+  title = {An Introduction to Modal Logic}
+  year = {1968}
+}
+
+@book{citeotter58,
+  address = {1989}
+  author = {Ostroff, J S "Temporal Logic for Real-Time Systems" Advanced Software Development Series England 1989}
+  number = {1989}
+  series = {Series}
+  year = {1989}
+}
+
+@book{citeotter59,
+  address = {1994}
+  author = {T}
+  title = {Imielinski, S}
+  year = {1994}
+}
+
+@book{citeotter60,
+  address = {71-99}
+  author = {Pagallo, G}
+  title = {Boolean feature discovery in empirical learning}
+  year = {1990}
+}
+
+@book{citeotter61,
+  address = {1971}
+  author = {D}
+  title = {Waltz}
+  year = {1116}
+}
+
+@book{citeotter62,
+  address = {163-169}
+  author = {Cheeseman, P Kanefsky B}
+  booktitle = {12th International Joint Conference on Artificial Intelligence, 163-169}
+  pages = {1991-12}
+  title = {Where the really hard problems are}
+  year = {1991}
+}
+
+@book{citeotter63,
+  address = {NJ}
+  author = {Cleveland, W S}
+  publisher = {AT&T Bell Laboratories}
+  title = {Loader, (1994)}
+  year = {1994}
+}
+
+@misc{citeotter64,
+  address = {1994}
+  author = {W, T}
+  booktitle = {Lesser, "An Exchange Protocol Without Enforcement", in the Proceedings of 13th International Distributed Artificial Intelligence Workshop, Seattle, WA., July 1994}
+  number = {1994}
+  series = {Proceedings of 13th International Distributed Artificial Intelligence Workshop}
+  title = {Sandholm and V. R}
+  volume = {13}
+  year = {1994}
+}
+
+@book{citeotter65,
+  address = {Skeletonization}
+  author = {Mozer, M C}
+  pages = {107-115}
+  publisher = {A technique for trimming the fat from a network via relevance assessment. Advances in Neural Information Processing Systems (Vol. 1)}
+  title = {Skeletonization: A technique for trimming the fat from a network via relevance assessment}
+  volume = {1}
+  year = {1988}
+}
+
+@book{citeotter66,
+  address = {1993}
+  author = {A}
+  booktitle = {In Preceedings of the 1993 ACM SIGMOD International Conference on Management of Data, pages 157-166, Washington, D. C., May 1993}
+  title = {Gupta, I}
+  volume = {1993}
+  year = {1571}
+}
+
+@misc{citeotter67,
+  address = {263-286}
+  author = {Dietterich, T G}
+  booktitle = {Journal of Artificial Intelligence Research, 2, 263-286}
+  title = {Solving multiclass learning problems via error-correcting output codes}
+  year = {1995}
+}
+
+@book{citeotter68,
+  address = {1983}
+  author = {P, A}
+  pages = {1019-1023}
+  title = {Witkin}
+  year = {1019}
+}
+
+@book{citeotter69,
+  address = {CMU-CS-94-123}
+  author = {Fink, E}
+  title = {Formalizing the prodigy planning algorithm}
+  year = {1994}
+}
+
+@book{citeotter70,
+  address = {55-64}
+  author = {Langley, P}
+  pages = {1995-38}
+  title = {Applications of machine learning and rule induction}
+  year = {1995}
+}
+
+@book{citeotter71,
+  address = {671-680}
+  author = {Kirkpatrick, S Gelatt C}
+  title = {Optimization by simulated annealing}
+  year = {1983}
+}
+
+@book{citeotter72,
+  address = {1990}
+  author = {C}
+  title = {Rosene, ``Incremental dependence analysis,'' Ph}
+  year = {1990}
+}
+
+@book{citeotter73,
+  address = {111-161}
+  author = {Michalski, R (1983)}
+  title = {A theory and methodology of inductive learning}
+  year = {1983}
+}
+
+@book{citeotter74,
+  address = {Multiprocessor}
+  author = {R, David}
+  booktitle = {In International Symposium on Shared Memory Multiprocessing, pages 109-118, April 1991}
+  number = {109}
+  publisher = {A First Experience. In International Symposium on Shared Memory Multiprocessing}
+  series = {Symposium on Shared Memory Multiprocessing}
+  title = {Cheriton, Hendrik A}
+  year = {1091}
+}
+
+@misc{citeotter75,
+  address = {modeling}
+  author = {Gmytrasiewicz, P J}
+  booktitle = {In Proceedings of the Tenth National Conference on Artificial Intelligence, pp}
+  number = {628}
+  pages = {628-634}
+  publisher = {Preliminary report. In Proceedings of the Tenth National Conference on Artificial Intelligence}
+  series = {Proceedings of the Tenth National Conference on Artificial Intelligence}
+  title = {A logic of knowledge and belief for recursive modeling: Preliminary report}
+  year = {1992}
+}
+
+@book{citeotter76,
+  address = {roles}
+  author = {Baader, F (1991)}
+  publisher = {An alternative to terminological cycles. In Proc. of the 12th Int. Joint Conf. on Artificial Intelligence (IJCAI-91) Sydney}
+  title = {Augmenting concept languages by transitive closure of roles: An alternative to terminological cycles}
+  year = {1991}
+}
+
+@book{citeotter77,
+  address = {1997}
+  author = {E}
+  booktitle = {4th International Symposium, LFCS'97, volume 1234, of Lecture Notes in Computer Science, pages 56-66, Yaroslavl, Russia, July 1997}
+  editor = {editors}
+  number = {56}
+  series = {Lecture Notes in Computer Science}
+  title = {Dantsin and A}
+  volume = {1234}
+  year = {5666}
+}
+
+@misc{citeotter78,
+  address = {1993}
+  author = {M}
+  booktitle = {In Proceedings of the Eleventh National Conference on Artificial Intelligence, pages 492-499, Washington, D. C., 1993}
+  collection-number = {492}
+  issue = {492}
+  series = {Proceedings of the Eleventh National Conference on Artificial Intelligence}
+  title = {Peot and D. E}
+  year = {1499}
+}
+
+@misc{citeotter79,
+  address = {Box}
+  author = {Burton, Robert P}
+  booktitle = {"Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp}
+  number = {513}
+  pages = {513-520}
+  publisher = {A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp. 513-520.}
+  series = {Proceedings of the National Computer Conference (1974) pp}
+  title = {Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp}
+  year = {1974}
+}
+
+@book{citeotter80,
+  address = {1987}
+  author = {Barry Wilkinson, Digital System Design Prentice Hall 1987}
+  year = {1987}
+}
+
+@book{citeotter81,
+  address = {1997}
+  author = {Ermedahl, Andreas}
+  issue = {97}
+  title = {Deriving annotations for tight calculation of execution time}
+  year = {1997}
+}
+
+@book{citeotter82,
+  address = {Press}
+  author = {Horn, B (1986)}
+  title = {Robot Vision, MIT Press}
+  year = {1986}
+}
+
+@book{citeotter83,
+  address = {1979}
+  author = {J}
+  title = {Dongarra, J}
+  year = {1979}
+}
+
+@book{citeotter84,
+  address = {1993}
+  author = {Puschner, Peter}
+  title = {A tool for the computation of worst case task execution times}
+  year = {1993}
+}
+
+@misc{citeotter85,
+  address = {411-420}
+  author = {Rivest, R L}
+  booktitle = {In Proceedings of the 21th ACM Symp. on Theory of Computing, pp}
+  number = {411}
+  pages = {411-420}
+  series = {Proceedings of the 21th ACM Symp}
+  title = {Inference of Finite Automata Using Homing Sequences}
+  year = {1989}
+}
+
+@book{citeotter86,
+  address = {appear}
+  author = {M, D}
+  title = {Chiarulli, S. P}
+}
+
+@misc{citeotter87,
+  address = {54-67}
+  author = {W}
+  booktitle = {Boss, "Multimedia Databases and Servers," AT&T Technical Journal, Vol}
+  issue = {5}
+  pages = {54-67}
+  title = {Sterling, F}
+  volume = {74}
+  year = {1995}
+}
+
+@book{citeotter88,
+  address = {Netherlands}
+  author = {Salomons, O (1994)}
+  title = {Computer support in the design of mechanical products}
+  year = {1994}
+}
+
+@misc{citeotter89,
+  address = {Programs}
+  author = {C, S}
+  booktitle = {In Proceedings of the 22nd International Symposium on Computer Architecture, pages 24-36, June 1995}
+  number = {24}
+  pages = {2-22}
+  publisher = {Characterization and Methodological Considerations. In Proceedings of the 22nd International Symposium on Computer Architecture}
+  series = {Proceedings of the 22nd International Symposium on Computer Architecture}
+  title = {Woo, M}
+  year = {2436}
+}
+
+@book{citeotter90,
+  address = {1983}
+  author = {E, J}
+  number = {1983}
+  series = {Series in Computational Mathematics}
+  title = {Dennis and R. B}
+  year = {1983}
+}
+
+@book{citeotter91,
+  address = {1988}
+  author = {J}
+  pages = {213-218}
+  title = {Borenstein and Y}
+  year = {1218}
+}
+
+@misc{citeotter92,
+  address = {Plans}
+  author = {V}
+  booktitle = {In Reasoning about Actions and Plans: Proceedings of the 1986 Workshop, Timberline, OR, 1987}
+  editor = {eds}
+  number = {1987}
+  publisher = {Proceedings of the 1986 Workshop}
+  series = {Proceedings of the 1986 Workshop}
+  title = {Lifschitz}
+  volume = {1986}
+  year = {1986}
+}
+
+@misc{citeotter93,
+  address = {appear}
+  author = {W}
+  booktitle = {Journal of Optimization Theory and Applications, to appear}
+  issue = {23529}
+  title = {Li}
+  year = {2352}
+}
+
+@book{citeotter94,
+  address = {14-23}
+  author = {Moggi, E}
+  booktitle = {Symposium on Logic in Computer Science, 1989, 14-23}
+  number = {1989}
+  series = {Symposium on Logic in Computer Science}
+  title = {Computational lambda-calculus and monads}
+  year = {1989}
+}
+
+@misc{citeotter95,
+  address = {1990}
+  author = {K}
+  booktitle = {In Proceedings of the 1990 ACM International Conference on Supercomputing, Amsterdam, The Netherlands, June 1990}
+  number = {1990}
+  series = {Proceedings of the 1990 ACM International Conference on Supercomputing}
+  title = {Smith, W}
+  year = {1990}
+}
+
+@book{citeotter96,
+  address = {1989}
+  author = {S, A}
+  title = {Acampora and M. J}
+  year = {1941}
+}
+
+@misc{citeotter97,
+  address = {929-965}
+  author = {Blumer, A Ehrenfeucht A Haussler D}
+  booktitle = {Journal of the ACM, 36 (4), 929-965}
+  title = {Learnability and the Vapnik-Chervonenkis dimension}
+  year = {1989}
+}
+
+@book{citeotter98,
+  address = {233-246}
+  author = {Watson, Tim}
+  genre = {4}
+  title = {A new representation technique for genetic algorithms}
+  year = {1246}
+}
+
+@book{citeotter99,
+  address = {1986}
+  author = {Hermenegildo, M V An Abstract Machine for Restricted AND-parallel Execution of Logic Programs in Third International Conference on Logic Programming Springer-Verlag Berlin 1986}
+  booktitle = {Hermenegildo, M. V., An Abstract Machine for Restricted AND-parallel Execution of Logic Programs, in Third International Conference on Logic Programming, Springer-Verlag, Berlin, 1986}
+  volume = {1986}
+  year = {1986}
+}
