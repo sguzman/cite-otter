@@ -14,7 +14,9 @@ fn ruby_format_parity_matches() {
   }
 
   let status = Command::new("bash")
-    .arg("scripts/compare_ruby_format.sh")
+    .arg(
+      "scripts/compare_ruby_format.sh"
+    )
     .status()
     .expect("run ruby format parity");
   assert!(
@@ -23,12 +25,14 @@ fn ruby_format_parity_matches() {
   );
 
   let report = fs::read_to_string(
-    "target/reports/ruby-format-diff.txt"
+    "target/reports/ruby-format-diff.\
+     txt"
   )
   .expect("read ruby format diff");
   assert!(
     !report.contains("\n--- ")
       && !report.contains("\n+++ "),
-    "ruby format diff report contains changes"
+    "ruby format diff report contains \
+     changes"
   );
 }

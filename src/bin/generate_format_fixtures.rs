@@ -9,7 +9,8 @@ use cite_otter::parser::Parser;
 
 const CORE_XML: &str =
   "tmp/anystyle/res/parser/core.xml";
-const OUT_DIR: &str = "tests/fixtures/format";
+const OUT_DIR: &str =
+  "tests/fixtures/format";
 const SAMPLE_REFS: &str =
   "tests/fixtures/format/refs.txt";
 const LIMIT: usize = 200;
@@ -34,16 +35,13 @@ fn main() -> anyhow::Result<()> {
   }
 
   fs::create_dir_all(OUT_DIR)?;
-  let refs_path =
-    Path::new(OUT_DIR).join("core-refs.txt");
+  let refs_path = Path::new(OUT_DIR)
+    .join("core-refs.txt");
   fs::write(
     &refs_path,
     refs.join("\n")
   )?;
-  write_format_fixtures(
-    "core",
-    &refs
-  )?;
+  write_format_fixtures("core", &refs)?;
 
   if Path::new(SAMPLE_REFS).exists() {
     let sample_text =
@@ -70,8 +68,10 @@ fn write_format_fixtures(
   if refs.is_empty() {
     return Ok(());
   }
-  let ref_slices =
-    refs.iter().map(|line| line.as_str()).collect::<Vec<_>>();
+  let ref_slices = refs
+    .iter()
+    .map(|line| line.as_str())
+    .collect::<Vec<_>>();
   let parser = Parser::new();
   let parsed = parser.parse(
     &ref_slices,
@@ -79,10 +79,10 @@ fn write_format_fixtures(
   );
   let formatter = Format::new();
 
-  let csl =
-    formatter.to_csl(&parsed);
+  let csl = formatter.to_csl(&parsed);
   let csl_path = if prefix == "core" {
-    Path::new(OUT_DIR).join("core-csl.txt")
+    Path::new(OUT_DIR)
+      .join("core-csl.txt")
   } else {
     Path::new(OUT_DIR).join("csl.txt")
   };
@@ -90,10 +90,13 @@ fn write_format_fixtures(
 
   let bibtex =
     formatter.to_bibtex(&parsed);
-  let bibtex_path = if prefix == "core" {
-    Path::new(OUT_DIR).join("core-bibtex.txt")
+  let bibtex_path = if prefix == "core"
+  {
+    Path::new(OUT_DIR)
+      .join("core-bibtex.txt")
   } else {
-    Path::new(OUT_DIR).join("bibtex.txt")
+    Path::new(OUT_DIR)
+      .join("bibtex.txt")
   };
   fs::write(bibtex_path, bibtex)?;
   Ok(())
@@ -103,7 +106,8 @@ fn extract_core_refs(
   path: &Path,
   limit: usize
 ) -> anyhow::Result<Vec<String>> {
-  let content = fs::read_to_string(path)?;
+  let content =
+    fs::read_to_string(path)?;
   let mut refs = Vec::new();
   let mut cursor = content.as_str();
   while let Some(start) =
@@ -124,8 +128,9 @@ fn extract_core_refs(
         parts.push((tag, text));
       }
     }
-    let reference =
-      normalize_reference(render_reference(&parts));
+    let reference = normalize_reference(
+      render_reference(&parts)
+    );
     if !reference.is_empty() {
       refs.push(reference);
     }
@@ -144,7 +149,8 @@ fn extract_tag_line(
   if !trimmed.starts_with('<') {
     return None;
   }
-  let tag_start = trimmed.find('<')? + 1;
+  let tag_start =
+    trimmed.find('<')? + 1;
   let tag_end = trimmed.find('>')?;
   let tag = trimmed[tag_start..tag_end]
     .trim()
@@ -154,11 +160,13 @@ fn extract_tag_line(
     return None;
   }
   let close_tag = format!("</{tag}>");
-  let close_idx = trimmed.rfind(&close_tag)?;
+  let close_idx =
+    trimmed.rfind(&close_tag)?;
   if close_idx <= tag_end {
     return None;
   }
-  let text = trimmed[tag_end + 1..close_idx]
+  let text = trimmed
+    [tag_end + 1..close_idx]
     .trim();
   if text.is_empty() {
     return None;
@@ -184,7 +192,8 @@ fn render_reference(
   let mut previous = String::new();
   let mut previous_tag = String::new();
   for (tag, text) in parts {
-    let text = normalize_tag_text(tag, text);
+    let text =
+      normalize_tag_text(tag, text);
     let text = text.trim();
     if text.is_empty() {
       continue;
@@ -256,16 +265,22 @@ fn ensure_trailing_period(
 fn has_terminal_punct(
   value: &str
 ) -> bool {
-  let Some(ch) = terminal_char(value) else {
+  let Some(ch) = terminal_char(value)
+  else {
     return false;
   };
-  matches!(ch, '.' | ',' | ';' | ':' | '?' | '!')
+  matches!(
+    ch,
+    '.' | ',' | ';' | ':' | '?' | '!'
+  )
 }
 
 fn terminal_char(
   value: &str
 ) -> Option<char> {
-  for ch in value.trim_end().chars().rev() {
+  for ch in
+    value.trim_end().chars().rev()
+  {
     if is_closing_wrapper(ch) {
       continue;
     }
@@ -277,21 +292,31 @@ fn terminal_char(
 fn is_closing_wrapper(
   ch: char
 ) -> bool {
-  matches!(ch, ')' | ']' | '}' | '"' | '\'')
+  matches!(
+    ch,
+    ')' | ']' | '}' | '"' | '\''
+  )
 }
 
 fn starts_with_punct(
   value: &str
 ) -> bool {
-  value
-    .trim_start()
-    .starts_with(|c: char| {
+  value.trim_start().starts_with(
+    |c: char| {
       matches!(
         c,
-        '.' | ',' | ';' | ':' | '?' | '!' | ')'
-          | ']' | '}'
+        '.'
+          | ','
+          | ';'
+          | ':'
+          | '?'
+          | '!'
+          | ')'
+          | ']'
+          | '}'
       )
-    })
+    }
+  )
 }
 
 fn separator_for(
@@ -302,15 +327,21 @@ fn separator_for(
 ) -> String {
   if tag == "publisher"
     && previous_tag == "location"
-    && !previous_text.trim_end().ends_with(':')
+    && !previous_text
+      .trim_end()
+      .ends_with(':')
   {
     return ": ".to_string();
   }
   if matches!(
     tag,
-    "date" | "pages" | "issue" | "volume"
-  ) && !has_terminal_punct(previous_text)
-  {
+    "date"
+      | "pages"
+      | "issue"
+      | "volume"
+  ) && !has_terminal_punct(
+    previous_text
+  ) {
     return ", ".to_string();
   }
   if has_terminal_punct(previous_text) {
@@ -339,7 +370,8 @@ fn normalize_reference(
     (" )", ")"),
     ("( ", "(")
   ] {
-    reference = reference.replace(from, to);
+    reference =
+      reference.replace(from, to);
   }
   reference.trim().to_string()
 }

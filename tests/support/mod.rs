@@ -18,7 +18,9 @@ pub fn assert_snapshot_eq(
   actual: &str,
   expected: &str
 ) {
-  if actual.trim_end() == expected.trim_end() {
+  if actual.trim_end()
+    == expected.trim_end()
+  {
     return;
   }
 
@@ -26,16 +28,25 @@ pub fn assert_snapshot_eq(
     diff_lines(expected, actual);
   let header =
     snapshot_header(label, &summary);
-  let report = format!("{header}\n{diff}");
+  let report =
+    format!("{header}\n{diff}");
   let report_path = Path::new("target")
     .join("reports")
     .join("format-diff.txt");
-  if let Some(parent) = report_path.parent() {
-    let _ = std::fs::create_dir_all(parent);
+  if let Some(parent) =
+    report_path.parent()
+  {
+    let _ =
+      std::fs::create_dir_all(parent);
   }
-  let _ = std::fs::write(&report_path, &report);
+  let _ = std::fs::write(
+    &report_path,
+    &report
+  );
   eprintln!(
-    "\nsnapshot mismatch: {label}\n{diff}\n(diff saved to {})",
+    "\nsnapshot mismatch: \
+     {label}\n{diff}\n(diff saved to \
+     {})",
     report_path.display()
   );
   panic!("snapshot mismatch: {label}");
@@ -46,8 +57,9 @@ fn diff_lines(
   expected: &str,
   actual: &str
 ) -> (String, DiffSummary) {
-  let expected_lines =
-    expected.lines().collect::<Vec<_>>();
+  let expected_lines = expected
+    .lines()
+    .collect::<Vec<_>>();
   let actual_lines =
     actual.lines().collect::<Vec<_>>();
   let mut out = Vec::new();
@@ -80,45 +92,51 @@ fn diff_lines(
       added += 1;
     }
   }
-  (
-    out.join("\n"),
-    DiffSummary {
-      expected_lines: expected_lines.len(),
-      actual_lines: actual_lines.len(),
-      removed,
-      added,
-      expected_bytes: expected.len(),
-      actual_bytes: actual.len()
-    }
-  )
+  (out.join("\n"), DiffSummary {
+    expected_lines: expected_lines
+      .len(),
+    actual_lines: actual_lines.len(),
+    removed,
+    added,
+    expected_bytes: expected.len(),
+    actual_bytes: actual.len()
+  })
 }
 
 struct DiffSummary {
   expected_lines: usize,
-  actual_lines: usize,
-  removed: usize,
-  added: usize,
+  actual_lines:   usize,
+  removed:        usize,
+  added:          usize,
   expected_bytes: usize,
-  actual_bytes: usize
+  actual_bytes:   usize
 }
 
 fn snapshot_header(
   label: &str,
   summary: &DiffSummary
 ) -> String {
-  let timestamp = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .map(|duration| duration.as_secs())
-    .unwrap_or(0);
+  let timestamp =
+    std::time::SystemTime::now()
+      .duration_since(
+        std::time::UNIX_EPOCH
+      )
+      .map(|duration| {
+        duration.as_secs()
+      })
+      .unwrap_or(0);
   let mut lines = vec![
     format!("snapshot: {label}"),
-    format!("updated: {timestamp}")
+    format!("updated: {timestamp}"),
   ];
   if let Some((group, format)) =
     split_label(label)
   {
-    lines.push(format!("group: {group}"));
-    lines.push(format!("format: {format}"));
+    lines
+      .push(format!("group: {group}"));
+    lines.push(format!(
+      "format: {format}"
+    ));
   }
   lines.extend([
     format!(
@@ -137,7 +155,10 @@ fn snapshot_header(
       "actual_bytes: {}",
       summary.actual_bytes
     ),
-    format!("removed: {}", summary.removed),
+    format!(
+      "removed: {}",
+      summary.removed
+    ),
     format!("added: {}", summary.added)
   ]);
   lines.join("\n")

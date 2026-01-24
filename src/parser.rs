@@ -270,9 +270,7 @@ fn split_reference_segments(
   {
     if ch == '(' {
       depth = depth.saturating_add(1);
-    } else if ch == ')'
-      && depth > 0
-    {
+    } else if ch == ')' && depth > 0 {
       depth = depth.saturating_sub(1);
     }
     if ch != '.' {
@@ -281,7 +279,9 @@ fn split_reference_segments(
     if depth > 0 {
       continue;
     }
-    if is_initial_boundary(reference, idx) {
+    if is_initial_boundary(
+      reference, idx
+    ) {
       continue;
     }
     let mut next_chars = reference
@@ -295,7 +295,10 @@ fn split_reference_segments(
       next.map_or(true, |next_char| {
         next_char.is_uppercase()
           || next_char.is_ascii_digit()
-          || matches!(next_char, '"' | '“' | '‘')
+          || matches!(
+            next_char,
+            '"' | '“' | '‘'
+          )
       });
     if !is_boundary {
       continue;
@@ -324,7 +327,8 @@ fn is_initial_boundary(
   reference: &str,
   idx: usize
 ) -> bool {
-  let before = reference[..idx].trim_end();
+  let before =
+    reference[..idx].trim_end();
   let mut token_start = 0usize;
   for (pos, ch) in before.char_indices()
   {
@@ -332,7 +336,8 @@ fn is_initial_boundary(
       token_start = pos + ch.len_utf8();
     }
   }
-  let token = before[token_start..].trim();
+  let token =
+    before[token_start..].trim();
   if token.len() != 1
     || !token
       .chars()
@@ -340,8 +345,7 @@ fn is_initial_boundary(
   {
     return false;
   }
-  let mut chars = reference
-    [idx + 1..]
+  let mut chars = reference[idx + 1..]
     .chars()
     .skip_while(|c| c.is_whitespace());
   let next = chars.next();
@@ -451,7 +455,9 @@ fn split_author_candidates(
         parts[3..].join(", ");
       if !remainder.is_empty() {
         grouped.extend(
-          split_author_candidates(&remainder)
+          split_author_candidates(
+            &remainder
+          )
         );
       }
       return grouped;
@@ -460,20 +466,25 @@ fn split_author_candidates(
   if parts.len() % 2 == 0
     && parts.chunks(2).all(|pair| {
       pair.len() == 2
-        && looks_like_initials(pair[1])
+        && looks_like_given_name(
+          pair[1]
+        )
     })
   {
     return parts
       .chunks(2)
       .map(|pair| {
-        format!("{}, {}", pair[0], pair[1])
+        format!(
+          "{}, {}",
+          pair[0], pair[1]
+        )
       })
       .collect();
   }
   if parts.len() >= 3
-    && parts.iter().all(|part| {
-      !part.contains(',')
-    })
+    && parts
+      .iter()
+      .all(|part| !part.contains(','))
   {
     return parts
       .into_iter()
@@ -486,10 +497,9 @@ fn split_author_candidates(
 fn is_author_suffix(
   value: &str
 ) -> bool {
-  let normalized = normalize_author_component(
-    value
-  )
-  .to_lowercase();
+  let normalized =
+    normalize_author_component(value)
+      .to_lowercase();
   matches!(
     normalized.as_str(),
     "jr" | "sr" | "ii" | "iii" | "iv"
@@ -597,8 +607,9 @@ fn parse_author_chunk(
         &tokens[family_end - 1]
       )
     {
-      let family =
-        tokens[..family_end - 1].join(" ");
+      let family = tokens
+        [..family_end - 1]
+        .join(" ");
       let mut given_parts = vec![
         tokens[family_end - 1].clone(),
       ];
@@ -606,14 +617,16 @@ fn parse_author_chunk(
         given_parts.push(token);
       }
       return Some(Author {
-        family: normalize_author_component(
-          &family
-        ),
-        given:  normalize_author_component(
-          &strip_et_al_suffix(
-            &given_parts.join(" ")
+        family:
+          normalize_author_component(
+            &family
+          ),
+        given:
+          normalize_author_component(
+            &strip_et_al_suffix(
+              &given_parts.join(" ")
+            )
           )
-        )
       });
     }
     let family =
@@ -683,8 +696,15 @@ fn normalize_author_component(
         .trim_matches(|c: char| {
           matches!(
             c,
-            '.' | ',' | ';' | ':' | '!'
-              | '?' | '(' | ')' | '['
+            '.'
+              | ','
+              | ';'
+              | ':'
+              | '!'
+              | '?'
+              | '('
+              | ')'
+              | '['
               | ']'
           )
         })
@@ -705,10 +725,18 @@ fn looks_like_initials(
   if letters.is_empty() {
     return false;
   }
+  if letters.len() <= 2
+    && letters
+      .chars()
+      .all(|c| c.is_uppercase())
+  {
+    return true;
+  }
   if letters.len() <= 4
     && letters
       .chars()
       .all(|c| c.is_uppercase())
+    && value.contains('.')
   {
     return true;
   }
@@ -717,6 +745,24 @@ fn looks_like_initials(
       || c == '-'
       || c == '.'
   })
+}
+
+fn looks_like_given_name(
+  value: &str
+) -> bool {
+  if looks_like_initials(value) {
+    return true;
+  }
+  let cleaned =
+    value.trim_matches(|c: char| {
+      c.is_ascii_punctuation()
+    });
+  let mut chars = cleaned.chars();
+  let Some(first) = chars.next() else {
+    return false;
+  };
+  first.is_uppercase()
+    && cleaned.len() >= 2
 }
 
 fn strip_et_al_suffix(
@@ -783,7 +829,9 @@ fn tokens_from_dates(
 fn capture_year_like(
   reference: &str
 ) -> Vec<(String, bool)> {
-  let chars = reference.chars().collect::<Vec<_>>();
+  let chars = reference
+    .chars()
+    .collect::<Vec<_>>();
   let mut tokens = Vec::new();
   let mut idx = 0usize;
 
@@ -793,17 +841,24 @@ fn capture_year_like(
       continue;
     }
     let start = idx;
-    while idx < chars.len() && chars[idx].is_ascii_digit() {
+    while idx < chars.len()
+      && chars[idx].is_ascii_digit()
+    {
       idx += 1;
     }
     let end = idx;
-    let digits: String =
-      chars[start..end].iter().collect();
+    let digits: String = chars
+      [start..end]
+      .iter()
+      .collect();
     if digits.len() < 2 {
       continue;
     }
     let mut prev_idx = start;
-    while prev_idx > 0 && chars[prev_idx - 1].is_whitespace() {
+    while prev_idx > 0
+      && chars[prev_idx - 1]
+        .is_whitespace()
+    {
       prev_idx -= 1;
     }
     let prev = if prev_idx > 0 {
@@ -817,29 +872,42 @@ fn capture_year_like(
     {
       next_idx += 1;
     }
-    let next = chars.get(next_idx).copied();
+    let next =
+      chars.get(next_idx).copied();
     let allow_short = matches!(
       prev,
-      Some('/') | Some('-') | Some('–') | Some('—')
+      Some('/')
+        | Some('-')
+        | Some('–')
+        | Some('—')
     );
-    let is_page_range = if let Some(next) = next
-      && matches!(next, '-' | '–' | '—')
-    {
-      let mut look = next_idx + 1;
-      while look < chars.len()
-        && chars[look].is_whitespace()
+    let is_page_range =
+      if let Some(next) = next
+        && matches!(
+          next,
+          '-' | '–' | '—'
+        )
       {
-        look += 1;
-      }
-      let mut next_digits = String::new();
-      while look < chars.len() && chars[look].is_ascii_digit() {
-        next_digits.push(chars[look]);
-        look += 1;
-      }
-      digits.len() == 4 && next_digits.len() <= 2
-    } else {
-      false
-    };
+        let mut look = next_idx + 1;
+        while look < chars.len()
+          && chars[look].is_whitespace()
+        {
+          look += 1;
+        }
+        let mut next_digits =
+          String::new();
+        while look < chars.len()
+          && chars[look]
+            .is_ascii_digit()
+        {
+          next_digits.push(chars[look]);
+          look += 1;
+        }
+        digits.len() == 4
+          && next_digits.len() <= 2
+      } else {
+        false
+      };
     let is_short_page_range = if matches!(
       prev,
       Some('-') | Some('–') | Some('—')
@@ -848,8 +916,11 @@ fn capture_year_like(
     } else {
       false
     };
-    if !is_page_range && !is_short_page_range {
-      tokens.push((digits, allow_short));
+    if !is_page_range
+      && !is_short_page_range
+    {
+      tokens
+        .push((digits, allow_short));
     }
   }
 
@@ -915,13 +986,15 @@ fn collect_numeric_date_parts(
   let mut parts = Vec::new();
   let separators = ['-', '/', '.'];
   let mut found = false;
-  let tokens =
-    reference.split_whitespace().collect::<Vec<_>>();
+  let tokens = reference
+    .split_whitespace()
+    .collect::<Vec<_>>();
   for (idx, token) in
     tokens.iter().enumerate()
   {
     if is_page_marker(token)
-      || parse_page_range_token(token).is_some()
+      || parse_page_range_token(token)
+        .is_some()
       || idx
         .checked_sub(1)
         .and_then(|pos| tokens.get(pos))
@@ -999,7 +1072,9 @@ fn select_date_reference(
       best = Some(segment);
     }
   }
-  best.unwrap_or_else(|| reference.to_string())
+  best.unwrap_or_else(|| {
+    reference.to_string()
+  })
 }
 
 fn date_segment_score(
@@ -1026,7 +1101,8 @@ fn date_segment_score(
   if segment_has_page_range(segment) {
     score -= 2;
   }
-  if segment_has_volume_marker(segment) {
+  if segment_has_volume_marker(segment)
+  {
     score -= 1;
   }
   score
@@ -1036,7 +1112,9 @@ fn segment_has_year(
   segment: &str
 ) -> bool {
   segment
-    .split(|c: char| !c.is_ascii_digit())
+    .split(|c: char| {
+      !c.is_ascii_digit()
+    })
     .filter(|part| part.len() >= 4)
     .any(|part| {
       let year = &part[..4];
@@ -1060,7 +1138,9 @@ fn segment_has_month(
         c.is_ascii_punctuation()
       })
     })
-    .any(|token| parse_month_token(token).is_some())
+    .any(|token| {
+      parse_month_token(token).is_some()
+    })
 }
 
 fn segment_has_page_marker(
@@ -1084,14 +1164,15 @@ fn segment_has_volume_marker(
 fn segment_has_page_range(
   segment: &str
 ) -> bool {
-  segment
-    .split_whitespace()
-    .any(|token| parse_page_range_token(token).is_some())
+  segment.split_whitespace().any(
+    |token| {
+      parse_page_range_token(token)
+        .is_some()
+    }
+  )
 }
 
-fn is_page_marker(
-  token: &str
-) -> bool {
+fn is_page_marker(token: &str) -> bool {
   let lower = token
     .trim_matches(|c: char| {
       c.is_ascii_punctuation()
@@ -1244,9 +1325,8 @@ fn month_number(
     | "jun" | "june" => Some(6),
     | "jul" | "july" => Some(7),
     | "aug" | "august" => Some(8),
-    | "sep" | "sept" | "september" => {
-      Some(9)
-    }
+    | "sep" | "sept" | "september"
+    | "septembre" => Some(9),
     | "oct" | "october" => Some(10),
     | "nov" | "november" => Some(11),
     | "dec" | "december" => Some(12),
@@ -1864,28 +1944,37 @@ fn extract_title(
     )
   {
     if !title.is_empty() {
-      return clean_title_segment(&title);
+      return clean_title_segment(
+        &title
+      );
     }
   }
   let (author_index, author_segment) =
     select_author_segment(&segments);
-  let mut candidate = if author_index > 0 {
-    segments[author_index - 1].clone()
-  } else if segments.len() > 1 {
-    segments[1].clone()
-  } else {
-    segments[0].clone()
-  };
+  let mut candidate =
+    if author_index > 0 {
+      segments[author_index - 1].clone()
+    } else if segments.len() > 1 {
+      segments[1].clone()
+    } else {
+      segments[0].clone()
+    };
   if candidate == author_segment {
     candidate = segments
       .get(1)
       .cloned()
-      .unwrap_or_else(|| segments[0].clone());
+      .unwrap_or_else(|| {
+        segments[0].clone()
+      });
   }
-  if candidate.split_whitespace().count() < 3
+  if candidate
+    .split_whitespace()
+    .count()
+    < 3
     && author_index + 1 < segments.len()
   {
-    let next = segments[author_index + 1]
+    let next = segments
+      [author_index + 1]
       .trim()
       .to_string();
     if !next.is_empty()
@@ -1895,7 +1984,10 @@ fn extract_title(
         format!("{candidate}. {next}");
     }
   }
-  if candidate.split_whitespace().count() < 3
+  if candidate
+    .split_whitespace()
+    .count()
+    < 3
     && author_index == 0
   {
     if let Some(title) =
@@ -1917,11 +2009,14 @@ fn extract_title(
       candidate = title;
     }
   }
-  if is_title_noise_segment(&candidate) {
+  if is_title_noise_segment(&candidate)
+  {
     if let Some(best) =
       select_title_segment(&segments)
     {
       candidate = best;
+    } else {
+      return String::new();
     }
   }
   clean_title_segment(&candidate)
@@ -1940,11 +2035,26 @@ fn extract_author_segment(
     strip_leading_citation_number(
       reference
     );
+  if let Some(pos) = cleaned.find('.')
+    && pos > 0
+  {
+    let prefix = cleaned[..pos].trim();
+    if looks_like_author_list(prefix) {
+      return prefix.to_string();
+    }
+  }
   let segments =
     split_reference_segments(&cleaned);
   if segments.is_empty() {
     return strip_parenthetical_date(
       cleaned.trim()
+    );
+  }
+  if let Some(first) = segments.first()
+    && looks_like_author_list(first)
+  {
+    return strip_parenthetical_date(
+      &trim_author_segment(first)
     );
   }
   let (index, segment) =
@@ -2005,7 +2115,10 @@ fn author_segment_score(
   if trimmed.contains(':') {
     score -= 2;
   }
-  if trimmed.to_lowercase().contains("proc.") {
+  if trimmed
+    .to_lowercase()
+    .contains("proc.")
+  {
     score -= 2;
   }
   if trimmed.contains('(')
@@ -2015,15 +2128,39 @@ fn author_segment_score(
     score += 2;
   }
   if trimmed
+    .to_lowercase()
+    .contains(" in ")
+  {
+    score -= 2;
+  }
+  if trimmed
     .chars()
     .next()
     .map(|c| c.is_ascii_digit())
     .unwrap_or(false)
   {
-    score -= 3;
+    score -= 6;
   }
-  if trimmed.contains(',') {
+  if trimmed.chars().all(|c| {
+    c.is_ascii_digit()
+      || c == ','
+      || c == '.'
+      || c == '-'
+  }) {
+    score -= 6;
+  }
+  let comma_count =
+    trimmed.matches(',').count();
+  if comma_count >= 2
+    && segment_is_container(trimmed)
+  {
     score += 2;
+  }
+  if comma_count > 0 {
+    score += 2;
+  }
+  if comma_count >= 2 {
+    score += 1;
   }
   if trimmed.contains(" and ")
     || trimmed.contains(" & ")
@@ -2034,23 +2171,119 @@ fn author_segment_score(
   if segment_has_year(trimmed) {
     score -= 2;
   }
-  if trimmed.to_lowercase().contains("http")
-    || trimmed.to_lowercase().contains("doi")
-  {
-    score -= 2;
-  }
-  if trimmed.split_whitespace().count() <= 6 {
-    score += 1;
-  } else if trimmed.split_whitespace().count() >= 10 {
-    score -= 2;
-  }
   if trimmed
-    .split_whitespace()
-    .any(|token| looks_like_initials(token))
+    .to_lowercase()
+    .contains("http")
+    || trimmed
+      .to_lowercase()
+      .contains("doi")
   {
+    score -= 2;
+  }
+  let initial_count = trimmed
+    .split_whitespace()
+    .filter(|token| {
+      looks_like_initials(token)
+    })
+    .count();
+  if initial_count >= 2 {
+    score += 2;
+  }
+  if comma_count >= 2
+    && initial_count >= 1
+  {
+    score += 4;
+  }
+  if trimmed.split_whitespace().any(
+    |token| {
+      parse_month_token(token).is_some()
+    }
+  ) {
+    score -= 2;
+  }
+  if trimmed.split_whitespace().count()
+    <= 6
+  {
+    score += 1;
+  } else if trimmed
+    .split_whitespace()
+    .count()
+    >= 10
+  {
+    score -= 2;
+  }
+  if trimmed.split_whitespace().any(
+    |token| looks_like_initials(token)
+  ) {
     score += 1;
   }
   score
+}
+
+fn looks_like_author_list(
+  segment: &str
+) -> bool {
+  let trimmed = segment.trim();
+  if trimmed.is_empty() {
+    return false;
+  }
+  let comma_count =
+    trimmed.matches(',').count();
+  if comma_count == 0 {
+    return false;
+  }
+  let word_count =
+    trimmed.split_whitespace().count();
+  let initial_count = trimmed
+    .split_whitespace()
+    .filter(|token| {
+      looks_like_initials(token)
+    })
+    .count();
+  if initial_count >= 1 {
+    return true;
+  }
+  if word_count > 6 {
+    return false;
+  }
+  let parts = trimmed
+    .split(',')
+    .map(str::trim)
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.len() < 2 {
+    return false;
+  }
+  let family_tokens =
+    parts[0].split_whitespace();
+  let given_tokens =
+    parts[1].split_whitespace();
+  let allowed_particles = [
+    "da", "de", "del", "der", "den",
+    "di", "du", "la", "le", "van",
+    "von", "al", "bin", "ibn"
+  ];
+  let family_ok = family_tokens
+    .clone()
+    .all(|token| {
+      let normalized =
+        normalize_author_component(
+          token
+        )
+        .to_lowercase();
+      allowed_particles
+        .contains(&normalized.as_str())
+        || token
+          .chars()
+          .next()
+          .map(|c| c.is_uppercase())
+          .unwrap_or(false)
+    });
+  let given_ok =
+    given_tokens.clone().any(|token| {
+      looks_like_given_name(token)
+    });
+  family_ok && given_ok
 }
 
 fn trim_author_segment(
@@ -2060,7 +2293,65 @@ fn trim_author_segment(
     segment.split_once('(')
   {
     if segment_has_year(segment) {
-      return before.trim().trim_end_matches(',').to_string();
+      return before
+        .trim()
+        .trim_end_matches(',')
+        .to_string();
+    }
+  }
+  if let Some((before, after)) =
+    segment.split_once('.')
+  {
+    let next = after.trim_start();
+    if !next.is_empty()
+      && !next
+        .chars()
+        .next()
+        .map(|c| c.is_uppercase())
+        .unwrap_or(false)
+    {
+      return before
+        .trim()
+        .trim_end_matches(',')
+        .to_string();
+    }
+    if next
+      .split_whitespace()
+      .next()
+      .map(|token| {
+        !looks_like_initials(token)
+      })
+      .unwrap_or(false)
+    {
+      return before
+        .trim()
+        .trim_end_matches(',')
+        .to_string();
+    }
+  }
+  let tokens = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  for (idx, token) in
+    tokens.iter().enumerate()
+  {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      });
+    let lower = cleaned.to_lowercase();
+    if parse_month_token(cleaned)
+      .is_some()
+      || lower.starts_with("vol")
+      || lower == "pp"
+      || lower == "pp."
+    {
+      if idx > 0 {
+        return tokens[..idx]
+          .join(" ")
+          .trim_end_matches(',')
+          .to_string();
+      }
     }
   }
   if let Some(pos) = segment
@@ -2070,7 +2361,9 @@ fn trim_author_segment(
   {
     let prefix = segment[..pos].trim();
     if prefix.len() >= 3 {
-      return prefix.trim_end_matches(',').to_string();
+      return prefix
+        .trim_end_matches(',')
+        .to_string();
     }
   }
   segment.trim().to_string()
@@ -2080,6 +2373,13 @@ fn strip_leading_citation_number(
   reference: &str
 ) -> String {
   let trimmed = reference.trim();
+  if let Some(stripped) =
+    strip_bracketed_citation_number(
+      trimmed
+    )
+  {
+    return stripped;
+  }
   let mut chars = trimmed.chars();
   let mut idx = 0usize;
   while let Some(ch) = chars.next() {
@@ -2092,11 +2392,14 @@ fn strip_leading_citation_number(
   if idx == 0 {
     return trimmed.to_string();
   }
-  let remainder = trimmed[idx..].trim_start();
+  let remainder =
+    trimmed[idx..].trim_start();
   if remainder.starts_with('.')
     || remainder.starts_with(']')
   {
-    return remainder[1..].trim_start().to_string();
+    return remainder[1..]
+      .trim_start()
+      .to_string();
   }
   trimmed.to_string()
 }
@@ -2106,6 +2409,9 @@ fn is_title_noise_segment(
 ) -> bool {
   let lower = segment.to_lowercase();
   if segment_is_container(segment) {
+    return true;
+  }
+  if looks_like_author_list(segment) {
     return true;
   }
   if lower.contains("http")
@@ -2129,9 +2435,9 @@ fn is_title_noise_segment(
   if word_count <= 1 {
     return true;
   }
-  segment
-    .chars()
-    .all(|c| c.is_ascii_digit() || c == ',')
+  segment.chars().all(|c| {
+    c.is_ascii_digit() || c == ','
+  })
 }
 
 fn select_title_segment(
@@ -2146,9 +2452,8 @@ fn select_title_segment(
     if trimmed.is_empty() {
       continue;
     }
-    let score = title_segment_score(
-      trimmed, idx
-    );
+    let score =
+      title_segment_score(trimmed, idx);
     if score > best_score {
       best_score = score;
       best = Some(trimmed.to_string());
@@ -2204,17 +2509,17 @@ fn extract_citation_number(
       digits.push(ch);
     } else {
       if !digits.is_empty() {
-        let mut suffix = String::new();
-        if ch == '.'
-          || ch == ')'
-          || ch == ']'
-        {
-          suffix.push(ch);
+        if prefix.is_empty() {
+          let mut suffix =
+            String::new();
+          if ch == '.' {
+            suffix.push(ch);
+          }
+          return Some(format!(
+            "{digits}{suffix}"
+          ));
         }
-        let value = format!(
-          "{prefix}{digits}{suffix}"
-        );
-        return Some(value);
+        return Some(digits);
       }
       return None;
     }
@@ -2222,8 +2527,44 @@ fn extract_citation_number(
   if digits.is_empty() {
     None
   } else {
-    Some(format!("{prefix}{digits}"))
+    if prefix.is_empty() {
+      Some(format!("{digits}"))
+    } else {
+      Some(digits)
+    }
   }
+}
+
+fn strip_bracketed_citation_number(
+  reference: &str
+) -> Option<String> {
+  let trimmed = reference.trim();
+  let mut chars = trimmed.chars();
+  let first = chars.next()?;
+  if first != '[' && first != '(' {
+    return None;
+  }
+  let mut digits = String::new();
+  for ch in chars.by_ref() {
+    if ch.is_ascii_digit() {
+      digits.push(ch);
+    } else if ch == ']' || ch == ')' {
+      break;
+    } else {
+      return None;
+    }
+  }
+  if digits.is_empty() {
+    return None;
+  }
+  let remainder =
+    chars.as_str().trim_start();
+  Some(
+    remainder
+      .trim_start_matches('.')
+      .trim_start()
+      .to_string()
+  )
 }
 
 fn split_author_title_segment(
@@ -2234,7 +2575,8 @@ fn split_author_title_segment(
     .find(')')?
     + open
     + 1;
-  let inside = &segment[open + 1..close];
+  let inside =
+    &segment[open + 1..close];
   if inside
     .chars()
     .filter(|c| c.is_ascii_digit())
@@ -2255,7 +2597,9 @@ fn split_author_title_segment(
     })
     .trim()
     .to_string();
-  if author.is_empty() || title.len() < 3 {
+  if author.is_empty()
+    || title.len() < 3
+  {
     return None;
   }
   Some((author, title))
@@ -2271,9 +2615,14 @@ fn title_from_first_segment(
   if parts.len() < 3 {
     return None;
   }
-  let year_pos = parts.iter().position(|part| {
-    part.chars().filter(|c| c.is_ascii_digit()).count() >= 4
-  });
+  let year_pos =
+    parts.iter().position(|part| {
+      part
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .count()
+        >= 4
+    });
   let Some(pos) = year_pos else {
     return None;
   };
@@ -2323,7 +2672,8 @@ fn segment_is_conference(
       .any(|kw| lower.contains(kw));
   }
   if lower.contains("proc.") {
-    if segment_is_journal_like(segment) {
+    if segment_is_journal_like(segment)
+    {
       return false;
     }
     return lower.contains("conf")
@@ -2357,6 +2707,21 @@ fn segment_is_journal_like(
   {
     return true;
   }
+  if lower
+    .starts_with("proceedings of the")
+    && (lower.contains("ieee")
+      || lower.contains("acm"))
+  {
+    return true;
+  }
+  if segment.contains(" J ")
+    || segment.contains(", J ")
+  {
+    return true;
+  }
+  if looks_like_short_journal(segment) {
+    return true;
+  }
   let trimmed = segment.trim();
   if trimmed.starts_with("J ")
     || trimmed.starts_with("J.")
@@ -2374,6 +2739,36 @@ fn segment_is_journal_like(
   false
 }
 
+fn looks_like_short_journal(
+  segment: &str
+) -> bool {
+  let tokens = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if tokens.len() < 2
+    || tokens.len() > 4
+  {
+    return false;
+  }
+  if tokens.iter().any(|token| {
+    token
+      .chars()
+      .any(|c| c.is_ascii_digit())
+  }) {
+    return false;
+  }
+  if segment.contains(':') {
+    return false;
+  }
+  tokens.iter().all(|token| {
+    token
+      .chars()
+      .next()
+      .map(|c| c.is_uppercase())
+      .unwrap_or(false)
+  })
+}
+
 fn segment_journal_score(
   segment: &str,
   dictionary: Option<&Dictionary>
@@ -2389,12 +2784,16 @@ fn segment_journal_score(
   }
   if let Some(dictionary) = dictionary {
     let matches = segment
-      .split(|c: char| !c.is_alphanumeric())
+      .split(|c: char| {
+        !c.is_alphanumeric()
+      })
       .filter(|token| !token.is_empty())
       .filter(|token| {
         dictionary
           .lookup(token)
-          .contains(&DictionaryCode::Journal)
+          .contains(
+            &DictionaryCode::Journal
+          )
       })
       .count();
     score += matches * 2;
@@ -2406,7 +2805,9 @@ fn strip_numeric_suffix(
   segment: &str
 ) -> String {
   let mut digit_pos = None;
-  for (idx, ch) in segment.char_indices() {
+  for (idx, ch) in
+    segment.char_indices()
+  {
     if ch.is_ascii_digit() {
       digit_pos = Some(idx);
       break;
@@ -2415,7 +2816,9 @@ fn strip_numeric_suffix(
   if let Some(idx) = digit_pos {
     let prefix = segment[..idx].trim();
     if let Some((sep_idx, _)) = prefix
-      .match_indices(&[',', ';', '('][..])
+      .match_indices(
+        &[',', ';', '('][..]
+      )
       .last()
     {
       let tail = prefix[sep_idx + 1..]
@@ -2444,19 +2847,24 @@ fn resolve_type(
     return "thesis".into();
   }
   if lower.contains("report")
-    || lower.contains("technical report")
+    || lower
+      .contains("technical report")
   {
     return "report".into();
   }
   if split_reference_segments(reference)
     .iter()
-    .any(|segment| segment_is_conference(segment))
+    .any(|segment| {
+      segment_is_conference(segment)
+    })
   {
     return "paper-conference".into();
   }
   if split_reference_segments(reference)
     .iter()
-    .any(|segment| segment_is_journal_like(segment))
+    .any(|segment| {
+      segment_is_journal_like(segment)
+    })
   {
     return "article-journal".into();
   }
@@ -2486,7 +2894,9 @@ fn resolve_type_with_dictionary(
   }
   if split_reference_segments(reference)
     .iter()
-    .any(|segment| segment_is_conference(segment))
+    .any(|segment| {
+      segment_is_conference(segment)
+    })
   {
     return "paper-conference".into();
   }
@@ -2496,35 +2906,99 @@ fn resolve_type_with_dictionary(
 fn extract_location(
   reference: &str
 ) -> String {
-  reference
-    .split(':')
-    .next()
-    .and_then(|segment| {
-      segment.split_whitespace().last()
-    })
-    .map(|token| {
-      token
-        .trim_matches(|c: char| {
-          !c.is_alphanumeric()
-        })
-        .to_string()
-    })
-    .unwrap_or_default()
+  let (location, _) =
+    extract_location_publisher(
+      reference
+    );
+  location
 }
 
 fn extract_publisher(
   reference: &str
 ) -> String {
-  reference
-    .split(':')
-    .nth(1)
-    .and_then(|segment| {
-      segment
-        .split(',')
-        .next()
-        .map(|s| s.trim().to_string())
-    })
-    .unwrap_or_default()
+  let (_, publisher) =
+    extract_location_publisher(
+      reference
+    );
+  publisher
+}
+
+fn extract_location_publisher(
+  reference: &str
+) -> (String, String) {
+  let Some(pos) = reference.rfind(':')
+  else {
+    return (
+      String::new(),
+      String::new()
+    );
+  };
+  let before = reference[..pos].trim();
+  let after =
+    reference[pos + 1..].trim();
+  let location_segment = before
+    .rsplit('.')
+    .next()
+    .unwrap_or(before)
+    .trim();
+  if !is_location_segment(
+    location_segment
+  ) {
+    return (
+      String::new(),
+      String::new()
+    );
+  }
+  let location =
+    clean_segment(location_segment);
+  let publisher = after
+    .split(',')
+    .next()
+    .map(|s| s.trim().to_string())
+    .unwrap_or_default();
+  (location, publisher)
+}
+
+fn is_location_segment(
+  segment: &str
+) -> bool {
+  let words = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if words.is_empty() || words.len() > 3
+  {
+    return false;
+  }
+  let lower = segment.to_lowercase();
+  if lower.contains(" and ")
+    || lower.contains(" in ")
+    || lower.contains(" for ")
+  {
+    return false;
+  }
+  let allowed_particles =
+    ["de", "la", "of", "da", "del"];
+  for word in words {
+    let trimmed =
+      word.trim_matches(|c: char| {
+        c == ',' || c == '.'
+      });
+    let lower = trimmed.to_lowercase();
+    if allowed_particles
+      .contains(&lower.as_str())
+    {
+      continue;
+    }
+    let mut chars = trimmed.chars();
+    let Some(first) = chars.next()
+    else {
+      continue;
+    };
+    if !first.is_uppercase() {
+      return false;
+    }
+  }
+  true
 }
 
 fn extract_pages(
@@ -2545,8 +3019,15 @@ fn extract_pages(
     )
     .unwrap_or_default();
   }
-  if let Some(range) = find_page_range(reference) {
+  if let Some(range) =
+    find_page_range(reference)
+  {
     return range;
+  }
+  if let Some(value) =
+    trailing_page_token(reference)
+  {
+    return value;
   }
 
   reference
@@ -2565,12 +3046,85 @@ fn extract_pages(
     .unwrap_or_default()
 }
 
+fn trailing_page_token(
+  reference: &str
+) -> Option<String> {
+  let tokens = reference
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  let mut candidate = None;
+  for token in tokens.iter().rev() {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c == ',' || c == ';' || c == '.'
+      });
+    if cleaned.is_empty() {
+      continue;
+    }
+    if cleaned
+      .chars()
+      .all(|c| c.is_ascii_digit())
+    {
+      candidate =
+        Some(cleaned.to_string());
+      break;
+    }
+    break;
+  }
+  let candidate = candidate?;
+  let years =
+    collect_year_tokens(reference);
+  if years
+    .iter()
+    .any(|year| year == &candidate)
+  {
+    return None;
+  }
+  if candidate.len() >= 3 {
+    Some(candidate)
+  } else {
+    None
+  }
+}
+
 fn find_page_range(
   reference: &str
 ) -> Option<String> {
-  for token in reference.split_whitespace() {
-    if let Some(range) = parse_page_range_token(token) {
+  let tokens = reference
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  let year_tokens =
+    collect_year_tokens(reference);
+  for (idx, token) in
+    tokens.iter().enumerate()
+  {
+    if let Some(range) =
+      parse_page_range_token(token)
+    {
       return Some(range);
+    }
+    if let Some(range) =
+      parse_short_page_range_token(
+        token
+      )
+    {
+      let has_year_after = tokens
+        .iter()
+        .skip(idx + 1)
+        .any(|candidate| {
+          let cleaned = candidate
+            .trim_matches(|c: char| {
+              c == ','
+                || c == ';'
+                || c == '.'
+            });
+          year_tokens.contains(
+            &cleaned.to_string()
+          )
+        });
+      if has_year_after {
+        return Some(range);
+      }
     }
   }
   None
@@ -2593,7 +3147,9 @@ fn parse_page_range_token(
     return None;
   }
   let parts = cleaned
-    .split(|c| c == '-' || c == '–' || c == '—')
+    .split(|c| {
+      c == '-' || c == '–' || c == '—'
+    })
     .filter(|part| !part.is_empty())
     .collect::<Vec<_>>();
   if parts.len() != 2 {
@@ -2604,16 +3160,69 @@ fn parse_page_range_token(
   if left.len() < 2 || right.len() < 2 {
     return None;
   }
-  if left.len() == 4 && right.len() <= 2 {
+  if left.len() == 4 && right.len() <= 2
+  {
     return None;
   }
-  if left.len() == 4 && right.len() == 4 {
+  if left.len() == 4 && right.len() == 4
+  {
     return None;
   }
   if left.len() < 3 && right.len() < 3 {
     return None;
   }
   Some(format!("{left}-{right}"))
+}
+
+fn parse_short_page_range_token(
+  token: &str
+) -> Option<String> {
+  if token
+    .chars()
+    .any(|c| c.is_alphabetic())
+  {
+    return None;
+  }
+  let cleaned: String = token
+    .chars()
+    .filter(|c| {
+      c.is_ascii_digit()
+        || matches!(c, '-' | '–' | '—')
+    })
+    .collect();
+  let parts = cleaned
+    .split(|c| {
+      c == '-' || c == '–' || c == '—'
+    })
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.len() != 2 {
+    return None;
+  }
+  let left = parts[0];
+  let right = parts[1];
+  if left.len() < 2 || right.len() < 2 {
+    return None;
+  }
+  if left.len() == 4 && right.len() <= 2
+  {
+    return Some(format!(
+      "{left}-{right}"
+    ));
+  }
+  if left.len() == 4 && right.len() == 4
+  {
+    return Some(format!(
+      "{left}-{right}"
+    ));
+  }
+  if left.len() == 2 && right.len() == 2
+  {
+    return Some(format!(
+      "{left}-{right}"
+    ));
+  }
+  None
 }
 
 fn capture_page_range(
@@ -2755,10 +3364,19 @@ fn extract_container_title(
   split_reference_segments(reference)
     .iter()
     .map(|segment| segment.trim())
-    .filter(|segment| !segment.is_empty())
-    .filter(|segment| segment_is_conference(segment))
+    .filter(|segment| {
+      !segment.is_empty()
+    })
+    .filter(|segment| {
+      segment_is_conference(segment)
+    })
     .map(strip_numeric_suffix)
-    .map(|segment| clean_segment(&segment))
+    .map(|segment| {
+      clean_segment(&segment)
+    })
+    .map(|segment| {
+      strip_trailing_metadata(&segment)
+    })
     .map(|segment| {
       strip_trailing_location(&segment)
     })
@@ -2798,8 +3416,10 @@ fn extract_journal_with_dictionary(
   reference: &str,
   dictionary: Option<&Dictionary>
 ) -> Option<String> {
-  let mut best: Option<(usize, String)> =
-    None;
+  let mut best: Option<(
+    usize,
+    String
+  )> = None;
   for segment in
     split_reference_segments(reference)
   {
@@ -2813,19 +3433,24 @@ fn extract_journal_with_dictionary(
     if score == 0 {
       continue;
     }
-    let cleaned = strip_numeric_suffix(
-      trimmed
-    );
-    let cleaned = clean_segment(&cleaned);
-    let cleaned = strip_trailing_location(&cleaned);
-    let cleaned = strip_container_prefix(&cleaned);
+    let cleaned =
+      strip_numeric_suffix(trimmed);
+    let cleaned =
+      clean_segment(&cleaned);
+    let cleaned =
+      strip_leading_date(&cleaned);
+    let cleaned =
+      strip_trailing_metadata(&cleaned);
+    let cleaned =
+      strip_trailing_location(&cleaned);
+    let cleaned =
+      strip_container_prefix(&cleaned);
     if cleaned.is_empty() {
       continue;
     }
     match best {
       | Some((best_score, _))
-        if best_score >= score =>
-      {}
+        if best_score >= score => {}
       | _ => {
         best = Some((score, cleaned));
       }
@@ -2851,34 +3476,139 @@ fn strip_container_prefix(
 fn strip_trailing_location(
   segment: &str
 ) -> String {
+  let mut current =
+    segment.trim().to_string();
+  loop {
+    let Some((before, after)) =
+      current.rsplit_once(',')
+    else {
+      return current.trim().to_string();
+    };
+    let tail = after.trim();
+    if tail.is_empty() {
+      current =
+        before.trim().to_string();
+      continue;
+    }
+    if tail
+      .chars()
+      .any(|c| c.is_ascii_digit())
+    {
+      return current.trim().to_string();
+    }
+    let word_count =
+      tail.split_whitespace().count();
+    if word_count > 4 {
+      return current.trim().to_string();
+    }
+    if tail.split_whitespace().all(
+      |word| {
+        word
+          .chars()
+          .next()
+          .map(|c| c.is_uppercase())
+          .unwrap_or(false)
+      }
+    ) {
+      current =
+        before.trim().to_string();
+      continue;
+    }
+    return current.trim().to_string();
+  }
+}
+
+fn strip_trailing_metadata(
+  segment: &str
+) -> String {
+  let mut tokens = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  while let Some(last) = tokens.last() {
+    let cleaned = last
+      .trim_matches(|c: char| {
+        c == ','
+          || c == ';'
+          || c == ')'
+          || c == '('
+      })
+      .to_string();
+    if cleaned.is_empty() {
+      tokens.pop();
+      continue;
+    }
+    if parse_page_range_token(&cleaned)
+      .is_some()
+      || parse_short_page_range_token(
+        &cleaned
+      )
+      .is_some()
+    {
+      tokens.pop();
+      continue;
+    }
+    if cleaned
+      .chars()
+      .all(|c| c.is_ascii_digit())
+      && cleaned.len() >= 3
+    {
+      tokens.pop();
+      continue;
+    }
+    let lower = cleaned.to_lowercase();
+    if lower == "pp"
+      || lower == "pp."
+      || lower == "p."
+      || lower == "pages"
+      || lower == "vol"
+      || lower == "vol."
+      || lower == "no."
+      || lower == "issue"
+    {
+      tokens.pop();
+      continue;
+    }
+    break;
+  }
+  let mut result = tokens.join(" ");
+  result = result
+    .trim_end_matches(|c: char| {
+      c == ',' || c == ';'
+    })
+    .trim()
+    .to_string();
+  result
+}
+
+fn strip_leading_date(
+  segment: &str
+) -> String {
   let trimmed = segment.trim();
   let Some((before, after)) =
-    trimmed.rsplit_once(',')
+    trimmed.split_once(',')
   else {
     return trimmed.to_string();
   };
-  let tail = after.trim();
-  if tail.is_empty() {
-    return before.trim().to_string();
-  }
-  if tail.chars().any(|c| c.is_ascii_digit()) {
-    return trimmed.to_string();
-  }
-  let word_count = tail.split_whitespace().count();
-  if word_count > 4 {
-    return trimmed.to_string();
-  }
-  if tail
+  let prefix = before.trim();
+  let prefix_tokens = prefix
     .split_whitespace()
-    .all(|word| {
-      word
+    .collect::<Vec<_>>();
+  if prefix_tokens.iter().all(|token| {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      });
+    if cleaned.is_empty() {
+      return true;
+    }
+    parse_month_token(cleaned).is_some()
+      || cleaned
         .chars()
-        .next()
-        .map(|c| c.is_uppercase())
-        .unwrap_or(false)
-    })
-  {
-    return before.trim().to_string();
+        .filter(|c| c.is_ascii_digit())
+        .count()
+        >= 4
+  }) {
+    return after.trim().to_string();
   }
   trimmed.to_string()
 }
@@ -2910,17 +3640,21 @@ fn strip_parenthetical_date(
   segment: &str
 ) -> String {
   let mut output = String::new();
-  let mut chars = segment.chars().peekable();
+  let mut chars =
+    segment.chars().peekable();
   while let Some(ch) = chars.next() {
     if ch == '(' {
       let mut contents = String::new();
-      while let Some(inner) = chars.next() {
+      while let Some(inner) =
+        chars.next()
+      {
         if inner == ')' {
           break;
         }
         contents.push(inner);
       }
-      let lower = contents.to_lowercase();
+      let lower =
+        contents.to_lowercase();
       let has_year = contents
         .chars()
         .any(|c| c.is_ascii_digit());
@@ -2932,7 +3666,8 @@ fn strip_parenthetical_date(
           || lower.contains("éd"));
       if !is_date {
         output.push('(');
-        output.push_str(contents.trim());
+        output
+          .push_str(contents.trim());
         output.push(')');
       }
       continue;
@@ -3145,10 +3880,13 @@ fn extract_volume(
       lower.find(keyword)
     {
       let start = pos + keyword.len();
-      let remainder =
-        reference.get(start..).unwrap_or("");
+      let remainder = reference
+        .get(start..)
+        .unwrap_or("");
       if let Some(volume) =
-        capture_number_after(reference, start)
+        capture_number_after(
+          reference, start
+        )
       {
         if let Some(part) =
           extract_part_suffix(remainder)
@@ -3161,11 +3899,13 @@ fn extract_volume(
       }
     }
   }
-  for segment in split_reference_segments(
-    reference
-  ) {
+  for segment in
+    split_reference_segments(reference)
+  {
     if let Some(volume) =
-      extract_volume_from_segment(&segment)
+      extract_volume_from_segment(
+        &segment
+      )
     {
       return Some(volume);
     }
@@ -3200,10 +3940,13 @@ fn extract_issue(
       lower.find(keyword)
     {
       let start = pos + keyword.len();
-      let remainder =
-        reference.get(start..).unwrap_or("");
+      let remainder = reference
+        .get(start..)
+        .unwrap_or("");
       if let Some(value) =
-        capture_number_after(reference, start)
+        capture_number_after(
+          reference, start
+        )
       {
         if let Some(part) =
           extract_part_suffix(remainder)
@@ -3216,11 +3959,13 @@ fn extract_issue(
       }
     }
   }
-  for segment in split_reference_segments(
-    reference
-  ) {
+  for segment in
+    split_reference_segments(reference)
+  {
     if let Some(issue) =
-      extract_issue_from_segment(&segment)
+      extract_issue_from_segment(
+        &segment
+      )
     {
       return Some(issue);
     }
@@ -3243,6 +3988,15 @@ fn extract_volume_from_segment(
     }
     return Some(volume);
   }
+  if segment_is_journal_like(segment) {
+    if let Some(value) =
+      last_number_token(segment)
+    {
+      if value.len() <= 3 {
+        return Some(value);
+      }
+    }
+  }
   if issue.is_some() {
     None
   } else {
@@ -3258,13 +4012,21 @@ fn extract_issue_from_segment(
   if let Some(issue) = issue {
     return Some(issue);
   }
+  if segment
+    .to_lowercase()
+    .contains("vol")
+  {
+    return None;
+  }
   if let Some(part) =
     extract_part_suffix(segment)
   {
     let before = segment
       .to_lowercase()
       .find("part")
-      .and_then(|pos| segment.get(..pos))
+      .and_then(|pos| {
+        segment.get(..pos)
+      })
       .unwrap_or(segment);
     if let Some(number) =
       last_number_token(before)
@@ -3286,18 +4048,28 @@ fn parse_volume_issue_pair(
 ) -> (Option<String>, Option<String>) {
   let mut volume = None;
   let mut issue = None;
-  if let Some(open) = segment.find('(') {
+  if let Some(open) = segment.find('(')
+  {
     if let Some(close) =
       segment[open + 1..].find(')')
     {
       let inside = &segment
         [open + 1..open + 1 + close];
+      let inside_lower =
+        inside.to_lowercase();
       let inside_digits =
         number_token(inside);
-      if let Some(value) = inside_digits
-        && value.len() <= 3
+      if !inside_lower.contains("vol")
+        && !inside_lower
+          .contains("part")
+        && !inside_lower.contains("no.")
       {
-        issue = Some(value);
+        if let Some(value) =
+          inside_digits
+          && value.len() <= 3
+        {
+          issue = Some(value);
+        }
       }
       if let Some(before) =
         segment.get(..open)
@@ -3347,7 +4119,9 @@ fn last_number_token(
     })
     .filter(|part| !part.is_empty())
     .filter(|part| {
-      part.chars().all(|c| c.is_ascii_digit())
+      part
+        .chars()
+        .all(|c| c.is_ascii_digit())
     })
     .map(|part| part.to_string())
     .last()
@@ -3362,8 +4136,8 @@ fn extract_part_suffix(
   let token = after
     .split_whitespace()
     .find(|part| !part.is_empty())?;
-  let cleaned = token
-    .trim_matches(|c: char| {
+  let cleaned =
+    token.trim_matches(|c: char| {
       !c.is_alphanumeric()
     });
   if cleaned.is_empty() {
@@ -3379,12 +4153,18 @@ fn extract_genre(
   let start = reference.find('[')?;
   let close =
     reference[start + 1..].find(']')?;
-  Some(
-    reference
-      [start + 1..start + 1 + close]
-      .trim()
-      .to_string()
-  )
+  let value = reference
+    [start + 1..start + 1 + close]
+    .trim()
+    .to_string();
+  if start == 0
+    && value
+      .chars()
+      .all(|c| c.is_ascii_digit())
+  {
+    return None;
+  }
+  Some(value)
 }
 
 fn extract_edition(
@@ -3429,11 +4209,56 @@ fn extract_edition(
   None
 }
 
-fn detect_circa(reference: &str) -> bool {
-  let lower = reference.to_lowercase();
-  lower.contains("c.")
-    || lower.contains("ca.")
-    || lower.contains("circa")
+fn detect_circa(
+  reference: &str
+) -> bool {
+  let tokens = reference
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  for (idx, token) in
+    tokens.iter().enumerate()
+  {
+    let has_lowercase = token
+      .chars()
+      .any(|c| c.is_lowercase());
+    let trimmed = token
+      .trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      })
+      .to_lowercase();
+    if trimmed == "circa" {
+      return true;
+    }
+    if (trimmed == "c"
+      || trimmed == "ca")
+      && has_lowercase
+    {
+      if let Some(next) =
+        tokens.get(idx + 1)
+      {
+        let digits = next
+          .chars()
+          .filter(|c| {
+            c.is_ascii_digit()
+          })
+          .count();
+        if digits >= 4 {
+          return true;
+        }
+      }
+    }
+    if trimmed.starts_with("c")
+      && trimmed
+        .chars()
+        .skip(1)
+        .filter(|c| c.is_ascii_digit())
+        .count()
+        >= 4
+    {
+      return true;
+    }
+  }
+  false
 }
 
 fn edition_number_before(
@@ -3464,24 +4289,30 @@ fn clean_title_segment(
   segment: &str
 ) -> String {
   let mut output = String::new();
-  let mut chars = segment.chars().peekable();
+  let mut chars =
+    segment.chars().peekable();
   while let Some(ch) = chars.next() {
     if ch == '(' {
       let mut contents = String::new();
-      while let Some(inner) = chars.next() {
+      while let Some(inner) =
+        chars.next()
+      {
         if inner == ')' {
           break;
         }
         contents.push(inner);
       }
-      let lower = contents.to_lowercase();
-      let is_edition = lower.contains("ed")
+      let lower =
+        contents.to_lowercase();
+      let is_edition = lower
+        .contains("ed")
         || lower.contains("édition")
         || lower.contains("ed.")
         || lower.contains("éd");
       if !is_edition {
         output.push('(');
-        output.push_str(contents.trim());
+        output
+          .push_str(contents.trim());
         output.push(')');
       }
       continue;

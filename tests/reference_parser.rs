@@ -58,12 +58,11 @@ const MONTH_RANGE_DAY_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, Apr 5–7 1995.";
 const MONTH_RANGE_DAY_PUNCT_REF: &str =
-  "Perec, Georges. A Void. London: \
-   The Harvill Press, Apr. 5–7, \
-   1995.";
+  "Perec, Georges. A Void. London: The \
+   Harvill Press, Apr. 5–7, 1995.";
 const DAY_RANGE_BEFORE_MONTH_REF: &str =
-  "Perec, Georges. A Void. London: \
-   The Harvill Press, 5–7 Apr 1995.";
+  "Perec, Georges. A Void. London: The \
+   Harvill Press, 5–7 Apr 1995.";
 const PUNCTUATED_AUTHORS_REF: &str =
   "Doe, J.; Smith, A., Jr.; O'Neil, \
    M.-J. Title. City: Pub, 2020.";
@@ -71,9 +70,13 @@ const PUNCTUATED_AUTHORS_WITH_AMP_REF: &str =
   "Doe, J.; Smith, A., Jr.; O'Neil, \
    M.-J.; Brown, R. & White, T. \
    Title. City: Pub, 2020.";
+const FULL_NAME_COMMA_AUTHORS_REF:
+  &str = "Perec, Georges, Calvino, \
+          Italo. Title. City: Pub, \
+          1999.";
 const ET_AL_REF: &str =
-  "Doe, J., et al. Title. City: \
-   Pub, 2020.";
+  "Doe, J., et al. Title. City: Pub, \
+   2020.";
 const MONTH_NAME_PUNCT_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, Apr. 5, 1995.";
@@ -99,12 +102,12 @@ const TRANSLATOR_REF: &str =
    Doe, J. ISBN 978-1-2345-6789-0 \
    ISSN 1234-5678.";
 const DERRIDA_REF: &str =
-  "Derrida, J. (c.1967). \
-   L’écriture et la différence (1 \
-   éd.). Paris: Éditions du Seuil.";
+  "Derrida, J. (c.1967). L’écriture \
+   et la différence (1 éd.). Paris: \
+   Éditions du Seuil.";
 const QUOTED_TITLE_REF: &str =
-  "Doe, Jane. \"Quoted Title\". \
-   City: Pub, 2020.";
+  "Doe, Jane. \"Quoted Title\". City: \
+   Pub, 2020.";
 const PARTICLE_NAME_REF: &str =
   "van der Waals, J. D. A Title. \
    City: Pub, 2020.";
@@ -118,10 +121,10 @@ const CITATION_NUMBER_REF: &str =
   "60. Differences in cyclic fatigue \
    resistance between ProTaper Next \
    and ProTaper Universal instruments \
-   at different levels. Pérez-Higueras \
-   JJ, Arias A, de la Macorra JC, \
-   Peters OA. septembre 2014, J Endod, \
-   Vol. 9, pp. 1477-81.";
+   at different levels. \
+   Pérez-Higueras JJ, Arias A, de la \
+   Macorra JC, Peters OA. septembre \
+   2014, J Endod, Vol. 9, pp. 1477-81.";
 const PAGE_RANGE_DATE_REF: &str =
   "Solon, G. (1999). Chapter 29. \
    Intergenerational mobility in the \
@@ -129,29 +132,52 @@ const PAGE_RANGE_DATE_REF: &str =
    1761–1800). London: Elsevier.";
 const VOLUME_ISSUE_REF: &str =
   "Ghezzi, C., Mandriolli, D., \
-   Morzenti, A. Trio: A logic language \
-   for executable specifications of \
-   real-time systems. Journal of \
-   Systems and Software, 12(2), \
-   107-123, May 1990.";
+   Morzenti, A. Trio: A logic \
+   language for executable \
+   specifications of real-time \
+   systems. Journal of Systems and \
+   Software, 12(2), 107-123, May 1990.";
 const ISSUE_PART_REF: &str =
   "Fischer, H. Centre Pompidou. \
-   Deutsche Bauzeitung, H. 134, Part 3, \
-   2000, 20-21.";
+   Deutsche Bauzeitung, H. 134, Part \
+   3, 2000, 20-21.";
 const IEEE_PROC_REF: &str =
   "Ramadge, P., Wonham, W. The \
    Control of Discrete Event Systems. \
    Proceedings of the IEEE, 77(1), \
    81-98, 1989.";
 const ROMERO_REF: &str =
-  "Romero, C., Paunesku, D., & \
-   Dweck, C. (2011). Brainology in \
-   the classroom: An online growth \
+  "Romero, C., Paunesku, D., & Dweck, \
+   C. (2011). Brainology in the \
+   classroom: An online growth \
    mindset intervention affects GPA, \
    conduct, and implicit theories. \
-   Poster session presented at Society \
-   for Research in Child Development \
-   Biennial Meeting, Montreal, Canada.";
+   Poster session presented at \
+   Society for Research in Child \
+   Development Biennial Meeting, \
+   Montreal, Canada.";
+const J_ENDOD_REF: &str =
+  "60. Differences in cyclic fatigue \
+   resistance between ProTaper Next \
+   and ProTaper Universal instruments \
+   at different levels. \
+   Pérez-Higueras JJ, Arias A, de la \
+   Macorra JC, Peters OA. septembre \
+   2014, J Endod, Vol. 9, pp. 1477-81.";
+const FISCHER_REF: &str =
+  "Fischer, H. Centre Pompidou. \
+   Deutsche Bauzeitung, H. 134, Part \
+   3, 2000, 20-21.";
+const BRISCHOUX_REF: &str =
+  "Brischoux, F., Chakraborty, S., \
+   Brierley, D.I., Ungless, M.A. \
+   Phasic excitation of dopamine \
+   neurons in ventral VTA by noxious \
+   stimuli. Proc Natl Acad Sci U S A \
+   106, 4894-4899, 2009.";
+const HAN_REF: &str =
+  "[13] S. E. Han, G. Chen. Nano Lett \
+   2010, 10, 1012.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -411,9 +437,7 @@ fn parse_extracts_edition_from_parenthetical()
 
   let reference = &references[0].0;
   assert_list_field(
-    reference,
-    "edition",
-    "1"
+    reference, "edition", "1"
   );
   assert_list_field(
     reference,
@@ -475,18 +499,15 @@ fn parse_preserves_author_particles() {
     )
     }
   };
-  assert_eq!(
-    authors[0],
-    Author {
-      family: "van der Waals".into(),
-      given:  "J D".into()
-    }
-  );
+  assert_eq!(authors[0], Author {
+    family: "van der Waals".into(),
+    given:  "J D".into()
+  });
 }
 
 #[test]
 fn parse_extracts_genre_from_brackets()
- {
+{
   let parser = Parser::new();
   let references = parser.parse(
     &[GENRE_REF],
@@ -696,9 +717,9 @@ fn parse_uses_normalization_dir_assets()
     })
     .unwrap_or_default();
   assert!(
-    scripts.iter().any(|value| {
-      value == "Latn"
-    }),
+    scripts
+      .iter()
+      .any(|value| { value == "Latn" }),
     "locale overrides should update \
      script names"
   );
@@ -999,8 +1020,8 @@ fn parse_handles_day_ranges_before_month_name()
       "04".to_string(),
       "5".to_string()
     ],
-    "Parser should capture day \
-     ranges before month names"
+    "Parser should capture day ranges \
+     before month names"
   );
 }
 
@@ -1065,6 +1086,36 @@ fn parse_handles_punctuated_author_lists_with_ampersands()
 }
 
 #[test]
+fn parse_handles_comma_separated_full_names()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[FULL_NAME_COMMA_AUTHORS_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(
+    authors.len(),
+    2,
+    "parser should split comma \
+     separated full-name authors"
+  );
+}
+
+#[test]
 fn parse_handles_citation_number_author_lists()
  {
   let parser = Parser::new();
@@ -1092,13 +1143,10 @@ fn parse_handles_citation_number_author_lists()
     "parser should split authors \
      after citation numbers"
   );
-  assert_eq!(
-    authors[0],
-    Author {
-      family: "Pérez-Higueras".into(),
-      given:  "JJ".into()
-    }
-  );
+  assert_eq!(authors[0], Author {
+    family: "Pérez-Higueras".into(),
+    given:  "JJ".into()
+  });
 }
 
 #[test]
@@ -1130,8 +1178,7 @@ fn parse_extracts_citation_numbers() {
 }
 
 #[test]
-fn parse_skips_et_al_in_author_lists()
- {
+fn parse_skips_et_al_in_author_lists() {
   let parser = Parser::new();
   let references = parser.parse(
     &[ET_AL_REF],
@@ -1157,13 +1204,10 @@ fn parse_skips_et_al_in_author_lists()
     "parser should ignore et al \
      placeholders"
   );
-  assert_eq!(
-    authors[0],
-    Author {
-      family: "Doe".into(),
-      given:  "J".into()
-    }
-  );
+  assert_eq!(authors[0], Author {
+    family: "Doe".into(),
+    given:  "J".into()
+  });
 }
 
 #[test]
@@ -1195,8 +1239,8 @@ fn parse_captures_month_names_with_punctuation()
       "04".to_string(),
       "5".to_string()
     ],
-    "Parser should capture month names \
-     with punctuation"
+    "Parser should capture month \
+     names with punctuation"
   );
 }
 
@@ -1209,16 +1253,20 @@ fn parse_handles_month_ranges_with_days_and_punctuation()
     ParseFormat::Json
   );
 
-  let date_values =
-    match references[0].fields().get("date") {
-      | Some(FieldValue::List(values)) => values,
-      | other => {
-        panic!(
-          "Expected list of date \
-           values, got {other:?}"
-        )
-      }
-    };
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         values, got {other:?}"
+      )
+    }
+  };
 
   assert_eq!(
     date_values,
@@ -1227,14 +1275,14 @@ fn parse_handles_month_ranges_with_days_and_punctuation()
       "09".to_string(),
       "12".to_string()
     ],
-    "Parser should capture month ranges \
-     with punctuation and days"
+    "Parser should capture month \
+     ranges with punctuation and days"
   );
 }
 
 #[test]
 fn parse_ignores_page_ranges_in_dates()
- {
+{
   let parser = Parser::new();
   let references = parser.parse(
     &[PAGE_RANGE_DATE_REF],
@@ -1254,9 +1302,10 @@ fn parse_ignores_page_ranges_in_dates()
       }
     };
   assert!(
-    date_values.contains(&"1999".to_string()),
-    "Parser should keep the year \
-     from date segments"
+    date_values
+      .contains(&"1999".to_string()),
+    "Parser should keep the year from \
+     date segments"
   );
   assert!(
     !date_values
@@ -1284,7 +1333,8 @@ fn parse_captures_volume_with_parts() {
 }
 
 #[test]
-fn parse_captures_volume_and_issue_pairs() {
+fn parse_captures_volume_and_issue_pairs()
+ {
   let parser = Parser::new();
   let references = parser.parse(
     &[VOLUME_ISSUE_REF],
@@ -1292,8 +1342,12 @@ fn parse_captures_volume_and_issue_pairs() {
   );
 
   let reference = &references[0].0;
-  assert_list_field(reference, "volume", "12");
-  assert_list_field(reference, "issue", "2");
+  assert_list_field(
+    reference, "volume", "12"
+  );
+  assert_list_field(
+    reference, "issue", "2"
+  );
 }
 
 #[test]
@@ -1305,11 +1359,16 @@ fn parse_captures_issue_parts() {
   );
 
   let reference = &references[0].0;
-  assert_list_field(reference, "issue", "134, Part 3");
+  assert_list_field(
+    reference,
+    "issue",
+    "134, Part 3"
+  );
 }
 
 #[test]
-fn parse_prefers_journal_type_for_proceedings() {
+fn parse_prefers_journal_type_for_proceedings()
+ {
   let parser = Parser::new();
   let references = parser.parse(
     &[IEEE_PROC_REF],
@@ -1322,12 +1381,15 @@ fn parse_prefers_journal_type_for_proceedings() {
     "journal",
     "Proceedings of the IEEE"
   );
-  assert_list_field(reference, "pages", "81-98");
+  assert_list_field(
+    reference, "pages", "81-98"
+  );
   match reference.get("type") {
-    | Some(FieldValue::Single(value)) => {
+    | Some(FieldValue::Single(
+      value
+    )) => {
       assert_eq!(
-        value,
-        "article-journal",
+        value, "article-journal",
         "type should prefer journal \
          classification"
       );
@@ -1342,7 +1404,8 @@ fn parse_prefers_journal_type_for_proceedings() {
 }
 
 #[test]
-fn parse_extracts_etre_et_temps_title() {
+fn parse_extracts_etre_et_temps_title()
+{
   let parser = Parser::new();
   let references = parser.parse(
     &[HEIDEGGER_REF],
@@ -1370,36 +1433,232 @@ fn parse_extracts_romero_authors_and_title()
   assert_list_field(
     reference,
     "title",
-    "Brainology in the classroom: An online growth mindset intervention affects GPA, conduct, and implicit theories"
+    "Brainology in the classroom: An \
+     online growth mindset \
+     intervention affects GPA, \
+     conduct, and implicit theories"
   );
-  let authors = match reference
-    .get("author")
-  {
-    | Some(FieldValue::Authors(list)) => list,
-    | other => {
-      panic!(
+  let authors =
+    match reference.get("author") {
+      | Some(FieldValue::Authors(
+        list
+      )) => list,
+      | other => {
+        panic!(
         "Expected FieldValue::Authors, \
          got {other:?}"
       )
-    }
-  };
+      }
+    };
   assert_eq!(
     authors.len(),
     3,
     "should capture all authors"
   );
-  assert_eq!(
-    authors[0],
-    Author {
-      family: "Romero".into(),
-      given:  "C".into()
-    }
+  assert_eq!(authors[0], Author {
+    family: "Romero".into(),
+    given:  "C".into()
+  });
+  assert_list_field(
+    reference,
+    "container-title",
+    "Poster session presented at \
+     Society for Research in Child \
+     Development Biennial Meeting"
+  );
+  assert!(
+    !reference
+      .contains_key("date-circa"),
+    "Romero reference should not be \
+     circa"
+  );
+}
+
+#[test]
+fn parse_extracts_j_endod_reference() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[J_ENDOD_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Differences in cyclic fatigue \
+     resistance between ProTaper Next \
+     and ProTaper Universal \
+     instruments at different levels"
   );
   assert_list_field(
     reference,
     "container-title",
-    "Poster session presented at Society for Research in Child Development Biennial Meeting"
+    "J Endod"
   );
+  assert_list_field(
+    reference, "volume", "9"
+  );
+  assert_list_field(
+    reference, "pages", "1477-81"
+  );
+  match reference.get("citation-number")
+  {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(value, "60.");
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
+  match reference.get("type") {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(
+        value,
+        "article-journal"
+      );
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
+}
+
+#[test]
+fn parse_extracts_fischer_reference() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[FISCHER_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Centre Pompidou"
+  );
+  assert_list_field(
+    reference,
+    "journal",
+    "Deutsche Bauzeitung"
+  );
+  assert_list_field(
+    reference,
+    "issue",
+    "134, Part 3"
+  );
+  assert_list_field(
+    reference, "pages", "20-21"
+  );
+  match reference.get("type") {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(
+        value,
+        "article-journal"
+      );
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
+}
+
+#[test]
+fn parse_extracts_proc_natlsci_reference()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[BRISCHOUX_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "journal",
+    "Proc Natl Acad Sci U S A"
+  );
+  assert_list_field(
+    reference, "volume", "106"
+  );
+  assert_list_field(
+    reference,
+    "pages",
+    "4894-4899"
+  );
+  match reference.get("type") {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(
+        value,
+        "article-journal"
+      );
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
+}
+
+#[test]
+fn parse_extracts_han_reference() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[HAN_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "journal",
+    "Nano Lett"
+  );
+  assert_list_field(
+    reference, "volume", "10"
+  );
+  assert_list_field(
+    reference, "pages", "1012"
+  );
+  assert!(
+    !reference.contains_key("genre"),
+    "citation numbers should not be \
+     treated as genre"
+  );
+  match reference.get("citation-number")
+  {
+    | Some(FieldValue::Single(
+      value
+    )) => {
+      assert_eq!(value, "13");
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
 }
 
 #[test]

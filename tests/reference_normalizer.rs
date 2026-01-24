@@ -400,8 +400,8 @@ fn normalization_config_prefers_manual_locale_overrides()
     AbbreviationMap::load_from_str(
       "en\ten-GB"
     );
-  let config =
-    config.with_language_locale(overrides);
+  let config = config
+    .with_language_locale(overrides);
 
   let mut map = Map::new();
   map.insert(
@@ -427,7 +427,8 @@ fn normalization_any_assets_load_locale_mappings()
   let config =
     NormalizationConfig::load_from_dir(
       std::path::Path::new(
-        "tests/fixtures/normalization-any"
+        "tests/fixtures/\
+         normalization-any"
       )
     )
     .expect("normalization assets");
@@ -465,7 +466,8 @@ fn normalization_any_assets_load_locale_mappings()
 fn abbreviations_last_entry_wins() {
   let abbreviations =
     AbbreviationMap::load_from_str(
-      "J. Test.\tOld Journal\nJ. Test.\tNew Journal"
+      "J. Test.\tOld Journal\nJ. \
+       Test.\tNew Journal"
     );
   assert_eq!(
     abbreviations.expand("J. Test."),

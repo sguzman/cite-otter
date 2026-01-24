@@ -71,8 +71,11 @@ impl Format {
         );
         let entry_type =
           entry_type_for(&mut map);
-        let key =
-          bibtex_key_for(&map, idx, &mut key_counts);
+        let key = bibtex_key_for(
+          &map,
+          idx,
+          &mut key_counts
+        );
         fields_to_bibtex(
           &key, entry_type, &map
         )
@@ -163,7 +166,9 @@ fn field_value_strings(
     | FieldValue::List(items) => {
       items
         .iter()
-        .filter(|item| !item.trim().is_empty())
+        .filter(|item| {
+          !item.trim().is_empty()
+        })
         .cloned()
         .collect()
     }
@@ -180,8 +185,7 @@ fn field_value_strings(
               );
             format!(
               "{}, {}",
-              author.family,
-              given
+              author.family, given
             )
           }
         })
@@ -254,17 +258,18 @@ fn entry_type_for(
   let raw_type =
     extract_first_value(map, "type")
       .unwrap_or_else(|| "misc".into());
-  let entry_type = match raw_type.as_str() {
-    | "article-journal" => "article",
-    | "chapter" => "incollection",
-    | "manuscript" => "unpublished",
-    | "report" => "techreport",
-    | "paper-conference" => {
-      "inproceedings"
+  let entry_type =
+    match raw_type.as_str() {
+      | "article-journal" => "article",
+      | "chapter" => "incollection",
+      | "manuscript" => "unpublished",
+      | "report" => "techreport",
+      | "paper-conference" => {
+        "inproceedings"
+      }
+      | _ => raw_type.as_str()
     }
-    | _ => raw_type.as_str()
-  }
-  .to_string();
+    .to_string();
   match entry_type.as_str() {
     | "article" => {
       rename_field(
@@ -304,16 +309,16 @@ fn fields_to_bibtex(
 ) -> String {
   let fields = bibtex_fields(map);
   let total = fields.len();
-  let mut rendered = Vec::with_capacity(total);
+  let mut rendered =
+    Vec::with_capacity(total);
   for (idx, (key, value)) in
     fields.into_iter().enumerate()
   {
-    let suffix =
-      if idx + 1 == total {
-        ""
-      } else {
-        ","
-      };
+    let suffix = if idx + 1 == total {
+      ""
+    } else {
+      ","
+    };
     rendered.push(format!(
       "  {key} = {{{value}}}{suffix}"
     ));
@@ -321,7 +326,8 @@ fn fields_to_bibtex(
   let fields = rendered.join("\n");
 
   format!(
-    "@{entry_type}{{{key},\n{fields}\n}}"
+    "@{entry_type}{{{key},\n{fields}\\
+     n}}"
   )
 }
 
@@ -331,11 +337,15 @@ fn csl_entry(
 ) -> String {
   let _ = idx;
 
-  let mut entries: Vec<(String, Value)> =
-    Vec::new();
-  let mut push = |key: &str, value: Value| {
-    entries.push((key.to_string(), value));
-  };
+  let mut entries: Vec<(
+    String,
+    Value
+  )> = Vec::new();
+  let mut push =
+    |key: &str, value: Value| {
+      entries
+        .push((key.to_string(), value));
+    };
 
   for key in
     ["author", "editor", "translator"]
@@ -360,10 +370,7 @@ fn csl_entry(
       &map, "title"
     )
   {
-    push(
-      "title",
-      Value::String(title)
-    );
+    push("title", Value::String(title));
   }
   if let Some(value) =
     extract_first_value_from_map(
@@ -448,7 +455,8 @@ fn csl_entry(
     )
   {
     if !pages.is_empty() {
-      let pages = normalize_page_range(&pages);
+      let pages =
+        normalize_page_range(&pages);
       push(
         "page",
         Value::String(pages)
@@ -476,7 +484,9 @@ fn csl_entry(
   }
 
   if let Some(value) =
-    extract_first_value_from_map(&map, "url")
+    extract_first_value_from_map(
+      &map, "url"
+    )
   {
     push(
       "URL",
@@ -486,7 +496,9 @@ fn csl_entry(
     );
   }
   if let Some(value) =
-    extract_first_value_from_map(&map, "doi")
+    extract_first_value_from_map(
+      &map, "doi"
+    )
   {
     push(
       "DOI",
@@ -502,10 +514,14 @@ fn csl_entry(
   {
     let key_json =
       serde_json::to_string(key)
-        .unwrap_or_else(|_| "\"\"".into());
+        .unwrap_or_else(|_| {
+          "\"\"".into()
+        });
     let value_json =
       serde_json::to_string(value)
-        .unwrap_or_else(|_| "null".into());
+        .unwrap_or_else(|_| {
+          "null".into()
+        });
     output.push_str(&key_json);
     output.push(':');
     output.push_str(&value_json);
@@ -633,7 +649,8 @@ fn split_name(
 fn extract_csl_issued(
   map: &Map<String, Value>
 ) -> Option<String> {
-  let array = map.get("date")?.as_array()?;
+  let array =
+    map.get("date")?.as_array()?;
   let mut parts = array
     .iter()
     .filter_map(Value::as_str)
@@ -652,7 +669,10 @@ fn extract_csl_issued(
   {
     format!("{}/{}", parts[0], parts[1])
   } else if parts.len() >= 3 {
-    format!("{}-{}-{}", parts[0], parts[1], parts[2])
+    format!(
+      "{}-{}-{}",
+      parts[0], parts[1], parts[2]
+    )
   } else {
     parts.join("-")
   };
@@ -684,7 +704,9 @@ fn bibtex_fields(
     .and_then(Value::as_array)
     .and_then(|items| items.first())
     .and_then(Value::as_str)
-    .map(|value| value.trim_end().ends_with('~'))
+    .map(|value| {
+      value.trim_end().ends_with('~')
+    })
     .unwrap_or(false);
   let mut entries = map
     .iter()
@@ -742,29 +764,35 @@ fn bibtex_fields(
     "issn",
     "note"
   ];
-  entries.sort_by(|(left, _), (right, _)| {
-    let left_idx = order
-      .iter()
-      .position(|key| key == left)
-      .unwrap_or(usize::MAX);
-    let right_idx = order
-      .iter()
-      .position(|key| key == right)
-      .unwrap_or(usize::MAX);
-    let left_idx = if left == "date" && date_is_circa {
-      1
-    } else {
+  entries.sort_by(
+    |(left, _), (right, _)| {
+      let left_idx = order
+        .iter()
+        .position(|key| key == left)
+        .unwrap_or(usize::MAX);
+      let right_idx = order
+        .iter()
+        .position(|key| key == right)
+        .unwrap_or(usize::MAX);
+      let left_idx = if left == "date"
+        && date_is_circa
+      {
+        1
+      } else {
+        left_idx
+      };
+      let right_idx = if right == "date"
+        && date_is_circa
+      {
+        1
+      } else {
+        right_idx
+      };
       left_idx
-    };
-    let right_idx = if right == "date" && date_is_circa {
-      1
-    } else {
-      right_idx
-    };
-    left_idx
-      .cmp(&right_idx)
-      .then_with(|| left.cmp(right))
-  });
+        .cmp(&right_idx)
+        .then_with(|| left.cmp(right))
+    }
+  );
   entries
 }
 
@@ -802,19 +830,34 @@ fn sanitize_csl_value(
 fn normalize_page_range(
   value: &str
 ) -> String {
-  let trimmed = value.trim();
-  if trimmed.contains('-')
+  let trimmed = value
+    .trim()
+    .trim_end_matches(|c: char| {
+      matches!(c, ',' | '.' | ';' | ')')
+    });
+  if (trimmed.contains('-')
+    || trimmed.contains('–')
+    || trimmed.contains('—'))
     && !trimmed.contains("://")
   {
     let parts = trimmed
-      .split('-')
+      .split(|c| {
+        c == '-' || c == '–' || c == '—'
+      })
       .map(str::trim)
       .collect::<Vec<_>>();
     if parts.len() == 2
-      && parts[0].chars().all(|c| c.is_ascii_digit())
-      && parts[1].chars().all(|c| c.is_ascii_digit())
+      && parts[0]
+        .chars()
+        .all(|c| c.is_ascii_digit())
+      && parts[1]
+        .chars()
+        .all(|c| c.is_ascii_digit())
     {
-      return format!("{}–{}", parts[0], parts[1]);
+      return format!(
+        "{}–{}",
+        parts[0], parts[1]
+      );
     }
   }
   trimmed.to_string()
@@ -838,7 +881,9 @@ fn normalize_given_initials(
     .split_whitespace()
     .map(|part| {
       if part.len() == 1
-        && part.chars().all(|c| c.is_alphabetic())
+        && part
+          .chars()
+          .all(|c| c.is_alphabetic())
       {
         format!("{part}.")
       } else {
@@ -889,16 +934,20 @@ fn normalize_bibtex_date(
   {
     format!("{}/{}", parts[0], parts[1])
   } else if parts.len() >= 3 {
-    format!("{}-{}-{}", parts[0], parts[1], parts[2])
+    format!(
+      "{}-{}-{}",
+      parts[0], parts[1], parts[2]
+    )
   } else {
     parts.join("-")
   };
   if has_circa {
     date.push('~');
   }
-  *value = Value::Array(vec![Value::String(
-    date
-  )]);
+  *value =
+    Value::Array(vec![Value::String(
+      date
+    )]);
   map.remove("date-circa");
 }
 
@@ -925,7 +974,9 @@ fn bibtex_key_for(
     .unwrap_or("");
   let family = family
     .chars()
-    .filter(|c| c.is_ascii_alphanumeric())
+    .filter(|c| {
+      c.is_ascii_alphanumeric()
+    })
     .collect::<String>()
     .to_lowercase();
   let date = map
@@ -943,12 +994,17 @@ fn bibtex_key_for(
   } else {
     String::new()
   };
-  if family.is_empty() || year.is_empty() {
+  if family.is_empty()
+    || year.is_empty()
+  {
     return format!("citeotter{idx}");
   }
   let base = format!("{family}{year}");
-  let count = counts.entry(base.clone()).or_insert(0);
-  let suffix = (*count as u8 + b'a') as char;
+  let count = counts
+    .entry(base.clone())
+    .or_insert(0);
+  let suffix =
+    (*count as u8 + b'a') as char;
   *count += 1;
   format!("{base}{suffix}")
 }

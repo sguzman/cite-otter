@@ -410,14 +410,14 @@ struct DatasetStat {
 
 #[derive(Debug, Clone, Serialize)]
 struct SampleEntry {
-  format: String,
-  output: String,
+  format:     String,
+  output:     String,
   references: usize
 }
 
 #[derive(Clone, Serialize)]
 struct ReportSummary {
-  datasets: usize,
+  datasets:  usize,
   sequences: usize,
   tokens:    usize
 }
@@ -445,19 +445,19 @@ struct TrainingReport {
 
 #[derive(Serialize)]
 struct ValidationReport {
-  parser: Vec<ValidationStat>,
-  finder: Vec<ValidationStat>,
+  parser:  Vec<ValidationStat>,
+  finder:  Vec<ValidationStat>,
   summary: ValidationSummary
 }
 
 #[derive(Clone, Serialize)]
 struct DeltaEntry {
-  path:     String,
-  kind:     String,
-  prepared: usize,
-  labeled:  usize,
-  stored:   usize,
-  delta:    isize,
+  path:            String,
+  kind:            String,
+  prepared:        usize,
+  labeled:         usize,
+  stored:          usize,
+  delta:           isize,
   prepared_tokens: usize,
   labeled_tokens:  usize,
   stored_tokens:   usize,
@@ -466,15 +466,15 @@ struct DeltaEntry {
 
 #[derive(Clone, Serialize)]
 struct ValidationStat {
-  path:            String,
-  sequences:       usize,
-  tokens:          usize,
+  path:             String,
+  sequences:        usize,
+  tokens:           usize,
   stored_sequences: usize,
-  stored_tokens:   usize,
-  delta_sequences: usize,
-  delta_tokens:    usize,
-  delta_rate:      f64,
-  token_rate:      f64
+  stored_tokens:    usize,
+  delta_sequences:  usize,
+  delta_tokens:     usize,
+  delta_rate:       f64,
+  token_rate:       f64
 }
 
 #[derive(Serialize)]
@@ -487,7 +487,7 @@ struct DeltaSummary {
 #[derive(Serialize)]
 struct DeltaReport {
   comparisons: Vec<DeltaEntry>,
-  summary: DeltaSummary
+  summary:     DeltaSummary
 }
 
 pub fn run() -> anyhow::Result<()> {
@@ -1691,8 +1691,11 @@ fn run_training_with_config(
       &finder_model_path
     )?;
   for (path, stat) in &finder_pairs {
-    finder_model
-      .record(path, stat.sequences);
+    finder_model.record(
+      path,
+      stat.sequences,
+      stat.tokens
+    );
   }
   finder_model
     .save(&finder_model_path)?;
@@ -1748,8 +1751,12 @@ fn run_training_with_config(
         .collect(),
       samples: sample_outputs,
       summary: TrainingSummary {
-        parser: summarize_stats(&parser_pairs),
-        finder: summarize_stats(&finder_pairs),
+        parser:  summarize_stats(
+          &parser_pairs
+        ),
+        finder:  summarize_stats(
+          &finder_pairs
+        ),
         samples: SAMPLE_FORMATS.len()
       }
     }
@@ -1790,7 +1797,9 @@ fn run_validation_with_config(
     &parser_model_path
   )?;
   let mut parser_validations =
-    Vec::with_capacity(parser_stats.len());
+    Vec::with_capacity(
+      parser_stats.len()
+    );
   for (path, stat) in &parser_stats {
     let stored_sequences = parser_model
       .sequences(path)
@@ -1818,17 +1827,21 @@ fn run_validation_with_config(
       token_delta,
       stat.tokens
     );
-    parser_validations.push(ValidationStat {
-      path: path.display().to_string(),
-      sequences: stat.sequences,
-      tokens: stat.tokens,
-      stored_sequences,
-      stored_tokens,
-      delta_sequences: seq_delta,
-      delta_tokens: token_delta,
-      delta_rate: seq_rate,
-      token_rate
-    });
+    parser_validations.push(
+      ValidationStat {
+        path: path
+          .display()
+          .to_string(),
+        sequences: stat.sequences,
+        tokens: stat.tokens,
+        stored_sequences,
+        stored_tokens,
+        delta_sequences: seq_delta,
+        delta_tokens: token_delta,
+        delta_rate: seq_rate,
+        token_rate
+      }
+    );
     println!(
       "checking {}... {:>4} seq \
        {:>5.2}% {:>4} tok {:>5.2}%",
@@ -1845,10 +1858,15 @@ fn run_validation_with_config(
     &finder_model_path
   )?;
   let mut finder_validations =
-    Vec::with_capacity(finder_stats.len());
+    Vec::with_capacity(
+      finder_stats.len()
+    );
   for (path, stat) in &finder_stats {
     let stored_sequences = finder_model
       .sequences(path)
+      .unwrap_or(0);
+    let stored_tokens = finder_model
+      .tokens(path)
       .unwrap_or(0);
     let seq_delta = (stored_sequences
       as isize
@@ -1858,22 +1876,33 @@ fn run_validation_with_config(
       seq_delta,
       stat.sequences
     );
-    let token_delta = 0usize;
+    let token_delta =
+      if stored_tokens == 0 {
+        0
+      } else {
+        (stored_tokens as isize
+          - stat.tokens as isize)
+          .unsigned_abs()
+      };
     let token_rate = percent_delta(
       token_delta,
       stat.tokens
     );
-    finder_validations.push(ValidationStat {
-      path: path.display().to_string(),
-      sequences: stat.sequences,
-      tokens: stat.tokens,
-      stored_sequences,
-      stored_tokens: 0,
-      delta_sequences: seq_delta,
-      delta_tokens: token_delta,
-      delta_rate: seq_rate,
-      token_rate
-    });
+    finder_validations.push(
+      ValidationStat {
+        path: path
+          .display()
+          .to_string(),
+        sequences: stat.sequences,
+        tokens: stat.tokens,
+        stored_sequences,
+        stored_tokens,
+        delta_sequences: seq_delta,
+        delta_tokens: token_delta,
+        delta_rate: seq_rate,
+        token_rate
+      }
+    );
     println!(
       "checking {}... {:>4} seq \
        {:>5.2}%",
@@ -1889,11 +1918,15 @@ fn run_validation_with_config(
       "validation-report.json"
     ),
     &ValidationReport {
-      parser: parser_validations,
-      finder: finder_validations,
+      parser:  parser_validations,
+      finder:  finder_validations,
       summary: ValidationSummary {
-        parser: summarize_stats(&parser_stats),
-        finder: summarize_stats(&finder_stats)
+        parser: summarize_stats(
+          &parser_stats
+        ),
+        finder: summarize_stats(
+          &finder_stats
+        )
       }
     }
   )?;
@@ -2005,9 +2038,16 @@ fn run_delta_with_config(
       let stored = finder_model
         .sequences(path)
         .unwrap_or(0);
+      let stored_tokens = finder_model
+        .tokens(path)
+        .unwrap_or(0);
       let delta =
         (labeled.len() as isize
           - stored as isize)
+        .abs();
+      let token_delta =
+        (labeled_tokens as isize
+          - stored_tokens as isize)
           .abs();
       Ok(DeltaEntry {
         path: path.display().to_string(),
@@ -2018,8 +2058,8 @@ fn run_delta_with_config(
         delta,
         prepared_tokens: labeled_tokens,
         labeled_tokens,
-        stored_tokens: 0,
-        delta_tokens: labeled_tokens as isize
+        stored_tokens,
+        delta_tokens: token_delta
       })
     })
     .collect::<Result<Vec<_>, anyhow::Error>>()?;
@@ -2027,11 +2067,15 @@ fn run_delta_with_config(
   delta_entries.extend(finder_entries);
   let parser_count = delta_entries
     .iter()
-    .filter(|entry| entry.kind == "parser")
+    .filter(|entry| {
+      entry.kind == "parser"
+    })
     .count();
   let finder_count = delta_entries
     .iter()
-    .filter(|entry| entry.kind == "finder")
+    .filter(|entry| {
+      entry.kind == "finder"
+    })
     .count();
 
   persist_report(
@@ -2041,10 +2085,11 @@ fn run_delta_with_config(
     ),
     &DeltaReport {
       comparisons: delta_entries,
-      summary: DeltaSummary {
-        comparisons: parser_count + finder_count,
-        parser: parser_count,
-        finder: finder_count
+      summary:     DeltaSummary {
+        comparisons: parser_count
+          + finder_count,
+        parser:      parser_count,
+        finder:      finder_count
       }
     }
   )?;
@@ -2230,15 +2275,15 @@ fn collect_sample_outputs()
         *format
       );
       SampleEntry {
-        format: sample_format_label(
-          *format
-        )
-        .to_string(),
-        output: format_sample_output(
-          &formatter,
-          &references,
-          *format
-        ),
+        format:
+          sample_format_label(*format)
+            .to_string(),
+        output:
+          format_sample_output(
+            &formatter,
+            &references,
+            *format
+          ),
         references: references.len()
       }
     })

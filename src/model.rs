@@ -137,9 +137,53 @@ impl ParserModel {
   Clone,
 )]
 pub struct FinderModel {
-  datasets:   HashMap<String, usize>,
+  datasets: HashMap<String, FinderStat>,
   #[serde(default)]
   signatures: HashSet<String>
+}
+
+#[derive(
+  Debug, Serialize, Deserialize, Clone,
+)]
+#[serde(untagged)]
+enum FinderStat {
+  Count(usize),
+  Full {
+    sequences: usize,
+    #[serde(default)]
+    tokens:    usize
+  }
+}
+
+impl FinderStat {
+  fn sequences(&self) -> usize {
+    match self {
+      | Self::Count(count) => *count,
+      | Self::Full {
+        sequences,
+        ..
+      } => *sequences
+    }
+  }
+
+  fn tokens(&self) -> usize {
+    match self {
+      | Self::Count(_) => 0,
+      | Self::Full {
+        tokens, ..
+      } => *tokens
+    }
+  }
+
+  fn from_counts(
+    sequences: usize,
+    tokens: usize
+  ) -> Self {
+    Self::Full {
+      sequences,
+      tokens
+    }
+  }
 }
 
 impl FinderModel {
@@ -173,11 +217,14 @@ impl FinderModel {
   pub fn record(
     &mut self,
     path: &Path,
-    sequences: usize
+    sequences: usize,
+    tokens: usize
   ) {
     self.datasets.insert(
       path.display().to_string(),
-      sequences
+      FinderStat::from_counts(
+        sequences, tokens
+      )
     );
   }
 
@@ -206,6 +253,16 @@ impl FinderModel {
     self
       .datasets
       .get(&path.display().to_string())
-      .copied()
+      .map(FinderStat::sequences)
+  }
+
+  pub fn tokens(
+    &self,
+    path: &Path
+  ) -> Option<usize> {
+    self
+      .datasets
+      .get(&path.display().to_string())
+      .map(FinderStat::tokens)
   }
 }

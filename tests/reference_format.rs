@@ -17,21 +17,21 @@ mod support;
 use support::assert_snapshot_eq;
 
 #[test]
-fn format_diff_writes_report_for_mismatch() {
+fn format_diff_writes_report_for_mismatch()
+ {
   let tmp =
     std::path::Path::new("target")
       .join("reports")
       .join("format-diff.txt");
   let _ = std::fs::remove_file(&tmp);
-  let result = std::panic::catch_unwind(
-    || {
+  let result =
+    std::panic::catch_unwind(|| {
       assert_snapshot_eq(
         "diff fixture",
         "actual",
         "expected"
       );
-    }
-  );
+    });
   assert!(result.is_err());
   assert!(
     tmp.exists(),
@@ -61,9 +61,9 @@ const TRANSLATOR_REF: &str =
    Doe, J. ISBN 978-1-2345-6789-0 \
    ISSN 1234-5678.";
 const DERRIDA_REF: &str =
-  "Derrida, J. (c.1967). \
-   L’écriture et la différence (1 \
-   éd.). Paris: Éditions du Seuil.";
+  "Derrida, J. (c.1967). L’écriture \
+   et la différence (1 éd.). Paris: \
+   Éditions du Seuil.";
 
 #[test]
 fn bibtex_formatter_round_trips_reference()
@@ -85,8 +85,7 @@ fn bibtex_formatter_round_trips_reference()
 }
 
 #[test]
-fn bibtex_maps_article_journal_types()
- {
+fn bibtex_maps_article_journal_types() {
   let parser = Parser::new();
   let references = parser.parse(
     &[COMPLEX_REF],
@@ -99,8 +98,8 @@ fn bibtex_maps_article_journal_types()
   assert!(
     bibtex.contains("@article"),
     "BibTeX formatter should map \
-     article-journal types to \
-     article entries"
+     article-journal types to article \
+     entries"
   );
 }
 
@@ -341,15 +340,16 @@ fn csl_includes_circa_for_approximate_dates()
     formatter.to_csl(&references);
 
   assert!(
-    csl.contains("\"issued\":\"1967~\""),
-    "CSL output should include \
-     circa date strings"
+    csl
+      .contains("\"issued\":\"1967~\""),
+    "CSL output should include circa \
+     date strings"
   );
 }
 
 #[test]
 fn bibtex_includes_edition_from_parser()
- {
+{
   let parser = Parser::new();
   let references = parser.parse(
     &[DERRIDA_REF],
@@ -379,18 +379,21 @@ fn bibtex_maps_date_to_year() {
 
   assert!(
     bibtex.contains("date = {1995}"),
-    "BibTeX output should keep \
-     date field"
+    "BibTeX output should keep date \
+     field"
   );
 }
 
 #[test]
-fn bibtex_maps_article_issue_to_number() {
+fn bibtex_maps_article_issue_to_number()
+{
   let formatter = Format::new();
   let mut reference = Reference::new();
   reference.insert(
     "type",
-    FieldValue::Single("article".into())
+    FieldValue::Single(
+      "article".into()
+    )
   );
   reference.insert(
     "issue",
@@ -429,7 +432,8 @@ fn bibtex_maps_report_and_conference_types()
   let report_bibtex =
     formatter.to_bibtex(&[report]);
   assert!(
-    report_bibtex.contains("@techreport"),
+    report_bibtex
+      .contains("@techreport"),
     "BibTeX formatter should map \
      report types to techreport"
   );
@@ -457,7 +461,8 @@ fn bibtex_maps_report_and_conference_types()
   let conf_bibtex =
     formatter.to_bibtex(&[conference]);
   assert!(
-    conf_bibtex.contains("@inproceedings"),
+    conf_bibtex
+      .contains("@inproceedings"),
     "BibTeX formatter should map \
      paper-conference types to \
      inproceedings"
@@ -495,7 +500,9 @@ fn csl_includes_type_note_genre_edition_and_language()
   );
   reference.insert(
     "edition",
-    FieldValue::List(vec!["2nd".into()])
+    FieldValue::List(vec![
+      "2nd".into(),
+    ])
   );
 
   let csl =
@@ -512,7 +519,8 @@ fn csl_includes_type_note_genre_edition_and_language()
     "CSL output should include note"
   );
   assert!(
-    csl.contains("\"genre\":\"Report\""),
+    csl
+      .contains("\"genre\":\"Report\""),
     "CSL output should include genre"
   );
   assert!(
@@ -529,7 +537,7 @@ fn csl_includes_scripts_array() {
     "scripts",
     FieldValue::List(vec![
       "Latin".into(),
-      "Common".into()
+      "Common".into(),
     ])
   );
 
@@ -657,10 +665,9 @@ fn format_outputs_match_parity_snapshots()
     .filter(|line| !line.is_empty())
     .map(|line| line.to_string())
     .collect::<Vec<_>>();
-  let ref_slices =
-    references.iter().map(|line| {
-      line.as_str()
-    })
+  let ref_slices = references
+    .iter()
+    .map(|line| line.as_str())
     .collect::<Vec<_>>();
 
   let parser = Parser::new();
@@ -672,10 +679,11 @@ fn format_outputs_match_parity_snapshots()
 
   let csl_output =
     formatter.to_csl(&parsed);
-  let expected_csl = fs::read_to_string(
-    "tests/fixtures/format/csl.txt"
-  )
-  .expect("read expected CSL");
+  let expected_csl =
+    fs::read_to_string(
+      "tests/fixtures/format/csl.txt"
+    )
+    .expect("read expected CSL");
   assert_snapshot_eq(
     "sample:csl",
     &csl_output,
@@ -686,7 +694,8 @@ fn format_outputs_match_parity_snapshots()
     formatter.to_bibtex(&parsed);
   let expected_bibtex =
     fs::read_to_string(
-      "tests/fixtures/format/bibtex.txt"
+      "tests/fixtures/format/bibtex.\
+       txt"
     )
     .expect("read expected BibTeX");
   assert_snapshot_eq(
@@ -698,9 +707,10 @@ fn format_outputs_match_parity_snapshots()
 
 #[test]
 fn format_core_outputs_match_snapshots()
- {
+{
   let refs_text = fs::read_to_string(
-    "tests/fixtures/format/core-refs.txt"
+    "tests/fixtures/format/core-refs.\
+     txt"
   )
   .expect("read core refs");
   let references = refs_text
@@ -709,10 +719,9 @@ fn format_core_outputs_match_snapshots()
     .filter(|line| !line.is_empty())
     .map(|line| line.to_string())
     .collect::<Vec<_>>();
-  let ref_slices =
-    references.iter().map(|line| {
-      line.as_str()
-    })
+  let ref_slices = references
+    .iter()
+    .map(|line| line.as_str())
     .collect::<Vec<_>>();
 
   let parser = Parser::new();
@@ -724,10 +733,12 @@ fn format_core_outputs_match_snapshots()
 
   let csl_output =
     formatter.to_csl(&parsed);
-  let expected_csl = fs::read_to_string(
-    "tests/fixtures/format/core-csl.txt"
-  )
-  .expect("read core CSL");
+  let expected_csl =
+    fs::read_to_string(
+      "tests/fixtures/format/core-csl.\
+       txt"
+    )
+    .expect("read core CSL");
   assert_snapshot_eq(
     "core:csl",
     &csl_output,
@@ -738,7 +749,8 @@ fn format_core_outputs_match_snapshots()
     formatter.to_bibtex(&parsed);
   let expected_bibtex =
     fs::read_to_string(
-      "tests/fixtures/format/core-bibtex.txt"
+      "tests/fixtures/format/\
+       core-bibtex.txt"
     )
     .expect("read core BibTeX");
   assert_snapshot_eq(
