@@ -15,6 +15,7 @@ use crate::language::{
   detect_language,
   detect_scripts
 };
+use crate::normalizer::NormalizationConfig;
 
 const PREPARED_LINES: [&str; 2] = [
   "Hello, hello Lu P H He , o, \
@@ -69,6 +70,12 @@ impl Reference {
     &self
   ) -> &BTreeMap<String, FieldValue> {
     &self.0
+  }
+
+  pub fn from_map(
+    map: BTreeMap<String, FieldValue>
+  ) -> Self {
+    Self(map)
   }
 }
 
@@ -551,7 +558,8 @@ fn matches_field(
 
 #[derive(Debug)]
 pub struct Parser {
-  dictionary: Dictionary
+  dictionary:    Dictionary,
+  normalization: NormalizationConfig
 }
 
 impl Default for Parser {
@@ -568,10 +576,13 @@ pub struct ParsedDataset(
 impl Parser {
   pub fn new() -> Self {
     Self {
-      dictionary: Dictionary::create(
-        DictionaryAdapter::Memory
-      )
-      .open()
+      dictionary:
+        Dictionary::create(
+          DictionaryAdapter::Memory
+        )
+        .open(),
+      normalization:
+        NormalizationConfig::default()
     }
   }
 
@@ -579,7 +590,31 @@ impl Parser {
     dictionary: Dictionary
   ) -> Self {
     Self {
-      dictionary
+      dictionary,
+      normalization:
+        NormalizationConfig::default()
+    }
+  }
+
+  pub fn with_normalization(
+    normalization: NormalizationConfig
+  ) -> Self {
+    Self {
+      dictionary: Dictionary::create(
+        DictionaryAdapter::Memory
+      )
+      .open(),
+      normalization
+    }
+  }
+
+  pub fn with_dictionary_and_normalization(
+    dictionary: Dictionary,
+    normalization: NormalizationConfig
+  ) -> Self {
+    Self {
+      dictionary,
+      normalization
     }
   }
 
@@ -898,9 +933,21 @@ impl Parser {
             detect_scripts(reference)
           )
         );
-        mapped
+        self.apply_normalization(mapped)
       })
       .collect()
+  }
+
+  fn apply_normalization(
+    &self,
+    reference: Reference
+  ) -> Reference {
+    let mut map =
+      reference.fields().clone();
+    self
+      .normalization
+      .apply_to_fields(&mut map);
+    Reference::from_map(map)
   }
 }
 

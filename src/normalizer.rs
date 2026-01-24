@@ -341,6 +341,8 @@ use serde_json::{
   Value
 };
 
+use crate::parser::FieldValue;
+
 #[derive(Debug, Clone)]
 pub struct NormalizationConfig {
   journal:   AbbreviationMap,
@@ -425,6 +427,30 @@ impl NormalizationConfig {
       &self.container
     );
   }
+
+  pub fn apply_to_fields(
+    &self,
+    map: &mut std::collections::BTreeMap<
+      String,
+      FieldValue
+    >
+  ) {
+    expand_field_value(
+      map,
+      "journal",
+      &self.journal
+    );
+    expand_field_value(
+      map,
+      "publisher",
+      &self.publisher
+    );
+    expand_field_value(
+      map,
+      "container-title",
+      &self.container
+    );
+  }
 }
 
 fn load_abbrev(
@@ -468,6 +494,35 @@ fn expand_field(
       }
     }
     | _ => {}
+  }
+}
+
+fn expand_field_value(
+  map: &mut std::collections::BTreeMap<
+    String,
+    FieldValue
+  >,
+  key: &str,
+  abbreviations: &AbbreviationMap
+) {
+  let Some(value) = map.get_mut(key)
+  else {
+    return;
+  };
+  match value {
+    | FieldValue::Single(text) => {
+      let expanded =
+        abbreviations.expand(text);
+      *text = expanded;
+    }
+    | FieldValue::List(items) => {
+      for item in items {
+        let expanded =
+          abbreviations.expand(item);
+        *item = expanded;
+      }
+    }
+    | FieldValue::Authors(_) => {}
   }
 }
 

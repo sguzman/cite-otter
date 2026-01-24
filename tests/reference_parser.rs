@@ -9,6 +9,10 @@ use cite_otter::dictionary::{
   DictionaryCode
 };
 use cite_otter::format::ParseFormat;
+use cite_otter::normalizer::{
+  abbreviations::AbbreviationMap,
+  NormalizationConfig
+};
 use cite_otter::parser::{
   Author,
   FieldValue,
@@ -249,6 +253,46 @@ fn parse_uses_dictionary_for_type_resolution()
       )
     }
   }
+}
+
+#[test]
+fn parse_applies_normalization_to_publisher()
+ {
+  let abbreviations =
+    AbbreviationMap::load_from_str(
+      "Univ. Press\tUniversity Press"
+    );
+  let config =
+    NormalizationConfig::default()
+      .with_publisher_abbrev(
+        abbreviations
+      );
+  let parser =
+    Parser::with_normalization(config);
+
+  let references = parser.parse(
+    &["Doe, J. Title. City: Univ. \
+       Press, 2020."],
+    ParseFormat::Json
+  );
+  let reference = &references[0].0;
+  let publisher = reference
+    .get("publisher")
+    .and_then(|value| {
+      match value {
+        | FieldValue::List(items) => {
+          items.first().cloned()
+        }
+        | FieldValue::Single(text) => {
+          Some(text.clone())
+        }
+        | _ => None
+      }
+    });
+  assert_eq!(
+    publisher.as_deref(),
+    Some("University Press")
+  );
 }
 
 #[test]
