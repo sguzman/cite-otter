@@ -686,9 +686,11 @@ fn capture_year_like(
 fn collect_year_tokens(
   reference: &str
 ) -> Vec<String> {
+  let date_source =
+    select_date_reference(reference);
   let mut tokens =
     collect_numeric_date_parts(
-      reference
+      &date_source
     );
   let date_parts_found =
     !tokens.is_empty();
@@ -696,7 +698,7 @@ fn collect_year_tokens(
     None;
 
   for (candidate, allow_short) in
-    capture_year_like(reference)
+    capture_year_like(&date_source)
   {
     if candidate.len() == 2
       && candidate
@@ -740,9 +742,21 @@ fn collect_numeric_date_parts(
   let mut parts = Vec::new();
   let separators = ['-', '/', '.'];
   let mut found = false;
-  for token in
-    reference.split_whitespace()
+  let tokens =
+    reference.split_whitespace().collect::<Vec<_>>();
+  for (idx, token) in
+    tokens.iter().enumerate()
   {
+    if is_page_marker(token)
+      || idx
+        .checked_sub(1)
+        .and_then(|pos| tokens.get(pos))
+        .map_or(false, |value| {
+          is_page_marker(value)
+        })
+    {
+      continue;
+    }
     let trimmed =
       token.trim_matches(|c: char| {
         c.is_ascii_punctuation()
@@ -791,6 +805,119 @@ fn collect_numeric_date_parts(
     }
   }
   parts
+}
+
+fn select_date_reference(
+  reference: &str
+) -> String {
+  let segments =
+    split_reference_segments(reference);
+  if segments.is_empty() {
+    return reference.to_string();
+  }
+  let mut best = None;
+  let mut best_score = 0i32;
+  for segment in segments {
+    let score =
+      date_segment_score(&segment);
+    if score > best_score {
+      best_score = score;
+      best = Some(segment);
+    }
+  }
+  best.unwrap_or_else(|| reference.to_string())
+}
+
+fn date_segment_score(
+  segment: &str
+) -> i32 {
+  let mut score = 0;
+  if segment_has_year(segment) {
+    score += 3;
+  }
+  if segment_has_month(segment) {
+    score += 2;
+  }
+  if segment.contains('(')
+    || segment.contains(')')
+  {
+    score += 1;
+  }
+  if segment_has_page_marker(segment) {
+    score -= 3;
+  }
+  if segment_has_volume_marker(segment) {
+    score -= 1;
+  }
+  score
+}
+
+fn segment_has_year(
+  segment: &str
+) -> bool {
+  segment
+    .split(|c: char| !c.is_ascii_digit())
+    .filter(|part| part.len() >= 4)
+    .any(|part| {
+      let year = &part[..4];
+      year
+        .parse::<u32>()
+        .ok()
+        .filter(|value| {
+          (1400..=2099).contains(value)
+        })
+        .is_some()
+    })
+}
+
+fn segment_has_month(
+  segment: &str
+) -> bool {
+  segment
+    .split_whitespace()
+    .map(|token| {
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      })
+    })
+    .any(|token| parse_month_token(token).is_some())
+}
+
+fn segment_has_page_marker(
+  segment: &str
+) -> bool {
+  segment
+    .split_whitespace()
+    .any(is_page_marker)
+}
+
+fn segment_has_volume_marker(
+  segment: &str
+) -> bool {
+  let lower = segment.to_lowercase();
+  lower.contains("vol")
+    || lower.contains("no.")
+    || lower.contains("issue")
+    || lower.contains("number")
+}
+
+fn is_page_marker(
+  token: &str
+) -> bool {
+  let lower = token
+    .trim_matches(|c: char| {
+      c.is_ascii_punctuation()
+    })
+    .to_lowercase();
+  matches!(
+    lower.as_str(),
+    "p"
+      | "p."
+      | "pp"
+      | "pp."
+      | "page"
+      | "pages"
+  )
 }
 
 fn collect_month_name_parts(
