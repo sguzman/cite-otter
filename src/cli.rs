@@ -11,6 +11,7 @@ use std::path::{
   Path,
   PathBuf
 };
+use std::process::Command as ProcessCommand;
 
 use clap::{
   Parser as ClapParser,
@@ -242,6 +243,8 @@ enum Command {
                        data"
     )]
     source_dir: PathBuf,
+    #[arg(long)]
+    repo:       Option<String>,
     #[arg(long)]
     pattern:    Vec<String>,
     #[arg(long)]
@@ -758,6 +761,7 @@ pub fn run() -> anyhow::Result<()> {
     }
     | Command::NormalizationSync {
       source_dir,
+      repo,
       pattern,
       output_dir
     } => {
@@ -783,11 +787,17 @@ pub fn run() -> anyhow::Result<()> {
           Path::new("target")
             .join("normalization")
         });
+      let source =
+        if let Some(repo) = repo {
+          resolve_normalization_source(
+            &repo
+          )?
+        } else {
+          source_dir
+        };
       let count =
         sync_normalization_files(
-          &source_dir,
-          &patterns,
-          &out_dir
+          &source, &patterns, &out_dir
         )?;
       println!(
         "synced {count} normalization \
@@ -908,6 +918,41 @@ fn collect_normalization_files(
   collect_dictionary_files(
     source_dir, patterns
   )
+}
+
+fn resolve_normalization_source(
+  repo: &str
+) -> anyhow::Result<PathBuf> {
+  let path = Path::new(repo);
+  if path.exists() {
+    return Ok(path.to_path_buf());
+  }
+
+  let target = Path::new("target")
+    .join("normalization")
+    .join("repo");
+  if target.exists() {
+    return Ok(target);
+  }
+
+  let status =
+    ProcessCommand::new("git")
+      .args([
+        "clone",
+        "--depth",
+        "1",
+        repo,
+        target
+          .to_string_lossy()
+          .as_ref()
+      ])
+      .status()?;
+  if !status.success() {
+    anyhow::bail!(
+      "git clone failed for {repo}"
+    );
+  }
+  Ok(target)
 }
 
 fn sync_normalization_files(
@@ -1109,6 +1154,34 @@ mod tests {
       copied
         .contains("Journal of Testing")
     );
+  }
+
+  #[test]
+  fn normalization_sync_accepts_repo_path()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("repo");
+    fs::create_dir_all(&source)
+      .expect("create repo dir");
+
+    let journal =
+      source.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let resolved =
+      resolve_normalization_source(
+        source
+          .to_string_lossy()
+          .as_ref()
+      )
+      .expect("resolve repo path");
+    assert_eq!(resolved, source);
   }
 }
 
