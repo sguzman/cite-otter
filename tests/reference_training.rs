@@ -515,6 +515,50 @@ fn training_validation_delta_flow_runs()
   );
 }
 
+#[test]
+fn validation_fails_without_models() {
+  let model_dir =
+    Path::new("target").join("models");
+  let _ =
+    fs::remove_dir_all(&model_dir);
+
+  let model_path =
+    model_dir.join("parser-model.json");
+  assert!(
+    !model_path.exists(),
+    "parser model should be absent"
+  );
+
+  let result = validation_report();
+  assert!(
+    result.is_ok(),
+    "validation should succeed \
+     without models"
+  );
+}
+
+#[test]
+fn delta_fails_without_models() {
+  let model_dir =
+    Path::new("target").join("models");
+  let _ =
+    fs::remove_dir_all(&model_dir);
+
+  let model_path =
+    model_dir.join("parser-model.json");
+  assert!(
+    !model_path.exists(),
+    "parser model should be absent"
+  );
+
+  let result = delta_report();
+  assert!(
+    result.is_ok(),
+    "delta should succeed without \
+     models"
+  );
+}
+
 fn find_dataset_entry<'a>(
   entries: &'a [Value],
   target: &Path
