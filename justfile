@@ -15,13 +15,14 @@ llvm-lines:
 
 # Context
 context:
-	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension yaml --extension yml --extension rs --extension toml --extension md . > ~/Downloads/all.txt
+	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension rs . > ~/Downloads/all.txt
 
 context-by-file:
 	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension rs . > ~/Downloads/rs.txt
 	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension md . > ~/Downloads/md.txt
 	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension toml . > ~/Downloads/toml.txt
 	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension yaml --extension yml . > ~/Downloads/yaml.txt
+	files-to-prompt --ignore tmp --ignore target/ --ignore .git/ --markdown --line-numbers --extension txt . > ~/Downloads/txt.txt
 
 # Release
 major:
