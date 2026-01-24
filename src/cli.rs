@@ -10,12 +10,18 @@ use std::path::{
 
 use clap::{
   Parser as ClapParser,
-  Subcommand
+  Subcommand,
+  ValueEnum
 };
 use glob::glob;
 use serde::Serialize;
 use serde_json::to_writer_pretty;
 
+use crate::dictionary::{
+  Dictionary,
+  DictionaryAdapter,
+  DictionaryConfig
+};
 use crate::finder::Finder;
 use crate::format::{
   Format,
@@ -132,6 +138,24 @@ enum Command {
       value_enum
     )]
     format: ParseFormat
+  },
+
+  /// Query dictionary adapters
+  Dictionary {
+    /// Term to lookup
+    term:      String,
+    #[arg(
+      long,
+      value_enum,
+      default_value_t = DictionaryAdapterArg::Memory
+    )]
+    adapter:   DictionaryAdapterArg,
+    #[arg(long)]
+    lmdb_path: Option<PathBuf>,
+    #[arg(long)]
+    redis_url: Option<String>,
+    #[arg(long)]
+    namespace: Option<String>
   }
 }
 
@@ -142,6 +166,39 @@ const DEFAULT_PARSER_PATTERN: &str =
   "tmp/anystyle/res/parser/*.xml";
 const DEFAULT_FINDER_PATTERN: &str =
   "tmp/anystyle/res/finder/*.ttx";
+
+#[derive(
+  Copy, Clone, Debug, ValueEnum,
+)]
+enum DictionaryAdapterArg {
+  Memory,
+  Redis,
+  Lmdb,
+  Gdbm
+}
+
+impl From<DictionaryAdapterArg>
+  for DictionaryAdapter
+{
+  fn from(
+    adapter: DictionaryAdapterArg
+  ) -> Self {
+    match adapter {
+      DictionaryAdapterArg::Memory => {
+        DictionaryAdapter::Memory
+      }
+      DictionaryAdapterArg::Redis => {
+        DictionaryAdapter::Redis
+      }
+      DictionaryAdapterArg::Lmdb => {
+        DictionaryAdapter::Lmdb
+      }
+      DictionaryAdapterArg::Gdbm => {
+        DictionaryAdapter::Gdbm
+      }
+    }
+  }
+}
 
 #[derive(Debug, Clone)]
 struct CliPaths {
@@ -378,6 +435,48 @@ pub fn run() -> anyhow::Result<()> {
         }
       };
       println!("{output}");
+    }
+    | Command::Dictionary {
+      term,
+      adapter,
+      lmdb_path,
+      redis_url,
+      namespace
+    } => {
+      let mut config =
+        DictionaryConfig::new(
+          DictionaryAdapter::from(
+            adapter
+          )
+        );
+      if let Some(path) = lmdb_path {
+        config =
+          config.with_lmdb_path(path);
+      }
+      if let Some(url) = redis_url {
+        config =
+          config.with_redis_url(url);
+      }
+      if let Some(name) = namespace {
+        config =
+          config.with_namespace(name);
+      }
+      let dictionary =
+        Dictionary::try_create(config)?;
+      let codes =
+        dictionary.lookup(&term);
+      if codes.is_empty() {
+        println!("no matches");
+      } else {
+        let labels = codes
+          .into_iter()
+          .map(|code| {
+            format!("{code:?}")
+          })
+          .collect::<Vec<_>>()
+          .join(", ");
+        println!("{labels}");
+      }
     }
   }
 
