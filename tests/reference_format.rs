@@ -145,3 +145,67 @@ fn formatter_expands_journal_abbrev() {
      abbreviations"
   );
 }
+
+#[test]
+fn formatter_expands_publisher_and_container_abbrev()
+ {
+  let publisher_text =
+    fs::read_to_string(
+      "tests/fixtures/\
+       publisher-abbrev-sample.txt"
+    )
+    .expect("publisher fixture");
+  let container_text =
+    fs::read_to_string(
+      "tests/fixtures/\
+       container-abbrev-sample.txt"
+    )
+    .expect("container fixture");
+  let config =
+    NormalizationConfig::default()
+      .with_publisher_abbrev(
+        AbbreviationMap::load_from_str(
+          &publisher_text
+        )
+      )
+      .with_container_abbrev(
+        AbbreviationMap::load_from_str(
+          &container_text
+        )
+      );
+  let formatter =
+    Format::with_normalization(config);
+
+  let mut reference = Reference::new();
+  reference.insert(
+    "publisher",
+    FieldValue::List(vec![
+      "Univ. Press".into(),
+    ])
+  );
+  reference.insert(
+    "container-title",
+    FieldValue::List(vec![
+      "Proc. Test.".into(),
+    ])
+  );
+  let csl =
+    formatter.to_csl(&[reference]);
+
+  assert!(
+    csl.contains(
+      "\"publisher\":\"University \
+       Press\""
+    ),
+    "Formatter should expand \
+     publisher abbreviations"
+  );
+  assert!(
+    csl.contains(
+      "\"container-title\":\"\
+       Proceedings of Testing\""
+    ),
+    "Formatter should expand \
+     container abbreviations"
+  );
+}

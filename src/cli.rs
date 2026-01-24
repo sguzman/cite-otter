@@ -37,6 +37,7 @@ use crate::model::{
   FinderModel,
   ParserModel
 };
+use crate::normalizer::NormalizationConfig;
 use crate::parser::{
   Parser,
   Reference,
@@ -50,17 +51,19 @@ use crate::sequence_model::SequenceModel;
 #[command(about = "Rust port of AnyStyle", long_about = None)]
 pub struct Cli {
   #[arg(long, global = true)]
-  parser_model:     Option<PathBuf>,
+  parser_model:      Option<PathBuf>,
   #[arg(long, global = true)]
-  finder_model:     Option<PathBuf>,
+  finder_model:      Option<PathBuf>,
   #[arg(long, global = true)]
-  parser_sequences: Option<PathBuf>,
+  parser_sequences:  Option<PathBuf>,
   #[arg(long, global = true)]
-  finder_sequences: Option<PathBuf>,
+  finder_sequences:  Option<PathBuf>,
   #[arg(long, global = true)]
-  report_dir:       Option<PathBuf>,
+  report_dir:        Option<PathBuf>,
+  #[arg(long, global = true)]
+  normalization_dir: Option<PathBuf>,
   #[command(subcommand)]
-  command:          Command
+  command:           Command
 }
 
 #[derive(Subcommand, Debug)]
@@ -419,7 +422,8 @@ struct DeltaReport {
 
 pub fn run() -> anyhow::Result<()> {
   let cli = Cli::parse();
-  let formatter = Format::new();
+  let formatter =
+    formatter_for_cli(&cli)?;
   let paths = CliPaths::from_cli(&cli);
 
   match cli.command {
@@ -532,7 +536,6 @@ pub fn run() -> anyhow::Result<()> {
         &SAMPLE_REFERENCES,
         format
       );
-      let formatter = Format::new();
       let output = match format {
         | ParseFormat::Json => {
           formatter.to_json(&references)
@@ -757,6 +760,24 @@ fn load_input(
     Ok(fs::read_to_string(path)?)
   } else {
     Ok(input.to_string())
+  }
+}
+
+fn formatter_for_cli(
+  cli: &Cli
+) -> anyhow::Result<Format> {
+  if let Some(dir) =
+    cli.normalization_dir.as_ref()
+  {
+    let config =
+      NormalizationConfig::load_from_dir(
+        dir
+      )?;
+    Ok(Format::with_normalization(
+      config
+    ))
+  } else {
+    Ok(Format::new())
   }
 }
 

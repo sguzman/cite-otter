@@ -5,6 +5,7 @@ use cite_otter::normalizer::container::Normalizer as ContainerNormalizer;
 use cite_otter::normalizer::journal::Normalizer as JournalNormalizer;
 use cite_otter::normalizer::location::Normalizer as LocationNormalizer;
 use cite_otter::normalizer::names::Normalizer;
+use cite_otter::normalizer::NormalizationConfig;
 use serde_json::{
   Map,
   Value
@@ -117,5 +118,67 @@ fn journal_normalizer_expands_abbreviations()
   assert_eq!(
     article_type,
     Some("article-journal")
+  );
+}
+
+#[test]
+fn normalization_config_expands_publisher_and_container()
+ {
+  let publisher_text =
+    fs::read_to_string(
+      "tests/fixtures/\
+       publisher-abbrev-sample.txt"
+    )
+    .expect("publisher fixture");
+  let container_text =
+    fs::read_to_string(
+      "tests/fixtures/\
+       container-abbrev-sample.txt"
+    )
+    .expect("container fixture");
+
+  let config =
+    NormalizationConfig::default()
+      .with_publisher_abbrev(
+        AbbreviationMap::load_from_str(
+          &publisher_text
+        )
+      )
+      .with_container_abbrev(
+        AbbreviationMap::load_from_str(
+          &container_text
+        )
+      );
+
+  let mut map = Map::new();
+  map.insert(
+    "publisher".into(),
+    Value::String("Univ. Press".into())
+  );
+  map.insert(
+    "container-title".into(),
+    Value::Array(vec![Value::String(
+      "Proc. Test.".into()
+    )])
+  );
+
+  config.apply_to_map(&mut map);
+
+  let publisher = map
+    .get("publisher")
+    .and_then(|value| value.as_str());
+  assert_eq!(
+    publisher,
+    Some("University Press")
+  );
+
+  let container = map
+    .get("container-title")
+    .and_then(|value| value.as_array())
+    .and_then(|array| array.first())
+    .and_then(|value| value.as_str());
+  assert_eq!(
+    container,
+    Some("Proceedings of Testing")
   );
 }
