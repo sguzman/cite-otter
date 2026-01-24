@@ -41,6 +41,10 @@ const PEREC_MULTI_YEAR_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995/96. p.108.";
 
+const MULTI_AUTHOR_REF: &str =
+  "Doe, J. and Smith, A. A Title. \
+   City: Pub, 2020.";
+
 const COMPLEX_REF: &str =
   "Smith, Alice. On heuristics for \
    mixing metadata. Lecture Notes in \
@@ -48,6 +52,11 @@ const COMPLEX_REF: &str =
    Testing. Edited by Doe, J. \
    (Note: Preprint release). \
    doi:10.1000/test https://example.org.";
+
+const TRANSLATOR_REF: &str =
+  "Roe, Jane. Title. Translated by \
+   Doe, J. ISBN 978-1-2345-6789-0 \
+   ISSN 1234-5678.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -150,6 +159,11 @@ fn parse_captures_collection_journal_editor_and_identifiers()
   );
   assert_list_field(
     reference,
+    "collection-number",
+    "4050"
+  );
+  assert_list_field(
+    reference,
     "journal",
     "Journal of Testing"
   );
@@ -213,6 +227,66 @@ fn parse_builds_structured_authors_for_variant_formats()
        consistently"
     );
   }
+}
+
+#[test]
+fn parse_handles_multiple_authors_with_initials()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MULTI_AUTHOR_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(authors.len(), 2);
+  assert_eq!(authors[0], Author {
+    family: "Doe".into(),
+    given:  "J".into()
+  });
+  assert_eq!(authors[1], Author {
+    family: "Smith".into(),
+    given:  "A".into()
+  });
+}
+
+#[test]
+fn parse_captures_translator_and_identifiers()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[TRANSLATOR_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "translator",
+    "Translated by Doe"
+  );
+  assert_list_field(
+    reference,
+    "isbn",
+    "978-1-2345-6789-0"
+  );
+  assert_list_field(
+    reference,
+    "issn",
+    "1234-5678"
+  );
 }
 
 #[test]

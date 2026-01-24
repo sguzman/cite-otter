@@ -97,6 +97,7 @@ struct FieldTokens {
   collection: BTreeSet<String>,
   journal:    BTreeSet<String>,
   editor:     BTreeSet<String>,
+  translator: BTreeSet<String>,
   note:       BTreeSet<String>,
   identifier: BTreeSet<String>,
   volume:     BTreeSet<String>,
@@ -149,6 +150,11 @@ impl FieldTokens {
       ),
       editor:     tokens_from_segment(
         extract_editor(reference)
+          .unwrap_or_default()
+          .as_str()
+      ),
+      translator: tokens_from_segment(
+        extract_translator(reference)
           .unwrap_or_default()
           .as_str()
       ),
@@ -252,6 +258,53 @@ fn split_references(
     .collect()
 }
 
+fn split_reference_segments(
+  reference: &str
+) -> Vec<String> {
+  let mut segments = Vec::new();
+  let mut last_start = 0usize;
+
+  for (idx, ch) in
+    reference.char_indices()
+  {
+    if ch != '.' {
+      continue;
+    }
+    let mut next_chars = reference
+      [idx + ch.len_utf8()..]
+      .chars()
+      .skip_while(|c| {
+        c.is_whitespace()
+      });
+    let next = next_chars.next();
+    let is_boundary =
+      next.map_or(true, |next_char| {
+        next_char.is_uppercase()
+          || next_char.is_ascii_digit()
+      });
+    if !is_boundary {
+      continue;
+    }
+    let segment = reference
+      [last_start..idx]
+      .trim()
+      .to_string();
+    if !segment.is_empty() {
+      segments.push(segment);
+    }
+    last_start = idx + ch.len_utf8();
+  }
+
+  let tail = reference[last_start..]
+    .trim()
+    .to_string();
+  if !tail.is_empty() {
+    segments.push(tail);
+  }
+
+  segments
+}
+
 fn tokens_from_segment(
   segment: &str
 ) -> BTreeSet<String> {
@@ -320,33 +373,97 @@ fn parse_author_chunk(
     return None;
   }
 
-  let (family, given) =
-    if trimmed.contains(',') {
-      let mut parts = trimmed
-        .split(',')
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .collect::<Vec<_>>();
-      let family =
-        parts.remove(0).to_string();
-      let given = parts.join(" ");
-      (family, given)
-    } else {
-      let tokens = trimmed
-        .split_whitespace()
-        .collect::<Vec<_>>();
-      if tokens.is_empty() {
-        return None;
+  let (family, given) = if trimmed
+    .contains(',')
+  {
+    let mut parts = trimmed
+      .split(',')
+      .map(str::trim)
+      .filter(|part| !part.is_empty())
+      .collect::<Vec<_>>();
+    let family =
+      parts.remove(0).to_string();
+    let given = parts.join(" ");
+    (family, given)
+  } else {
+    let tokens = trimmed
+      .split_whitespace()
+      .collect::<Vec<_>>();
+    if tokens.is_empty() {
+      return None;
+    }
+    let mut tokens: Vec<String> =
+      tokens
+        .iter()
+        .map(|token| {
+          (*token).to_string()
+        })
+        .collect();
+    let suffixes =
+      ["jr", "sr", "ii", "iii", "iv"];
+    let suffix = tokens
+      .last()
+      .map(|token| {
+        normalize_author_component(
+          token
+        )
+        .to_lowercase()
+      })
+      .filter(|token| {
+        suffixes
+          .contains(&token.as_str())
+      })
+      .map(|token| token);
+    if suffix.is_some() {
+      tokens.pop();
+    }
+    let family_end = tokens.len();
+    let particle_set = [
+      "da", "de", "del", "der", "den",
+      "di", "du", "la", "le", "van",
+      "von", "al", "bin", "ibn"
+    ];
+    let mut family_start = family_end;
+    for (idx, token) in
+      tokens.iter().enumerate().rev()
+    {
+      if idx + 1 != family_start {
+        break;
       }
-      let family = tokens
-        .last()
-        .unwrap()
-        .to_string();
-      let given = tokens
-        [..tokens.len() - 1]
-        .join(" ");
-      (family, given)
-    };
+      let normalized =
+        normalize_author_component(
+          token
+        )
+        .to_lowercase();
+      if normalized.is_empty() {
+        continue;
+      }
+      let is_particle = token
+        .chars()
+        .all(|c| c.is_lowercase())
+        || particle_set.contains(
+          &normalized.as_str()
+        );
+      if is_particle {
+        family_start = idx;
+      } else {
+        break;
+      }
+    }
+    if family_start == family_end {
+      family_start =
+        family_end.saturating_sub(1);
+    }
+    let family =
+      tokens[family_start..].join(" ");
+    let mut given_parts: Vec<String> =
+      tokens[..family_start].to_vec();
+    if let Some(token) = suffix {
+      given_parts.push(token);
+    }
+    let given = given_parts.join(" ");
+    (family, given)
+  };
 
   let normalized_family =
     normalize_author_component(&family);
@@ -372,7 +489,7 @@ fn authors_for_reference(
   if authors.is_empty() {
     if let Some(author) =
       parse_author_chunk(
-        extract_author_segment(
+        &extract_author_segment(
           reference
         )
       )
@@ -409,8 +526,9 @@ fn tokens_from_authors(
 ) -> BTreeSet<String> {
   let author_segment =
     extract_author_segment(reference);
-  let mut tokens =
-    tokens_from_segment(author_segment);
+  let mut tokens = tokens_from_segment(
+    &author_segment
+  );
 
   let normalized = author_segment
     .replace('&', ";")
@@ -741,12 +859,22 @@ impl Parser {
             )
           )
         );
+        let location =
+          extract_location(reference);
         mapped.insert(
           "location",
           FieldValue::List(vec![
-            extract_location(reference),
+            location.clone(),
           ])
         );
+        if !location.is_empty() {
+          mapped.insert(
+            "publisher-place",
+            FieldValue::List(vec![
+              location.clone(),
+            ])
+          );
+        }
         mapped.insert(
           "publisher",
           FieldValue::List(vec![
@@ -781,6 +909,18 @@ impl Parser {
             ])
           );
         }
+        if let Some(collection_number) =
+          extract_collection_number(
+            reference
+          )
+        {
+          mapped.insert(
+            "collection-number",
+            FieldValue::List(vec![
+              collection_number,
+            ])
+          );
+        }
 
         if let Some(journal) =
           extract_journal(reference)
@@ -804,6 +944,17 @@ impl Parser {
           );
         }
 
+        if let Some(translator) =
+          extract_translator(reference)
+        {
+          mapped.insert(
+            "translator",
+            FieldValue::List(vec![
+              translator,
+            ])
+          );
+        }
+
         if let Some(note) =
           extract_note(reference)
         {
@@ -821,9 +972,33 @@ impl Parser {
           );
         let mut doi_values = Vec::new();
         let mut url_values = Vec::new();
+        let mut isbn_values = Vec::new();
+        let mut issn_values = Vec::new();
         for identifier in identifiers {
           let lower =
             identifier.to_lowercase();
+          if lower.contains("isbn") {
+            let value =
+              clean_labeled_identifier(
+                &identifier,
+                "isbn"
+              );
+            if !value.is_empty() {
+              isbn_values.push(value);
+            }
+            continue;
+          }
+          if lower.contains("issn") {
+            let value =
+              clean_labeled_identifier(
+                &identifier,
+                "issn"
+              );
+            if !value.is_empty() {
+              issn_values.push(value);
+            }
+            continue;
+          }
           if lower.contains("doi") {
             doi_values
               .push(identifier.clone());
@@ -855,6 +1030,36 @@ impl Parser {
             "url",
             FieldValue::List(
               url_values
+            )
+          );
+        }
+        if isbn_values.is_empty() {
+          if let Some(isbn) =
+            extract_isbn(reference)
+          {
+            isbn_values.push(isbn);
+          }
+        }
+        if issn_values.is_empty() {
+          if let Some(issn) =
+            extract_issn(reference)
+          {
+            issn_values.push(issn);
+          }
+        }
+        if !isbn_values.is_empty() {
+          mapped.insert(
+            "isbn",
+            FieldValue::List(
+              isbn_values
+            )
+          );
+        }
+        if !issn_values.is_empty() {
+          mapped.insert(
+            "issn",
+            FieldValue::List(
+              issn_values
             )
           );
         }
@@ -962,30 +1167,27 @@ impl ParsedDataset {
 fn extract_title(
   reference: &str
 ) -> String {
-  reference
-    .split('.')
-    .nth(1)
-    .unwrap_or("")
-    .trim()
-    .to_string()
+  split_reference_segments(reference)
+    .get(1)
+    .map(|segment| segment.to_string())
+    .unwrap_or_default()
 }
 
 fn extract_author(
   reference: &str
 ) -> String {
   extract_author_segment(reference)
-    .trim()
-    .to_string()
 }
 
 fn extract_author_segment(
   reference: &str
-) -> &str {
-  reference
-    .split('.')
+) -> String {
+  split_reference_segments(reference)
+    .into_iter()
     .next()
-    .unwrap_or(reference)
-    .trim()
+    .unwrap_or_else(|| {
+      reference.trim().to_string()
+    })
 }
 fn resolve_type(
   reference: &str
@@ -1128,6 +1330,33 @@ fn extract_collection_title(
     .map(clean_segment)
 }
 
+fn extract_collection_number(
+  reference: &str
+) -> Option<String> {
+  let title = extract_collection_title(
+    reference
+  )?;
+  let lower_reference =
+    reference.to_lowercase();
+  let lower_title =
+    title.to_lowercase();
+  let start = lower_reference
+    .find(&lower_title)?;
+  let remainder = reference
+    .get(start + title.len()..)
+    .unwrap_or("");
+  let digits: String = remainder
+    .chars()
+    .skip_while(|c| !c.is_ascii_digit())
+    .take_while(|c| c.is_ascii_digit())
+    .collect();
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
+  }
+}
+
 fn extract_container_title(
   reference: &str
 ) -> Option<String> {
@@ -1140,9 +1369,9 @@ fn extract_container_title(
     "presented",
     "proceedings of"
   ];
-  reference
-    .split('.')
-    .map(str::trim)
+  split_reference_segments(reference)
+    .iter()
+    .map(|segment| segment.trim())
     .filter(|segment| {
       !segment.is_empty()
     })
@@ -1186,9 +1415,9 @@ fn capture_number_after(
 fn extract_journal(
   reference: &str
 ) -> Option<String> {
-  reference
-    .split('.')
-    .map(str::trim)
+  split_reference_segments(reference)
+    .iter()
+    .map(|segment| segment.trim())
     .find(|segment| {
       let lower =
         segment.to_lowercase();
@@ -1206,6 +1435,28 @@ fn extract_editor(
     "edited",
     "editor",
     "eds"
+  ];
+
+  for keyword in keywords {
+    if let Some(segment) =
+      segment_after_keyword(
+        reference, keyword
+      )
+    {
+      return Some(segment);
+    }
+  }
+
+  None
+}
+
+fn extract_translator(
+  reference: &str
+) -> Option<String> {
+  let keywords = [
+    "translated by",
+    "translator",
+    "trans."
   ];
 
   for keyword in keywords {
@@ -1275,6 +1526,8 @@ fn extract_identifiers(
       let lower = token.to_lowercase();
       lower.starts_with("doi")
         || lower.contains("doi:")
+        || lower.contains("isbn")
+        || lower.contains("issn")
         || lower.starts_with("http")
         || lower.starts_with("www")
         || lower.contains("url")
@@ -1282,6 +1535,76 @@ fn extract_identifiers(
     })
     .map(|token| token.to_string())
     .collect()
+}
+
+fn clean_labeled_identifier(
+  identifier: &str,
+  label: &str
+) -> String {
+  let lower = identifier.to_lowercase();
+  let trimmed = if let Some(pos) =
+    lower.find(label)
+  {
+    identifier[pos + label.len()..]
+      .trim()
+  } else {
+    identifier.trim()
+  };
+  trimmed
+    .chars()
+    .filter(|c| {
+      c.is_ascii_alphanumeric()
+        || *c == '-'
+    })
+    .collect::<String>()
+    .trim_matches('-')
+    .to_string()
+}
+
+fn extract_isbn(
+  reference: &str
+) -> Option<String> {
+  extract_labeled_identifier_value(
+    reference, "isbn"
+  )
+}
+
+fn extract_issn(
+  reference: &str
+) -> Option<String> {
+  extract_labeled_identifier_value(
+    reference, "issn"
+  )
+}
+
+fn extract_labeled_identifier_value(
+  reference: &str,
+  label: &str
+) -> Option<String> {
+  let lower = reference.to_lowercase();
+  let start = lower.find(label)?;
+  let remainder = reference
+    .get(start + label.len()..)
+    .unwrap_or("");
+  let value: String = remainder
+    .chars()
+    .skip_while(|c| {
+      !c.is_ascii_digit()
+        && *c != 'X'
+        && *c != 'x'
+    })
+    .take_while(|c| {
+      c.is_ascii_alphanumeric()
+        || *c == '-'
+    })
+    .collect();
+  let cleaned =
+    value.trim_matches('-').to_string();
+  if cleaned.is_empty() {
+    None
+  } else {
+    Some(cleaned)
+  }
 }
 
 fn clean_segment(
@@ -1604,6 +1927,11 @@ fn tag_token(
     &context.editor
   ) {
     "editor".into()
+  } else if matches_field(
+    &normalized,
+    &context.translator
+  ) {
+    "translator".into()
   } else if matches_field(
     &normalized,
     &context.note
