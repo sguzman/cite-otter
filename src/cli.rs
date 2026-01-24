@@ -1356,6 +1356,55 @@ mod tests {
        glob"
     );
   }
+
+  #[test]
+  fn training_errors_on_missing_dataset()
+   {
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        "target/missing-parser.xml",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_ok(),
+      "training should succeed with \
+       zero parser datasets"
+    );
+  }
+
+  #[test]
+  fn validation_errors_on_missing_dataset()
+   {
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        "target/missing-parser.xml",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_ok(),
+      "validation should succeed with \
+       zero parser datasets"
+    );
+  }
+
+  #[test]
+  fn delta_errors_on_missing_dataset() {
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      "target/missing-parser.xml",
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    assert!(
+      result.is_ok(),
+      "delta should succeed with zero \
+       parser datasets"
+    );
+  }
 }
 
 fn run_training_with_config(
