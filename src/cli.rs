@@ -198,6 +198,34 @@ enum Command {
     redis_url: Option<String>,
     #[arg(long)]
     namespace: Option<String>
+  },
+
+  /// Sync AnyStyle dictionaries into
+  /// adapters
+  #[command(name = "dictionary-sync")]
+  DictionarySync {
+    #[arg(
+      long,
+      default_value = "tmp/anystyle/\
+                       data"
+    )]
+    source_dir: PathBuf,
+    #[arg(long)]
+    pattern:    Vec<String>,
+    #[arg(
+      long,
+      value_enum,
+      default_value_t = DictionaryAdapterArg::Memory
+    )]
+    adapter:    DictionaryAdapterArg,
+    #[arg(long)]
+    gdbm_path:  Option<PathBuf>,
+    #[arg(long)]
+    lmdb_path:  Option<PathBuf>,
+    #[arg(long)]
+    redis_url:  Option<String>,
+    #[arg(long)]
+    namespace:  Option<String>
   }
 }
 
@@ -641,6 +669,75 @@ pub fn run() -> anyhow::Result<()> {
         "total imported: {total}"
       );
     }
+    | Command::DictionarySync {
+      source_dir,
+      pattern,
+      adapter,
+      gdbm_path,
+      lmdb_path,
+      redis_url,
+      namespace
+    } => {
+      let mut config =
+        DictionaryConfig::new(
+          DictionaryAdapter::from(
+            adapter
+          )
+        );
+      if let Some(path) = gdbm_path {
+        config =
+          config.with_gdbm_path(path);
+      }
+      if let Some(path) = lmdb_path {
+        config =
+          config.with_lmdb_path(path);
+      }
+      if let Some(url) = redis_url {
+        config =
+          config.with_redis_url(url);
+      }
+      if let Some(name) = namespace {
+        config =
+          config.with_namespace(name);
+      }
+      let patterns =
+        if pattern.is_empty() {
+          vec![
+            "**/*.txt".to_string(),
+            "**/*.txt.gz".to_string(),
+          ]
+        } else {
+          pattern
+        };
+      let files =
+        collect_dictionary_files(
+          &source_dir,
+          &patterns
+        )?;
+      if files.is_empty() {
+        anyhow::bail!(
+          "no dictionary files found \
+           in {}",
+          source_dir.display()
+        );
+      }
+      let mut dictionary =
+        Dictionary::try_create(config)?;
+      let mut total = 0usize;
+      for file in files {
+        let entries =
+          load_anystyle_entries(&file)?;
+        let inserted = dictionary
+          .import_entries(entries)?;
+        println!(
+          "synced {inserted} terms \
+           from {}",
+          file.display()
+        );
+        total += inserted;
+      }
+      println!("total synced: {total}");
+    }
   }
 
   Ok(())
@@ -686,6 +783,29 @@ fn load_dictionary_terms(
     }
   }
   Ok(terms)
+}
+
+fn collect_dictionary_files(
+  source_dir: &Path,
+  patterns: &[String]
+) -> anyhow::Result<Vec<PathBuf>> {
+  let mut files = Vec::new();
+  for pattern in patterns {
+    let pattern = source_dir
+      .join(pattern)
+      .to_string_lossy()
+      .to_string();
+    for entry in glob(&pattern)? {
+      if let Ok(path) = entry {
+        if path.is_file() {
+          files.push(path);
+        }
+      }
+    }
+  }
+  files.sort();
+  files.dedup();
+  Ok(files)
 }
 
 fn load_anystyle_entries(
@@ -781,6 +901,45 @@ fn is_score_token(token: &str) -> bool {
     && right
       .chars()
       .all(|c| c.is_ascii_digit())
+}
+
+#[cfg(test)]
+mod tests {
+  use std::collections::HashMap;
+
+  use super::*;
+
+  #[test]
+  fn load_anystyle_entries_reads_tagged_lines()
+   {
+    let path = Path::new(
+      "tests/fixtures/\
+       dictionary-sample.txt"
+    );
+    let entries =
+      load_anystyle_entries(path)
+        .expect("load entries");
+    let mut map =
+      HashMap::<String, u32>::new();
+    for (term, value) in entries {
+      *map.entry(term).or_insert(0) |=
+        value;
+    }
+
+    assert_eq!(
+      map.get("Italy"),
+      Some(
+        &DictionaryCode::Place.bit()
+      )
+    );
+    let nature =
+      map.get("Nature").copied();
+    let expected =
+      DictionaryCode::Journal.bit()
+        | DictionaryCode::Publisher
+          .bit();
+    assert_eq!(nature, Some(expected));
+  }
 }
 
 fn run_training_with_config(
