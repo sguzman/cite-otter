@@ -151,6 +151,8 @@ enum Command {
     )]
     adapter:   DictionaryAdapterArg,
     #[arg(long)]
+    gdbm_path: Option<PathBuf>,
+    #[arg(long)]
     lmdb_path: Option<PathBuf>,
     #[arg(long)]
     redis_url: Option<String>,
@@ -439,6 +441,7 @@ pub fn run() -> anyhow::Result<()> {
     | Command::Dictionary {
       term,
       adapter,
+      gdbm_path,
       lmdb_path,
       redis_url,
       namespace
@@ -449,6 +452,10 @@ pub fn run() -> anyhow::Result<()> {
             adapter
           )
         );
+      if let Some(path) = gdbm_path {
+        config =
+          config.with_gdbm_path(path);
+      }
       if let Some(path) = lmdb_path {
         config =
           config.with_lmdb_path(path);

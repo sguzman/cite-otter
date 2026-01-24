@@ -64,3 +64,30 @@ fn redis_backend_lookup_reads_seeded_data()
      place names"
   );
 }
+
+#[cfg(feature = "gdbm")]
+#[test]
+fn gdbm_backend_lookup_reads_seeded_data()
+ {
+  let temp_dir = tempfile::tempdir()
+    .expect("gdbm tempdir");
+  let db_path = temp_dir
+    .path()
+    .join("places.db");
+  let config = DictionaryConfig::new(
+    DictionaryAdapter::Gdbm
+  )
+  .with_gdbm_path(db_path);
+  let dictionary =
+    Dictionary::try_create(config)
+      .expect("gdbm dictionary opens");
+
+  let codes =
+    dictionary.lookup("Italy");
+  assert_eq!(
+    codes,
+    vec![DictionaryCode::Place],
+    "gdbm adapter should resolve \
+     place names"
+  );
+}

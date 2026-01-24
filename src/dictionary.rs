@@ -4,10 +4,16 @@ use std::path::{
 };
 
 use anyhow::{
+  anyhow,
   Context,
   Result
 };
 use lmdb::Transaction;
+#[cfg(feature = "gdbm")]
+use gnudbm::{
+  Error as GdbmError,
+  GdbmOpener
+};
 use redis::Commands;
 
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +35,7 @@ pub enum DictionaryCode {
 pub struct DictionaryConfig {
   adapter:   DictionaryAdapter,
   lmdb_path: Option<PathBuf>,
+  gdbm_path: Option<PathBuf>,
   redis_url: Option<String>,
   namespace: Option<String>
 }
@@ -40,6 +47,7 @@ impl DictionaryConfig {
     Self {
       adapter,
       lmdb_path: None,
+      gdbm_path: None,
       redis_url: std::env::var(
         "CITE_OTTER_REDIS_URL"
       )
@@ -56,6 +64,14 @@ impl DictionaryConfig {
     path: impl Into<PathBuf>
   ) -> Self {
     self.lmdb_path = Some(path.into());
+    self
+  }
+
+  pub fn with_gdbm_path(
+    mut self,
+    path: impl Into<PathBuf>
+  ) -> Self {
+    self.gdbm_path = Some(path.into());
     self
   }
 
@@ -84,18 +100,22 @@ impl DictionaryConfig {
         DictionaryBackend::Memory
       }
       | DictionaryAdapter::Gdbm => {
-        DictionaryBackend::Memory
+        let path =
+          resolve_backend_path(
+            self.gdbm_path.as_ref(),
+            "gdbm",
+            "places.db"
+          );
+        DictionaryBackend::Gdbm(
+          GdbmBackend::open(&path)?
+        )
       }
       | DictionaryAdapter::Lmdb => {
-        let path = self
-          .lmdb_path
-          .as_ref()
-          .cloned()
-          .unwrap_or_else(|| {
-            Path::new("target")
-              .join("dictionaries")
-              .join("lmdb")
-          });
+        let path = resolve_backend_path(
+          self.lmdb_path.as_ref(),
+          "lmdb",
+          ""
+        );
         DictionaryBackend::Lmdb(
           LmdbBackend::open(&path)?
         )
@@ -191,6 +211,7 @@ impl Dictionary {
 #[derive(Debug)]
 enum DictionaryBackend {
   Memory,
+  Gdbm(GdbmBackend),
   Lmdb(LmdbBackend),
   Redis(RedisBackend)
 }
@@ -207,6 +228,9 @@ impl DictionaryBackend {
             .iter()
             .any(|&name| term == name)
         })
+      }
+      | Self::Gdbm(backend) => {
+        backend.contains_any(terms)
       }
       | Self::Lmdb(backend) => {
         backend.contains_any(terms)
@@ -278,6 +302,70 @@ impl LmdbBackend {
         return true;
       }
     }
+    false
+  }
+}
+
+#[cfg(feature = "gdbm")]
+#[derive(Debug)]
+struct GdbmBackend {
+  handle: gnudbm::RwHandle
+}
+
+#[cfg(feature = "gdbm")]
+impl GdbmBackend {
+  fn open(path: &Path) -> Result<Self> {
+    if let Some(parent) = path.parent() {
+      std::fs::create_dir_all(parent)?;
+    }
+    let handle = GdbmOpener::new()
+      .create(true)
+      .readwrite(path)
+      .context("open gdbm database")?;
+    let mut backend = Self { handle };
+    backend.seed_places()?;
+    Ok(backend)
+  }
+
+  fn seed_places(&mut self) -> Result<()> {
+    for place in PLACE_NAMES {
+      let _ = self.handle.store(place, &1u8);
+    }
+    Ok(())
+  }
+
+  fn contains_any(
+    &self,
+    terms: &[String]
+  ) -> bool {
+    for term in terms {
+      match self.handle.fetch(term) {
+        Ok(_) => return true,
+        Err(GdbmError::NoRecord) => {}
+        Err(_) => return false
+      }
+    }
+    false
+  }
+}
+
+#[cfg(not(feature = "gdbm"))]
+#[derive(Debug)]
+struct GdbmBackend;
+
+#[cfg(not(feature = "gdbm"))]
+impl GdbmBackend {
+  fn open(_path: &Path) -> Result<Self> {
+    Err(anyhow!(
+      "gdbm support not enabled; \
+       recompile with --features gdbm"
+    ))
+  }
+
+  fn contains_any(
+    &self,
+    _terms: &[String]
+  ) -> bool {
     false
   }
 }
@@ -370,6 +458,27 @@ fn normalized_terms(
     .filter(|item| !item.is_empty())
     .map(|item| item.to_string())
     .collect()
+}
+
+fn resolve_backend_path(
+  candidate: Option<&PathBuf>,
+  default_dir: &str,
+  default_file: &str
+) -> PathBuf {
+  let base = candidate
+    .cloned()
+    .unwrap_or_else(|| {
+      Path::new("target")
+        .join("dictionaries")
+        .join(default_dir)
+    });
+  if base.extension().is_some()
+    || default_file.is_empty()
+  {
+    base
+  } else {
+    base.join(default_file)
+  }
 }
 
 static PLACE_NAMES: &[&str] =
