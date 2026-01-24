@@ -63,6 +63,11 @@ fn training_validation_delta_flow_runs()
       .expect(
         "training report should parse"
       );
+  assert_report_keys(
+    &training_json,
+    &["parser", "finder", "samples"],
+    "training report"
+  );
   assert!(
     training_json
       .get("parser")
@@ -79,6 +84,11 @@ fn training_validation_delta_flow_runs()
         "validation report should \
          parse"
       );
+  assert_report_keys(
+    &validation_json,
+    &["parser", "finder"],
+    "validation report"
+  );
   assert!(
     validation_json
       .get("parser")
@@ -94,6 +104,11 @@ fn training_validation_delta_flow_runs()
       .expect(
         "delta report should parse"
       );
+  assert_report_keys(
+    &delta_json,
+    &["comparisons"],
+    "delta report"
+  );
   assert!(
     delta_json
       .get("comparisons")
@@ -264,6 +279,11 @@ fn training_validation_delta_flow_runs()
         .unwrap_or(false),
       "sample outputs should be \
        non-empty"
+    );
+    assert_report_keys(
+      entry,
+      &["format", "output"],
+      "sample entry"
     );
   }
 
@@ -577,6 +597,27 @@ fn find_dataset_entry<'a>(
       })
       .unwrap_or(false)
   })
+}
+
+fn assert_report_keys(
+  value: &Value,
+  expected: &[&str],
+  label: &str
+) {
+  let obj = value
+    .as_object()
+    .unwrap_or_else(|| {
+      panic!(
+        "{label} should be a JSON \
+         object"
+      )
+    });
+  for key in expected {
+    assert!(
+      obj.contains_key(*key),
+      "{label} should include {key}"
+    );
+  }
 }
 
 fn model_file(name: &str) -> PathBuf {
