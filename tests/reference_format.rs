@@ -13,6 +13,8 @@ use cite_otter::parser::{
   Parser,
   Reference
 };
+mod support;
+use support::assert_snapshot_eq;
 
 const PEREC_REF: &str =
   "Perec, Georges. A Void. London: \
@@ -599,9 +601,10 @@ fn format_outputs_match_parity_snapshots()
     "tests/fixtures/format/csl.txt"
   )
   .expect("read expected CSL");
-  assert_eq!(
-    csl_output.trim_end(),
-    expected_csl.trim_end()
+  assert_snapshot_eq(
+    "sample csl",
+    &csl_output,
+    &expected_csl
   );
 
   let bibtex_output =
@@ -611,9 +614,10 @@ fn format_outputs_match_parity_snapshots()
       "tests/fixtures/format/bibtex.txt"
     )
     .expect("read expected BibTeX");
-  assert_eq!(
-    bibtex_output.trim_end(),
-    expected_bibtex.trim_end()
+  assert_snapshot_eq(
+    "sample bibtex",
+    &bibtex_output,
+    &expected_bibtex
   );
 }
 
@@ -649,9 +653,10 @@ fn format_core_outputs_match_snapshots()
     "tests/fixtures/format/core-csl.txt"
   )
   .expect("read core CSL");
-  assert_eq!(
-    csl_output.trim_end(),
-    expected_csl.trim_end()
+  assert_snapshot_eq(
+    "core csl",
+    &csl_output,
+    &expected_csl
   );
 
   let bibtex_output =
@@ -661,8 +666,9 @@ fn format_core_outputs_match_snapshots()
       "tests/fixtures/format/core-bibtex.txt"
     )
     .expect("read core BibTeX");
-  assert_eq!(
-    bibtex_output.trim_end(),
-    expected_bibtex.trim_end()
+  assert_snapshot_eq(
+    "core bibtex",
+    &bibtex_output,
+    &expected_bibtex
   );
 }

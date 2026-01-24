@@ -84,6 +84,10 @@ test:
 doc:
 	cargo doc --no-deps
 
+# Data
+sync-normalization:
+	scripts/sync_normalization_any.sh
+
 # Security (Rust)
 audit:
 	cargo audit

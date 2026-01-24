@@ -13,9 +13,16 @@ const OUT_DIR: &str = "tests/fixtures/format";
 const LIMIT: usize = 100;
 
 fn main() -> anyhow::Result<()> {
+  let limit = std::env::var(
+    "CITE_OTTER_CORE_LIMIT"
+  )
+  .ok()
+  .and_then(|value| value.parse().ok())
+  .unwrap_or(LIMIT);
+
   let refs = extract_core_refs(
     Path::new(CORE_XML),
-    LIMIT
+    limit
   )?;
   if refs.is_empty() {
     anyhow::bail!(
