@@ -242,13 +242,15 @@ enum Command {
       default_value = "tmp/anystyle/\
                        data"
     )]
-    source_dir: PathBuf,
+    source_dir:  PathBuf,
     #[arg(long)]
-    repo:       Option<String>,
+    repo:        Option<String>,
     #[arg(long)]
-    pattern:    Vec<String>,
+    repo_subdir: Option<PathBuf>,
     #[arg(long)]
-    output_dir: Option<PathBuf>
+    pattern:     Vec<String>,
+    #[arg(long)]
+    output_dir:  Option<PathBuf>
   }
 }
 
@@ -762,6 +764,7 @@ pub fn run() -> anyhow::Result<()> {
     | Command::NormalizationSync {
       source_dir,
       repo,
+      repo_subdir,
       pattern,
       output_dir
     } => {
@@ -790,7 +793,8 @@ pub fn run() -> anyhow::Result<()> {
       let source =
         if let Some(repo) = repo {
           resolve_normalization_source(
-            &repo
+            &repo,
+            repo_subdir.as_ref()
           )?
         } else {
           source_dir
@@ -921,18 +925,25 @@ fn collect_normalization_files(
 }
 
 fn resolve_normalization_source(
-  repo: &str
+  repo: &str,
+  repo_subdir: Option<&PathBuf>
 ) -> anyhow::Result<PathBuf> {
   let path = Path::new(repo);
   if path.exists() {
-    return Ok(path.to_path_buf());
+    return resolve_normalization_subdir(
+      path,
+      repo_subdir
+    );
   }
 
   let target = Path::new("target")
     .join("normalization")
     .join("repo");
   if target.exists() {
-    return Ok(target);
+    return resolve_normalization_subdir(
+      &target,
+      repo_subdir
+    );
   }
 
   let status =
@@ -952,7 +963,28 @@ fn resolve_normalization_source(
       "git clone failed for {repo}"
     );
   }
-  Ok(target)
+  resolve_normalization_subdir(
+    &target,
+    repo_subdir
+  )
+}
+
+fn resolve_normalization_subdir(
+  repo_root: &Path,
+  repo_subdir: Option<&PathBuf>
+) -> anyhow::Result<PathBuf> {
+  let Some(subdir) = repo_subdir else {
+    return Ok(repo_root.to_path_buf());
+  };
+  let resolved = repo_root.join(subdir);
+  if !resolved.exists() {
+    anyhow::bail!(
+      "normalization subdir not \
+       found: {}",
+      resolved.display()
+    );
+  }
+  Ok(resolved)
 }
 
 fn sync_normalization_files(
@@ -1178,10 +1210,41 @@ mod tests {
       resolve_normalization_source(
         source
           .to_string_lossy()
-          .as_ref()
+          .as_ref(),
+        None
       )
       .expect("resolve repo path");
     assert_eq!(resolved, source);
+  }
+
+  #[test]
+  fn normalization_sync_accepts_repo_subdir()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("repo");
+    let subdir = source.join("assets");
+    fs::create_dir_all(&subdir)
+      .expect("create repo dir");
+
+    let journal =
+      subdir.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let resolved =
+      resolve_normalization_source(
+        source
+          .to_string_lossy()
+          .as_ref(),
+        Some(&PathBuf::from("assets"))
+      )
+      .expect("resolve repo path");
+    assert_eq!(resolved, subdir);
   }
 
   #[test]
@@ -1229,7 +1292,8 @@ mod tests {
       resolve_normalization_source(
         remote_repo
           .to_string_lossy()
-          .as_ref()
+          .as_ref(),
+        None
       )
       .expect("clone repo");
     assert!(cloned.exists());
