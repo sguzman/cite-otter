@@ -40,6 +40,10 @@ const PEREC_REF_NO_COMMA: &str =
 const PEREC_MULTI_YEAR_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995/96. p.108.";
+const DATE_RANGE_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, 1995-04-02. pp. \
+   12-34.";
 
 const MULTI_AUTHOR_REF: &str =
   "Doe, J. and Smith, A. A Title. \
@@ -504,6 +508,43 @@ fn parse_prefers_first_year_in_multi_year_tokens()
     date_values, &expected,
     "Parser should normalize the \
      multi-year range"
+  );
+}
+
+#[test]
+fn parse_captures_page_ranges_and_date_parts()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[DATE_RANGE_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference, "pages", "12-34"
+  );
+
+  let date_values =
+    match reference.get("date") {
+      | Some(FieldValue::List(
+        values
+      )) => values,
+      | other => {
+        panic!(
+          "Expected list of date \
+           values, got {other:?}"
+        )
+      }
+    };
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string(),
+      "02".to_string()
+    ],
+    "Parser should capture date parts"
   );
 }
 

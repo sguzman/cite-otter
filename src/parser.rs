@@ -588,13 +588,23 @@ fn capture_year_like(
 fn collect_year_tokens(
   reference: &str
 ) -> Vec<String> {
-  let mut tokens = Vec::new();
+  let mut tokens =
+    collect_numeric_date_parts(
+      reference
+    );
+  let date_parts_found =
+    !tokens.is_empty();
   let mut previous: Option<String> =
     None;
 
   for (candidate, allow_short) in
     capture_year_like(reference)
   {
+    if date_parts_found
+      && candidate.len() < 4
+    {
+      continue;
+    }
     if let Some(year) =
       normalize_year_candidate(
         &candidate,
@@ -608,11 +618,78 @@ fn collect_year_tokens(
         continue;
       }
       previous = Some(year.clone());
-      tokens.push(year);
+      if !tokens.contains(&year) {
+        tokens.push(year);
+      }
     }
   }
 
   tokens
+}
+
+fn collect_numeric_date_parts(
+  reference: &str
+) -> Vec<String> {
+  let mut parts = Vec::new();
+  let separators = ['-', '/', '.'];
+  for token in
+    reference.split_whitespace()
+  {
+    let trimmed =
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+          && !separators.contains(&c)
+      });
+    if trimmed.is_empty() {
+      continue;
+    }
+    if separators
+      .iter()
+      .any(|sep| trimmed.contains(*sep))
+    {
+      let pieces = trimmed
+        .split(|c: char| {
+          !c.is_ascii_digit()
+        })
+        .filter(|piece| {
+          !piece.is_empty()
+        })
+        .collect::<Vec<_>>();
+      if pieces.len() >= 3 {
+        for (idx, piece) in
+          pieces.iter().enumerate()
+        {
+          let normalized =
+            normalize_date_part(
+              piece,
+              idx == 0
+            );
+          if !normalized.is_empty() {
+            parts.push(normalized);
+          }
+        }
+        break;
+      }
+    }
+  }
+  parts
+}
+
+fn normalize_date_part(
+  piece: &str,
+  is_year: bool
+) -> String {
+  if is_year {
+    normalize_year_candidate(
+      piece, None, false
+    )
+    .unwrap_or_default()
+  } else {
+    piece
+      .chars()
+      .filter(|c| c.is_ascii_digit())
+      .collect::<String>()
+  }
 }
 
 fn normalize_year_candidate(
@@ -1263,6 +1340,28 @@ fn extract_publisher(
 fn extract_pages(
   reference: &str
 ) -> String {
+  let lower = reference.to_lowercase();
+  if let Some(pos) = lower.find("pp.") {
+    return capture_page_range(
+      reference,
+      pos + 3
+    )
+    .unwrap_or_default();
+  }
+  if let Some(pos) = lower.find("p.") {
+    return capture_page_range(
+      reference,
+      pos + 2
+    )
+    .unwrap_or_default();
+  }
+
+  if let Some(range) =
+    capture_page_range(reference, 0)
+  {
+    return range;
+  }
+
   reference
     .split_whitespace()
     .find(|token| {
@@ -1277,6 +1376,61 @@ fn extract_pages(
         .collect::<String>()
     })
     .unwrap_or_default()
+}
+
+fn capture_page_range(
+  reference: &str,
+  start: usize
+) -> Option<String> {
+  let segment =
+    reference.get(start..)?;
+  let mut digits = Vec::new();
+  let mut current = String::new();
+  let mut saw_separator = false;
+  for ch in segment.chars() {
+    if ch.is_ascii_digit() {
+      current.push(ch);
+      continue;
+    }
+    if ch == '-'
+      || ch == '–'
+      || ch == '—'
+    {
+      if !current.is_empty() {
+        digits.push(current.clone());
+        current.clear();
+        saw_separator = true;
+      }
+      continue;
+    }
+    if !current.is_empty() {
+      digits.push(current.clone());
+      current.clear();
+    }
+    if saw_separator
+      || digits.len() >= 2
+    {
+      break;
+    }
+    if !digits.is_empty()
+      && ch.is_whitespace()
+    {
+      continue;
+    }
+  }
+  if !current.is_empty() {
+    digits.push(current);
+  }
+  if digits.is_empty() {
+    return None;
+  }
+  if digits.len() == 1 {
+    return Some(digits[0].clone());
+  }
+  Some(format!(
+    "{}-{}",
+    digits[0], digits[1]
+  ))
 }
 
 fn extract_collection_title(
