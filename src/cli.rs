@@ -2,6 +2,7 @@ use std::fs::{
   self,
   File
 };
+use std::io::Read;
 use std::path::{
   Path,
   PathBuf
@@ -36,8 +37,18 @@ use crate::sequence_model::SequenceModel;
 #[command(name = "cite-otter")]
 #[command(about = "Rust port of AnyStyle", long_about = None)]
 pub struct Cli {
+  #[arg(long, global = true)]
+  parser_model:     Option<PathBuf>,
+  #[arg(long, global = true)]
+  finder_model:     Option<PathBuf>,
+  #[arg(long, global = true)]
+  parser_sequences: Option<PathBuf>,
+  #[arg(long, global = true)]
+  finder_sequences: Option<PathBuf>,
+  #[arg(long, global = true)]
+  report_dir:       Option<PathBuf>,
   #[command(subcommand)]
-  command: Command
+  command:          Command
 }
 
 #[derive(Subcommand, Debug)]
@@ -60,17 +71,57 @@ enum Command {
   /// document
   Find {
     /// Path or inline text to scan
-    input: String
+    input:         String,
+    #[arg(
+      short,
+      long,
+      default_value_t = ParseFormat::Json,
+      value_enum
+    )]
+    output_format: ParseFormat
   },
 
   /// Train models
-  Train,
+  Train {
+    #[arg(
+      long,
+      default_value = DEFAULT_PARSER_PATTERN
+    )]
+    parser_dataset: String,
+    #[arg(
+      long,
+      default_value = DEFAULT_FINDER_PATTERN
+    )]
+    finder_dataset: String
+  },
 
   /// Check datasets
-  Check,
+  Check {
+    #[arg(
+      long,
+      default_value = DEFAULT_PARSER_PATTERN
+    )]
+    parser_dataset: String,
+    #[arg(
+      long,
+      default_value = DEFAULT_FINDER_PATTERN
+    )]
+    finder_dataset: String
+  },
 
   /// Produce delta outputs
-  Delta,
+  Delta {
+    #[arg(
+      long,
+      default_value = DEFAULT_PARSER_PATTERN
+    )]
+    parser_dataset: String,
+    #[arg(
+      long,
+      default_value = DEFAULT_FINDER_PATTERN
+    )]
+    finder_dataset: String
+  },
 
   /// Output sample parse results
   Sample {
@@ -87,6 +138,75 @@ enum Command {
 const REPORT_DIR: &str =
   "target/reports";
 const MODEL_DIR: &str = "target/models";
+const DEFAULT_PARSER_PATTERN: &str =
+  "tmp/anystyle/res/parser/*.xml";
+const DEFAULT_FINDER_PATTERN: &str =
+  "tmp/anystyle/res/finder/*.ttx";
+
+#[derive(Debug, Clone)]
+struct CliPaths {
+  parser_model:     PathBuf,
+  finder_model:     PathBuf,
+  parser_sequences: PathBuf,
+  finder_sequences: PathBuf,
+  report_dir:       PathBuf
+}
+
+impl Default for CliPaths {
+  fn default() -> Self {
+    Self {
+      parser_model:     model_path(
+        "parser-model.json"
+      ),
+      finder_model:     model_path(
+        "finder-model.json"
+      ),
+      parser_sequences: model_path(
+        "parser-sequences.json"
+      ),
+      finder_sequences: model_path(
+        "finder-sequences.json"
+      ),
+      report_dir:       Path::new(
+        REPORT_DIR
+      )
+      .to_path_buf()
+    }
+  }
+}
+
+impl CliPaths {
+  fn from_cli(cli: &Cli) -> Self {
+    let mut paths = Self::default();
+    if let Some(path) =
+      &cli.parser_model
+    {
+      paths.parser_model = path.clone();
+    }
+    if let Some(path) =
+      &cli.finder_model
+    {
+      paths.finder_model = path.clone();
+    }
+    if let Some(path) =
+      &cli.parser_sequences
+    {
+      paths.parser_sequences =
+        path.clone();
+    }
+    if let Some(path) =
+      &cli.finder_sequences
+    {
+      paths.finder_sequences =
+        path.clone();
+    }
+    if let Some(path) = &cli.report_dir
+    {
+      paths.report_dir = path.clone();
+    }
+    paths
+  }
+}
 
 #[derive(Clone, Serialize)]
 struct DatasetStat {
@@ -132,6 +252,7 @@ struct DeltaReport {
 pub fn run() -> anyhow::Result<()> {
   let cli = Cli::parse();
   let formatter = Format::new();
+  let paths = CliPaths::from_cli(&cli);
 
   match cli.command {
     | Command::Parse {
@@ -159,14 +280,13 @@ pub fn run() -> anyhow::Result<()> {
       println!("{output}");
     }
     | Command::Find {
-      input
+      input,
+      output_format
     } => {
       let text = load_input(&input)?;
       let signatures =
         SequenceModel::load(
-          &model_path(
-            "finder-sequences.json"
-          )
+          &paths.finder_sequences
         )?;
       let finder =
         Finder::with_signatures(
@@ -189,22 +309,52 @@ pub fn run() -> anyhow::Result<()> {
           .collect::<Vec<_>>();
         let parsed = parser.parse(
           &references,
-          ParseFormat::Json
+          output_format
         );
-        println!(
-          "{}",
-          formatter.to_json(&parsed)
-        );
+        let output = match output_format
+        {
+          | ParseFormat::Json => {
+            formatter.to_json(&parsed)
+          }
+          | ParseFormat::BibTeX => {
+            formatter.to_bibtex(&parsed)
+          }
+          | ParseFormat::Csl => {
+            formatter.to_csl(&parsed)
+          }
+        };
+        println!("{output}",);
       }
     }
-    | Command::Train => {
-      run_training()?;
+    | Command::Train {
+      parser_dataset,
+      finder_dataset
+    } => {
+      run_training_with_config(
+        &parser_dataset,
+        &finder_dataset,
+        &paths
+      )?;
     }
-    | Command::Check => {
-      run_validation()?;
+    | Command::Check {
+      parser_dataset,
+      finder_dataset
+    } => {
+      run_validation_with_config(
+        &parser_dataset,
+        &finder_dataset,
+        &paths
+      )?;
     }
-    | Command::Delta => {
-      run_delta()?;
+    | Command::Delta {
+      parser_dataset,
+      finder_dataset
+    } => {
+      run_delta_with_config(
+        &parser_dataset,
+        &finder_dataset,
+        &paths
+      )?;
     }
     | Command::Sample {
       format
@@ -237,6 +387,12 @@ pub fn run() -> anyhow::Result<()> {
 fn load_input(
   input: &str
 ) -> anyhow::Result<String> {
+  if input == "-" {
+    let mut buffer = String::new();
+    std::io::stdin()
+      .read_to_string(&mut buffer)?;
+    return Ok(buffer);
+  }
   let path = Path::new(input);
   if path.exists() {
     Ok(fs::read_to_string(path)?)
@@ -245,14 +401,15 @@ fn load_input(
   }
 }
 
-fn run_training() -> anyhow::Result<()>
-{
-  let parser_files = collect_files(
-    "tmp/anystyle/res/parser/*.xml"
-  )?;
-  let finder_files = collect_files(
-    "tmp/anystyle/res/finder/*.ttx"
-  )?;
+fn run_training_with_config(
+  parser_pattern: &str,
+  finder_pattern: &str,
+  paths: &CliPaths
+) -> anyhow::Result<()> {
+  let parser_files =
+    collect_files(parser_pattern)?;
+  let finder_files =
+    collect_files(finder_pattern)?;
 
   let parser_pairs =
     gather_parser_stats(&parser_files)?;
@@ -269,7 +426,7 @@ fn run_training() -> anyhow::Result<()>
     )?;
 
   let parser_model_path =
-    model_path("parser-model.json");
+    paths.parser_model.clone();
   let mut parser_model =
     ParserModel::load(
       &parser_model_path
@@ -282,7 +439,7 @@ fn run_training() -> anyhow::Result<()>
     .save(&parser_model_path)?;
 
   let finder_model_path =
-    model_path("finder-model.json");
+    paths.finder_model.clone();
   let mut finder_model =
     FinderModel::load(
       &finder_model_path
@@ -295,23 +452,20 @@ fn run_training() -> anyhow::Result<()>
     .save(&finder_model_path)?;
 
   let mut parser_signature_model =
-    SequenceModel::load(&model_path(
-      "parser-sequences.json"
-    ))?;
+    SequenceModel::load(
+      &paths.parser_sequences
+    )?;
   for signature in parser_signatures {
     parser_signature_model
       .record(signature);
   }
-  parser_signature_model.save(
-    &model_path(
-      "parser-sequences.json"
-    )
-  )?;
+  parser_signature_model
+    .save(&paths.parser_sequences)?;
 
   let mut finder_signature_model =
-    SequenceModel::load(&model_path(
-      "finder-sequences.json"
-    ))?;
+    SequenceModel::load(
+      &paths.finder_sequences
+    )?;
   for (_, signatures) in
     finder_signatures
   {
@@ -320,11 +474,8 @@ fn run_training() -> anyhow::Result<()>
         .record(signature);
     }
   }
-  finder_signature_model.save(
-    &model_path(
-      "finder-sequences.json"
-    )
-  )?;
+  finder_signature_model
+    .save(&paths.finder_sequences)?;
 
   let sample_outputs =
     collect_sample_outputs();
@@ -336,8 +487,10 @@ fn run_training() -> anyhow::Result<()>
     finder_files.len()
   );
   persist_report(
-    Path::new(REPORT_DIR)
-      .join("training-report.json"),
+    report_path(
+      &paths.report_dir,
+      "training-report.json"
+    ),
     &TrainingReport {
       parser:  parser_pairs
         .iter()
@@ -353,25 +506,35 @@ fn run_training() -> anyhow::Result<()>
   Ok(())
 }
 
+fn run_training() -> anyhow::Result<()>
+{
+  run_training_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &CliPaths::default()
+  )
+}
+
 pub fn training_report()
 -> anyhow::Result<()> {
   run_training()
 }
 
-fn run_validation() -> anyhow::Result<()>
-{
-  let parser_files = collect_files(
-    "tmp/anystyle/res/parser/*.xml"
-  )?;
-  let finder_files = collect_files(
-    "tmp/anystyle/res/finder/*.ttx"
-  )?;
+fn run_validation_with_config(
+  parser_pattern: &str,
+  finder_pattern: &str,
+  paths: &CliPaths
+) -> anyhow::Result<()> {
+  let parser_files =
+    collect_files(parser_pattern)?;
+  let finder_files =
+    collect_files(finder_pattern)?;
   let parser_stats =
     gather_parser_stats(&parser_files)?;
   let finder_stats =
     gather_finder_stats(&finder_files)?;
   let parser_model_path =
-    model_path("parser-model.json");
+    paths.parser_model.clone();
   let parser_model = ParserModel::load(
     &parser_model_path
   )?;
@@ -390,7 +553,7 @@ fn run_validation() -> anyhow::Result<()>
     }
   }
   let finder_model_path =
-    model_path("finder-model.json");
+    paths.finder_model.clone();
   let finder_model = FinderModel::load(
     &finder_model_path
   )?;
@@ -410,8 +573,10 @@ fn run_validation() -> anyhow::Result<()>
   }
 
   persist_report(
-    Path::new(REPORT_DIR)
-      .join("validation-report.json"),
+    report_path(
+      &paths.report_dir,
+      "validation-report.json"
+    ),
     &ValidationReport {
       parser: parser_stats
         .iter()
@@ -434,17 +599,29 @@ fn run_validation() -> anyhow::Result<()>
   Ok(())
 }
 
+fn run_validation() -> anyhow::Result<()>
+{
+  run_validation_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &CliPaths::default()
+  )
+}
+
 pub fn validation_report()
 -> anyhow::Result<()> {
   run_validation()
 }
 
-fn run_delta() -> anyhow::Result<()> {
-  let parser_files = collect_files(
-    "tmp/anystyle/res/parser/*.xml"
-  )?;
+fn run_delta_with_config(
+  parser_pattern: &str,
+  finder_pattern: &str,
+  paths: &CliPaths
+) -> anyhow::Result<()> {
+  let parser_files =
+    collect_files(parser_pattern)?;
   let parser_model_path =
-    model_path("parser-model.json");
+    paths.parser_model.clone();
   let mut delta_entries =
     parser_files
       .iter()
@@ -477,11 +654,10 @@ fn run_delta() -> anyhow::Result<()> {
       })
       .collect::<Result<Vec<_>, anyhow::Error>>()?;
 
-  let finder_files = collect_files(
-    "tmp/anystyle/res/finder/*.ttx"
-  )?;
+  let finder_files =
+    collect_files(finder_pattern)?;
   let finder_model_path =
-    model_path("finder-model.json");
+    paths.finder_model.clone();
   let finder_model = FinderModel::load(
     &finder_model_path
   )?;
@@ -513,8 +689,10 @@ fn run_delta() -> anyhow::Result<()> {
   delta_entries.extend(finder_entries);
 
   persist_report(
-    Path::new(REPORT_DIR)
-      .join("delta-report.json"),
+    report_path(
+      &paths.report_dir,
+      "delta-report.json"
+    ),
     &DeltaReport {
       comparisons: delta_entries
     }
@@ -527,6 +705,14 @@ fn run_delta() -> anyhow::Result<()> {
     finder_files.len()
   );
   Ok(())
+}
+
+fn run_delta() -> anyhow::Result<()> {
+  run_delta_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &CliPaths::default()
+  )
 }
 
 pub fn delta_report()
@@ -590,7 +776,9 @@ fn persist_report(
   path: PathBuf,
   value: &impl Serialize
 ) -> anyhow::Result<()> {
-  fs::create_dir_all(REPORT_DIR)?;
+  if let Some(parent) = path.parent() {
+    fs::create_dir_all(parent)?;
+  }
   let file = File::create(&path)?;
   to_writer_pretty(file, value)?;
   Ok(())
@@ -717,6 +905,13 @@ fn model_path(
   filename: &str
 ) -> PathBuf {
   Path::new(MODEL_DIR).join(filename)
+}
+
+fn report_path(
+  report_dir: &Path,
+  filename: &str
+) -> PathBuf {
+  report_dir.join(filename)
 }
 
 const SAMPLE_REFERENCES: [&str; 2] = [
