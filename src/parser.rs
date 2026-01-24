@@ -975,6 +975,9 @@ fn date_segment_score(
   if segment_has_page_marker(segment) {
     score -= 3;
   }
+  if segment_has_page_range(segment) {
+    score -= 2;
+  }
   if segment_has_volume_marker(segment) {
     score -= 1;
   }
@@ -1028,6 +1031,14 @@ fn segment_has_volume_marker(
     || lower.contains("no.")
     || lower.contains("issue")
     || lower.contains("number")
+}
+
+fn segment_has_page_range(
+  segment: &str
+) -> bool {
+  segment
+    .split_whitespace()
+    .any(|token| parse_page_range_token(token).is_some())
 }
 
 fn is_page_marker(
@@ -1837,6 +1848,17 @@ fn extract_title(
     {
       candidate = title;
     }
+  } else if author_index == 0
+    && segments[0].contains(',')
+    && segment_has_year(&segments[0])
+  {
+    if let Some(title) =
+      title_from_first_segment(
+        &segments[0]
+      )
+    {
+      candidate = title;
+    }
   }
   clean_title_segment(&candidate)
 }
@@ -1906,6 +1928,9 @@ fn author_segment_score(
     return i32::MIN;
   }
   let mut score = 0;
+  if segment_is_container(trimmed) {
+    score -= 4;
+  }
   if trimmed
     .chars()
     .next()
@@ -1933,6 +1958,8 @@ fn author_segment_score(
   }
   if trimmed.split_whitespace().count() <= 6 {
     score += 1;
+  } else if trimmed.split_whitespace().count() >= 10 {
+    score -= 2;
   }
   if trimmed
     .split_whitespace()
@@ -2316,6 +2343,9 @@ fn extract_pages(
     )
     .unwrap_or_default();
   }
+  if let Some(range) = find_page_range(reference) {
+    return range;
+  }
 
   reference
     .split_whitespace()
@@ -2331,6 +2361,57 @@ fn extract_pages(
         .collect::<String>()
     })
     .unwrap_or_default()
+}
+
+fn find_page_range(
+  reference: &str
+) -> Option<String> {
+  for token in reference.split_whitespace() {
+    if let Some(range) = parse_page_range_token(token) {
+      return Some(range);
+    }
+  }
+  None
+}
+
+fn parse_page_range_token(
+  token: &str
+) -> Option<String> {
+  let cleaned: String = token
+    .chars()
+    .filter(|c| {
+      c.is_ascii_digit()
+        || matches!(c, '-' | '–' | '—')
+    })
+    .collect();
+  if !cleaned.contains('-')
+    && !cleaned.contains('–')
+    && !cleaned.contains('—')
+  {
+    return None;
+  }
+  let parts = cleaned
+    .split(|c| c == '-' || c == '–' || c == '—')
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.len() != 2 {
+    return None;
+  }
+  let left = parts[0];
+  let right = parts[1];
+  if left.len() < 2 || right.len() < 2 {
+    return None;
+  }
+  if left.len() == 4 && right.len() <= 2 {
+    return None;
+  }
+  if left.len() == 4 && right.len() == 4 {
+    return None;
+  }
+  if left.len() < 3 && right.len() < 3 {
+    return None;
+  }
+  Some(format!("{left}-{right}"))
 }
 
 fn capture_page_range(

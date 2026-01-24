@@ -1313,6 +1313,7 @@ fn parse_prefers_journal_type_for_proceedings() {
     "journal",
     "Proceedings of the IEEE"
   );
+  assert_list_field(reference, "pages", "81-98");
   match reference.get("type") {
     | Some(FieldValue::Single(value)) => {
       assert_eq!(

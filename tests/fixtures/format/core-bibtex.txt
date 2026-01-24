@@ -1,14 +1,14 @@
 @book{heidegger1927a,
   author = {Heidegger, M.},
-  title = {1986, Paris. 1986, Paris},
+  title = {Être et temps},
   edition = {1986},
   date = {1927},
   address = {Paris}
 }
-@inproceedings{brainology2011a,
-  author = {Brainology in the classroom An online growth mindset intervention a↵ects GPA, conduct and implicit theories},
+@inproceedings{romero2011a,
+  author = {Romero, C. and Paunesku, D. and Dweck, C.},
   date = {2011~},
-  title = {Romero, C., Paunesku, D., & Dweck, C. (2011)},
+  title = {Brainology in the classroom: An online growth mindset intervention a↵ects GPA, conduct, and implicit theories},
   booktitle = {Poster session presented at Society for Research in Child Development Biennial Meeting, Montreal, Canada},
   publisher = {An online growth mindset intervention a↵ects GPA},
   address = {classroom}
@@ -122,6 +122,7 @@
   booktitle = {ACM Trans},
   volume = {4},
   date = {1271-06-12},
+  pages = {127-136},
   address = {1978},
   issue = {2},
   translator = {Trans}
@@ -136,9 +137,9 @@
   address = {Australia},
   collection-number = {62}
 }
-@misc{klein3193a,
-  author = {Klein and words by serial clustering, Detecting content-bearing and Research, Proceedings of the Nineteenth Annual International ACM SIGIR Conference on and Development in Information Retrieval, pp},
-  title = {Bookstein and S. T},
+@misc{bookstein3193a,
+  author = {Bookstein and S, T.},
+  title = {A},
   booktitle = {Klein, Detecting content-bearing words by serial clustering, Proceedings of the Nineteenth Annual International ACM SIGIR Conference on Research and Development in Information Retrieval, pp},
   series = {Proceedings of the Nineteenth Annual International ACM SIGIR Conference on Research and Development in Information Retrieval},
   date = {3193/1995},
@@ -152,6 +153,7 @@
   title = {U. Garcia-Molina, M},
   booktitle = {In ACM SIGMOD Conference on Management of Data, pages 393-397, Washington, D. C., May 1993},
   publisher = {A database challenge. In ACM SIGMOD Conference on Management of Data},
+  pages = {393-397},
   address = {monitors}
 }
 @inproceedings{qiao1995a,
@@ -185,10 +187,11 @@
   title = {How learning can guide evolution},
   volume = {1},
   date = {1987},
+  pages = {495-502},
   address = {495-502}
 }
-@misc{bulletin1994a,
-  author = {Bulletin, SIGART},
+@misc{cameronjones1994a,
+  author = {Cameron-Jones, R. M. and Quinlan, J. R.},
   title = {Efficient top-down induction of logic programs},
   booktitle = {SIGART Bulletin},
   volume = {5},
@@ -203,6 +206,7 @@
   series = {Proceedings of the Eighth International Conference on Machine Learning},
   publisher = {A Comprehensive Approach to Theory Refinement. In Proceedings of the Eighth International Conference on Machine Learning},
   date = {1489/1991},
+  pages = {485-489},
   address = {Rules},
   collection-number = {485}
 }
@@ -228,6 +232,7 @@
   title = {Larry D. Eager sharing for efficient massive parallelism},
   booktitle = {In 1992 International Conference on Parallel Processing, pages 251-255, St},
   date = {1992-08},
+  pages = {251-255},
   address = {11}
 }
 @inproceedings{bylander1992a,
@@ -329,6 +334,7 @@
   title = {A markov modulated characterization of voice and data traffic and related statistical multiplexer performance},
   booktitle = {IEEE J},
   date = {8568-09-85},
+  pages = {856-867},
   address = {1986}
 }
 @misc{mandriolli1071a,
@@ -338,6 +344,7 @@
   booktitle = {Journal of Systems and Software},
   volume = {12},
   publisher = {A logic language for executable specifications of real-time systems. Journal of Systems and Software},
+  pages = {107-123},
   address = {Trio},
   issue = {2}
 }
@@ -357,8 +364,8 @@
   pages = {1983-433},
   address = {433-439}
 }
-@inproceedings{in1996a,
-  author = {In Proceedings of the, AAAI-},
+@inproceedings{domingos1996a,
+  author = {Domingos, P.},
   title = {Using partitioning to speed up specific-to-general rule induction},
   booktitle = {In Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models, pp},
   series = {Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models},
@@ -367,9 +374,9 @@
   address = {29-34},
   collection-number = {29}
 }
-@book{variational1612a,
-  author = {variational inequality, Finite-dimensional and nonlinear complementarity problems A survey of theory, algorithms and applications},
-  title = {Pang. Mathematical Programming, 48(2), 161-220, September 1990},
+@book{harker1612a,
+  author = {Harker and J.-S},
+  title = {P. T. Pang},
   volume = {48},
   publisher = {A survey of theory},
   date = {1612-09-16},
@@ -390,6 +397,7 @@
   title = {Symbolic Logic, 27, 259-316. (1962)},
   volume = {27},
   date = {1316/1962},
+  pages = {259-316},
   address = {1962}
 }
 @inproceedings{gharachorloo1526a,
@@ -430,6 +438,7 @@
   title = {Zemel, M. C},
   volume = {2},
   publisher = {Recognizing objects using hierarchical reference frame transformations. In D. S. Touretzky},
+  pages = {266-273},
   address = {TRAFFIC},
   editor = {editor}
 }
@@ -476,6 +485,7 @@
   title = {Levy, B. N},
   booktitle = {"The interaction of architecture and operating system design"},
   date = {1122/1991},
+  pages = {108-122},
   address = {1991}
 }
 @misc{jahanian8909a,
@@ -484,6 +494,7 @@
   booktitle = {IEEE Transactions on Software Engineering},
   volume = {12},
   date = {8909-09-89},
+  pages = {890-904},
   address = {1986},
   issue = {9}
 }
@@ -520,6 +531,7 @@
   author = {D},
   title = {Waltz. Waltz},
   date = {1116/1971},
+  pages = {79-116},
   address = {1971}
 }
 @inproceedings{cheeseman1991a,
@@ -564,6 +576,7 @@
   title = {Gupta, I. Subrahmanian},
   booktitle = {In Preceedings of the 1993 ACM SIGMOD International Conference on Management of Data, pages 157-166, Washington, D. C., May 1993},
   volume = {1993},
+  pages = {157-166},
   address = {1993}
 }
 @misc{dietterich1995a,
@@ -571,6 +584,7 @@
   title = {Solving multiclass learning problems via error-correcting output codes},
   booktitle = {Journal of Artificial Intelligence Research},
   date = {1995},
+  pages = {263-286},
   address = {263-286}
 }
 @book{a1019a,
@@ -584,6 +598,7 @@
   author = {Fink, E. and Veloso, M.},
   title = {Formalizing the prodigy planning algorithm},
   date = {1994},
+  pages = {94-123},
   address = {CMU-CS-94-123}
 }
 @misc{langley1995a,
@@ -601,6 +616,7 @@
   date = {1983~},
   title = {Optimization by simulated annealing},
   volume = {220},
+  pages = {671-680},
   address = {671-680}
 }
 @thesis{rosene1990a,
@@ -613,6 +629,7 @@
   author = {theory, A. and methodology of inductive learning},
   title = {Michalski, R. (1983)},
   date = {1983},
+  pages = {111-161},
   address = {111-161}
 }
 @inproceedings{goosen1091a,
@@ -622,6 +639,7 @@
   series = {Symposium on Shared Memory Multiprocessing},
   publisher = {A First Experience. In International Symposium on Shared Memory Multiprocessing},
   date = {1091-04-10},
+  pages = {109-118},
   address = {Multiprocessor},
   collection-number = {109}
 }
@@ -662,6 +680,7 @@
   title = {M. Smith},
   booktitle = {In Proceedings of the Eleventh National Conference on Artificial Intelligence, pages 492-499, Washington, D. C., 1993},
   series = {Proceedings of the Eleventh National Conference on Artificial Intelligence},
+  pages = {492-499},
   address = {1993},
   collection-number = {492}
 }
@@ -676,15 +695,15 @@
   address = {Box},
   collection-number = {1974}
 }
-@misc{barry1987a,
-  author = {Barry Wilkinson, Digital System Design},
-  title = {Prentice Hall. Prentice Hall},
+@misc{hall1987a,
+  author = {Hall, Prentice},
+  title = {Barry Wilkinson, Digital System Design},
   booktitle = {Barry Wilkinson, Digital System Design},
   date = {1987},
   address = {1987}
 }
-@book{department1997a,
-  author = {Department of Computer Systems, University of Uppsala and Engineering, Department of Computer and University, Malardalen and Sweden},
+@book{ermedahl1997a,
+  author = {Ermedahl, Andreas and Gustafsson, Jan},
   title = {Deriving annotations for tight calculation of execution time},
   date = {1997-02-97},
   address = {1997}
@@ -724,10 +743,10 @@
   address = {appear},
   date-circa = {true}
 }
-@misc{boss1995a,
-  author = {Boss, "Multimedia Databases and Servers, " AT and T Technical Journal, Vol},
+@misc{sterling1995a,
+  author = {Sterling, F.},
   date = {1995-09-5~},
-  title = {Carino and C},
+  title = {W. Carino and C},
   booktitle = {Boss, "Multimedia Databases and Servers," AT&T Technical Journal, Vol},
   volume = {74},
   pages = {54-67},
@@ -769,21 +788,22 @@
   pages = {213-218},
   address = {1988}
 }
-@inproceedings{actions1990a,
-  author = {Actions, In Reasoning about and of the, Plans Proceedings},
-  title = {On the semantics of STRIPS},
+@inproceedings{v1986a,
+  author = {V},
+  title = {Lifschitz. Lifschitz},
   booktitle = {In Reasoning about Actions and Plans: Proceedings of the 1986 Workshop, Timberline, OR, 1987},
   series = {Proceedings of the 1986 Workshop},
   volume = {1986},
   publisher = {Proceedings of the 1986 Workshop},
-  date = {1990/1530},
+  date = {1986/1987},
+  pages = {523-530},
   address = {Plans},
   collection-number = {1987},
   editor = {eds}
 }
-@misc{technical2352a,
-  author = {Technical Report, TR},
-  title = {Linearly convergent descent methods for unconstrained minimization of convex quadratic splines},
+@misc{w2352a,
+  author = {W},
+  title = {Li. Li},
   booktitle = {Journal of Optimization Theory and Applications, to appear},
   date = {2352/1993},
   address = {appear}
@@ -815,12 +835,13 @@
   address = {1989},
   issue = {1}
 }
-@misc{blumer1989a,
-  author = {Blumer, A. and Ehrenfeucht, A. and Haussler, D. and Warmuth, M.},
-  title = {Learnability and the Vapnik-Chervonenkis dimension},
+@misc{learnability1989a,
+  author = {Learnability and dimension, the Vapnik-Chervonenkis},
+  title = {Blumer, A., Ehrenfeucht, A., Haussler, D., & Warmuth, M. (1989)},
   booktitle = {Journal of the ACM},
   volume = {36},
   date = {1989},
+  pages = {929-965},
   address = {929-965},
   issue = {4}
 }
@@ -828,6 +849,7 @@
   author = {, In Keane},
   title = {A new representation technique for genetic algorithms},
   date = {1246},
+  pages = {233-246},
   address = {233-246},
   genre = {4}
 }
@@ -845,6 +867,7 @@
   booktitle = {Communications of the ACM},
   volume = {33},
   date = {1111/1990},
+  pages = {103-111},
   address = {1990},
   issue = {8}
 }
@@ -860,6 +883,7 @@
   series = {Lecture Notes in Computer Science},
   volume = {193},
   date = {1985},
+  pages = {219-224},
   address = {1985},
   collection-number = {219},
   editor = {editor}
@@ -873,11 +897,12 @@
   address = {1462-1477},
   issue = {21}
 }
-@misc{statistics1952a,
-  author = {Statistics, Annals of Mathematical},
+@misc{chernoff1952a,
+  author = {Chernoff, H.},
   title = {A measure of the asymptotic efficiency for tests of a hypothesis based on the sum of observations},
   booktitle = {Annals of Mathematical Statistics},
   date = {1952},
+  pages = {493-509},
   address = {493-509}
 }
 @inproceedings{flajolet1996a,
@@ -923,6 +948,7 @@
   title = {The computational complexity of probabilistic inference using Bayesian belief networks},
   volume = {42},
   date = {1990},
+  pages = {393-405},
   address = {393-405},
   issue = {23}
 }
@@ -945,6 +971,7 @@
   title = {M. Simon},
   volume = {3},
   date = {1988/1469},
+  pages = {454-469},
   address = {454-469}
 }
 @misc{herlihy1987a,
@@ -965,10 +992,10 @@
   date = {1993},
   address = {MA}
 }
-@inproceedings{holte1989a,
-  author = {Holte, R. C. and Acker, L. E. and Porter, B. W.},
+@inproceedings{learning1989a,
+  author = {learning, Concept and the problem of small disjuncts},
   date = {1989~},
-  title = {Concept learning and the problem of small disjuncts},
+  title = {Holte, R. C., Acker, L. E., & Porter, B. W. (1989)},
   booktitle = {In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, pp},
   series = {Proceedings of the Eleventh International Joint Conference on Artificial Intelligence},
   publisher = {Morgan Kaufmann. 415},
@@ -1018,6 +1045,7 @@
   title = {A distributed genetic algorithm for neural network design and training},
   booktitle = {A distributed genetic algorithm for neural network design and training},
   date = {1992},
+  pages = {459-477},
   address = {459-477}
 }
 @book{b1986a,
@@ -1033,6 +1061,7 @@
   booktitle = {In OOPSLA '92 Conference Proceedings, pages 247-262, October 1992},
   series = {Proceedings},
   date = {2472-10-24},
+  pages = {247-262},
   address = {1992},
   collection-number = {247}
 }
@@ -1046,6 +1075,7 @@
   author = {De Raedt, L. and Bruynooghe, M.},
   title = {Indirect relevance and bias in inductive concept learning},
   date = {1990},
+  pages = {365-390},
   address = {365-390}
 }
 @thesis{emotional1996a,
@@ -1061,19 +1091,20 @@
   booktitle = {In Proceedings of the Winter 1990 USENIX Conference, pages 163-176, Washington, D. C., January 1990},
   series = {Proceedings of the Winter 1990 USENIX Conference},
   publisher = {A multi-processor implementation. In Proceedings of the Winter 1990 USENIX Conference},
+  pages = {163-176},
   address = {STREAMS},
   collection-number = {163}
 }
-@misc{j1993a,
-  author = {J, C.},
+@misc{butcher1993a,
+  author = {Butcher},
   date = {1993~},
-  title = {Butcher. Butcher},
+  title = {J. C. Diagonally implicit general linear methods for ordinary differential equations},
   booktitle = {J. C},
   address = {publication}
 }
 @misc{bederson1726a,
   author = {Bederson, B. B. and Hollan and J, D. and zooming graphical interface for exploring alternate interface physics, Pad++ A. and Software, Proceedings of User Interface and Technology},
-  title = {Bederson, B. B., & Hollan, J. D., Pad++: A zooming graphical interface for exploring alternate interface physics, Proceedings of User Interface Software and Technology (UIST 94) 1726, ACM, New York, 1994},
+  title = {ACM},
   booktitle = {Bederson, B. B., & Hollan, J. D., Pad++: A zooming graphical interface for exploring alternate interface physics, Proceedings of User Interface Software and Technology (UIST 94) 1726, ACM, New York, 1994},
   series = {Proceedings of User Interface Software and Technology (UIST 94) 1726},
   publisher = {A zooming graphical interface for exploring alternate interface physics},
@@ -1128,6 +1159,7 @@
   series = {Proceedings of the 1990 ACM Conference on LISP and Functional Programming},
   publisher = {a Technique for Increasing the Granularity of Parallel Programs. In Proceedings of the 1990 ACM Conference on LISP and Functional Programming},
   date = {1851-06-18},
+  pages = {185-197},
   address = {Creation},
   collection-number = {185}
 }
@@ -1171,6 +1203,7 @@
   booktitle = {Journal of Computer and System Sciences},
   volume = {43},
   date = {1124/1991},
+  pages = {62-124},
   address = {1991}
 }
 @misc{lipsett1989a,
@@ -1187,6 +1220,7 @@
   title = {Majumdar, D. Bunt},
   booktitle = {Proc. of the ACM SIGMETRICS Conf. on Measurement & Modeling of Computer Systems},
   volume = {1},
+  pages = {104-113},
   address = {104-113}
 }
 @inproceedings{mckinley1994a,
@@ -1203,6 +1237,7 @@
   title = {STRIPS: A new approach to the application of theorem proving to problem solving},
   publisher = {A new approach to the application of theorem proving to problem solving. Artificial Intelligence},
   date = {1971},
+  pages = {189-208},
   address = {STRIPS}
 }
 @book{felleisen1411a,
@@ -1213,9 +1248,9 @@
   address = {URL},
   url = {URL}
 }
-@misc{wing1990a,
-  author = {Wing and Objects", "Linearizability A. Correctness Condition for Concurrent and Languages, ACM Transactions on Programming and Systems, Vol},
-  title = {Herlihy and J},
+@misc{herlihy1990a,
+  author = {Herlihy and J},
+  title = {M},
   booktitle = {Wing, "Linearizability: A Correctness Condition for Concurrent Objects", ACM Transactions on Programming Languages and Systems, Vol},
   volume = {12},
   publisher = {A Correctness Condition for Concurrent Objects"},
@@ -1230,6 +1265,7 @@
   booktitle = {International Journal of Parallel Programming},
   volume = {16},
   date = {1371-04-13},
+  pages = {137-178},
   address = {1987},
   issue = {2}
 }
@@ -1251,6 +1287,7 @@
   booktitle = {ACM TODS},
   volume = {12},
   date = {2472-06-24},
+  pages = {247-298},
   address = {1987},
   issue = {2}
 }
@@ -1260,11 +1297,12 @@
   date = {1992},
   address = {Linguistics}
 }
-@misc{communications1987a,
-  author = {Communications of the, ACM},
+@misc{witten1987a,
+  author = {Witten and I, H. and Neal R, M. and Cleary J, G.},
   title = {Arithmetic coding for data compression},
   booktitle = {Communications of the ACM},
   date = {1987},
+  pages = {520-540},
   address = {520-540}
 }
 @book{emihovich1988a,
@@ -1272,6 +1310,7 @@
   date = {1988~},
   title = {Talking to the turtle: A discourse analysis of Logo instruction},
   publisher = {A discourse analysis of Logo instruction. Discourse Processes},
+  pages = {183-201},
   address = {turtle}
 }
 @misc{harper1995a,
@@ -1319,11 +1358,12 @@
   address = {Tread-Marks},
   issue = {2}
 }
-@book{srinivasan1996a,
-  author = {Srinivasan, A. and Muggleton, S. H. and Sternberg, M. J. E. and King, R. D.},
+@book{intelligence1996a,
+  author = {Intelligence, Artificial},
   title = {Theories for mutagenicity: a study in first-order and feature-based induction},
   publisher = {a study in first-order and feature-based induction. Artificial Intelligence},
   date = {1996},
+  pages = {277-299},
   address = {mutagenicity}
 }
 @misc{berthomieu1273a,
@@ -1331,6 +1371,7 @@
   title = {B. Diaz},
   booktitle = {IEEE Trans},
   date = {1273/1991},
+  pages = {259-273},
   address = {1991},
   translator = {Trans}
 }
@@ -1340,6 +1381,7 @@
   booktitle = {In Proceedings of the 17th Annual International Symposium on Computer Architecture, pages 104-114, May 1990},
   series = {Proceedings of the 17th Annual International Symposium on Computer Architecture},
   publisher = {a processor architecture for multiprocessing. In Proceedings of the 17th Annual International Symposium on Computer Architecture},
+  pages = {104-114},
   address = {APRIL},
   collection-number = {104}
 }
@@ -1358,9 +1400,9 @@
   address = {1991},
   editor = {Editor}
 }
-@misc{thesis1991a,
-  author = {thesis, D. and Science, Basser Department of Computer and Sydney, University of},
-  title = {Ph},
+@misc{ph1991a,
+  author = {Ph},
+  title = {Megainduction: Machine Learning on Very Large Databases},
   booktitle = {Catlett, J},
   publisher = {Machine Learning on Very Large Databases. Ph.D. thesis},
   date = {1991},
@@ -1370,6 +1412,7 @@
   author = {Learning, Machine},
   title = {Learning logical definitions from relations},
   date = {1990},
+  pages = {239-266},
   address = {239-266}
 }
 @inproceedings{felleisen1988a,
@@ -1379,6 +1422,7 @@
   series = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages},
   volume = {15},
   date = {1988/1190},
+  pages = {180-190},
   address = {180-190},
   collection-number = {1988}
 }
@@ -1391,8 +1435,8 @@
   address = {1988},
   collection-number = {1988}
 }
-@misc{in1993a,
-  author = {In Proceedings IEEE System, Man and Cybernetics Conf, Vol},
+@misc{adorni1993a,
+  author = {Adorni, G. and Broggi, A. and Conte, G. and D'Andrea, V.},
   title = {A self-tuning system for real-time Optical Flow detection},
   booktitle = {In Proceedings IEEE System, Man, and Cybernetics Conf, Vol},
   series = {Proceedings IEEE System},
@@ -1417,8 +1461,8 @@
   publisher = {IEEE Computer Society Press},
   address = {MA}
 }
-@thesis{thesis1990a,
-  author = {thesis, PhD and Science, Department of Computer and Waterloo, University of and Waterloo and Ontario},
+@thesis{van1990a,
+  author = {van Arragon, Paul},
   title = {Nested Default Reasoning for User Modeling},
   date = {1990},
   address = {CS-90-25}
@@ -1448,6 +1492,7 @@
   title = {L. Young},
   series = {Lecture notes on evasiveness of graph properties},
   date = {1317-1391-1991},
+  pages = {317-91},
   address = {1991},
   collection-number = {317}
 }
@@ -1465,6 +1510,7 @@
   booktitle = {Pattern Recognition Letters},
   volume = {1},
   date = {1983},
+  pages = {245-253},
   address = {245-253},
   issue = {4}
 }
@@ -1508,13 +1554,14 @@
   title = {Demmel, I. Ren},
   volume = {1995},
   date = {1149/1995},
+  pages = {116-149},
   address = {No.70},
   note = {See also LAPACK Working Note No.70},
   issue = {70}
 }
-@techreport{96039603a,
-  author = {9603, Technical Report Technical report TR},
-  title = {Using information from the programmer to implement system optimizations without violating sequential consistency},
+@techreport{sarita9603a,
+  author = {Sarita, V.},
+  title = {Adve. Adve},
   volume = {9603, Part ment},
   date = {9603-03-1996},
   address = {1996},
@@ -1590,6 +1637,7 @@
   booktitle = {In Proceedings of the ACM SIGMETRICS Conference on Measurement and Modeling of Computer Systems, pages 120-132, May 1991},
   series = {Proceedings of the ACM SIGMETRICS Conference on Measurement and Modeling of Computer Systems},
   date = {1201-05-12},
+  pages = {120-132},
   address = {1991},
   collection-number = {120}
 }
@@ -1602,7 +1650,7 @@
 }
 @misc{card1811a,
   author = {Card and S, K. and Robertson and G, G. and Mackinlay and J, D. and Visualizer, The Information and Workspace, an Information and Systems, Proceedings of Human Factors in Computing},
-  title = {Card, S. K., Robertson, G. G., Mackinlay, J. D., The Information Visualizer, an Information Workspace, Proceedings of Human Factors in Computing Systems (CHI91), 181188, ACM, New York, 1991},
+  title = {ACM},
   booktitle = {Card, S. K., Robertson, G. G., Mackinlay, J. D., The Information Visualizer, an Information Workspace, Proceedings of Human Factors in Computing Systems (CHI91), 181188, ACM, New York, 1991},
   series = {Proceedings of Human Factors in Computing Systems (CHI91)},
   date = {1811/1991},
@@ -1658,6 +1706,7 @@
   title = {Learning decision lists},
   volume = {2},
   date = {1987},
+  pages = {229-246},
   address = {229-246},
   issue = {3}
 }
