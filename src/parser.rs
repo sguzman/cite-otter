@@ -710,10 +710,11 @@ fn collect_month_name_parts(
   let month_index = tokens
     .iter()
     .position(|token| {
-      month_number(token).is_some()
+      parse_month_token(token).is_some()
     })?;
-  let month =
-    month_number(tokens[month_index])?;
+  let month = parse_month_token(
+    tokens[month_index]
+  )?;
 
   let mut year: Option<String> = None;
   for token in
@@ -754,7 +755,9 @@ fn collect_month_name_parts(
       .chars()
       .filter(|c| c.is_ascii_digit())
       .collect();
-    if !digits.is_empty() {
+    if !digits.is_empty()
+      && digits.len() <= 2
+    {
       day = Some(digits);
     }
   }
@@ -765,6 +768,16 @@ fn collect_month_name_parts(
     parts.push(day);
   }
   Some(parts)
+}
+
+fn parse_month_token(
+  token: &str
+) -> Option<u32> {
+  let mut parts = token.split(|c| {
+    c == '-' || c == '–' || c == '—'
+  });
+  let first = parts.next()?.trim();
+  month_number(first)
 }
 
 fn month_number(

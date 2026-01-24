@@ -48,6 +48,12 @@ const MONTH_NAME_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, Apr 5 1995. pp. \
    12-34.";
+const YEAR_RANGE_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, 1995–1996.";
+const MONTH_RANGE_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, Apr–May 1995.";
 
 const MULTI_AUTHOR_REF: &str =
   "Doe, J. and Smith, A. A Title. \
@@ -582,6 +588,76 @@ fn parse_captures_month_name_dates() {
     ],
     "Parser should parse month names \
      into date parts"
+  );
+}
+
+#[test]
+fn parse_captures_year_ranges_with_en_dash()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[YEAR_RANGE_REF],
+    ParseFormat::Json
+  );
+
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         values, got {other:?}"
+      )
+    }
+  };
+
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "1996".to_string()
+    ],
+    "Parser should normalize en dash \
+     year ranges"
+  );
+}
+
+#[test]
+fn parse_prefers_first_month_in_ranges()
+{
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MONTH_RANGE_REF],
+    ParseFormat::Json
+  );
+
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         values, got {other:?}"
+      )
+    }
+  };
+
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string()
+    ],
+    "Parser should prefer the first \
+     month in ranges"
   );
 }
 
