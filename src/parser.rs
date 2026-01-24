@@ -576,7 +576,12 @@ fn normalize_author_component(
     .map(|part| {
       part
         .trim_matches(|c: char| {
-          c == '.' || c == ',' || c == ';'
+          matches!(
+            c,
+            '.' | ',' | ';' | ':' | '!'
+              | '?' | '(' | ')' | '['
+              | ']'
+          )
         })
         .to_string()
     })
@@ -845,6 +850,13 @@ fn collect_month_name_parts(
     tokens.get(month_index + 1)
   {
     day = extract_day_token(token);
+  }
+  if day.is_none() && month_index > 0 {
+    if let Some(token) =
+      tokens.get(month_index - 1)
+    {
+      day = extract_day_token(token);
+    }
   }
 
   let mut parts =

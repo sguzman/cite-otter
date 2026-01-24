@@ -17,7 +17,7 @@
 
 @book{citeotter2,
   address = {London}
-  author = {Solon, G (1999)}
+  author = {Solon, G 1999}
   issue = {1761}
   pages = {1761-1800}
   publisher = {Elsevier. Retrieved from. http}
@@ -53,7 +53,7 @@
 
 @book{citeotter6,
   address = {1012}
-  author = {E, [13] S}
+  author = {E, 13 S}
   genre = {13}
   title = {Han, G}
   year = {2010}
@@ -61,7 +61,7 @@
 
 @misc{citeotter7,
   address = {Himself}
-  author = {Adams, Nicholson B “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera ”}
+  author = {Adams, Nicholson B “A Spanish Romanticist Parodies Himself Los Hijos del Tı́o Tronera ”}
   booktitle = {Proceedings of the Modern Language Association, 45, (1930), pp}
   number = {45}
   pages = {573-77}
@@ -227,7 +227,7 @@
 
 @book{citeotter25,
   address = {Systems}
-  author = {Pearl, J (1988)}
+  author = {Pearl, J 1988}
   publisher = {Networks of Plausible Inference. Morgan Kaufmann.}
   title = {Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference}
   year = {1988}
@@ -243,7 +243,7 @@
 
 @misc{citeotter27,
   address = {CA}
-  author = {Bylander, T (1992)}
+  author = {Bylander, T 1992}
   booktitle = {In Proceedings of National Conference on Artificial Intelligence, pp}
   number = {729}
   pages = {729-734}
@@ -287,7 +287,7 @@
 
 @book{citeotter32,
   address = {in}
-  author = {Clark, K L Negation as Failure in: H}
+  author = {Clark, K L Negation as Failure in H}
   editor = {eds}
   publisher = {H. Gallaire and J. Minker (eds.)}
   title = {Gallaire and J}
@@ -321,7 +321,7 @@
 @misc{citeotter36,
   address = {Reliability}
   author = {P}
-  booktitle = {Proceedings of IEEE, Vol}
+  booktitle = {"Design for Reliability: The Major Challenge for VLSI," Proceedings of IEEE, Vol}
   collection-number = {81}
   issue = {5}
   pages = {730-744}
@@ -362,7 +362,7 @@
 
 @misc{citeotter40,
   address = {Learning}
-  author = {Cohen, W W (1992)}
+  author = {Cohen, W W 1992}
   booktitle = {In Proceedings of the Ninth International Conference on Machine Learning}
   series = {Proceedings of the Ninth International Conference on Machine Learning}
   title = {Compiling knowledge into an explicit bias}
@@ -380,7 +380,7 @@
 
 @misc{citeotter42,
   address = {29-34}
-  author = {Domingos, P (1996b)}
+  author = {Domingos, P 1996b}
   booktitle = {In Proceedings of the AAAI-96 Workshop on Integrating Multiple Learned Models, pp}
   collection-number = {29}
   issue = {96}
@@ -428,6 +428,7 @@
 @book{citeotter47,
   address = {72-76}
   author = {Etzioni, O}
+  title = {A Softbot-based Interface to the Internet, Comm. of th e ACM, 37(7), pages 72-76}
   year = {1994}
 }
 
@@ -458,7 +459,7 @@
 
 @misc{citeotter51,
   address = {Tokyo}
-  author = {Corkill, D D (1979)}
+  author = {Corkill, D D 1979}
   booktitle = {In Proceedings of the Sixth International Joint Conference on Artificial Intelligence, pp}
   number = {168}
   pages = {168-175}
@@ -636,13 +637,13 @@
 @book{citeotter72,
   address = {1990}
   author = {C}
-  title = {Rosene, ``Incremental dependence analysis,}
+  title = {Rosene, ``Incremental dependence analysis,'' Ph}
   year = {1990}
 }
 
 @book{citeotter73,
   address = {111-161}
-  author = {Michalski, R (1983)}
+  author = {Michalski, R 1983}
   title = {A theory and methodology of inductive learning}
   year = {1983}
 }
@@ -672,8 +673,8 @@
 
 @book{citeotter76,
   address = {roles}
-  author = {Baader, F (1991)}
-  publisher = {An alternative to terminological cycles. In Proc. of the 12th Int. Joint Conf. on Artificial Intelligence (IJCAI-91) Sydney}
+  author = {Baader, F 1991}
+  publisher = {An alternative to terminological cycles. In Proc. of the 12th Int. Joint Conf. on Artificial Intelligence (IJCAI-91). Sydney}
   title = {Augmenting concept languages by transitive closure of roles: An alternative to terminological cycles}
   year = {1991}
 }
@@ -704,12 +705,12 @@
 @misc{citeotter79,
   address = {Box}
   author = {Burton, Robert P}
-  booktitle = {"Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp}
+  booktitle = {"Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974). pp}
   number = {1974}
   pages = {513-520}
-  publisher = {A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp. 513-520.}
+  publisher = {A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974). pp. 513-520.}
   series = {Proceedings of the National Computer Conference}
-  title = {Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp}
+  title = {Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974). pp}
   year = {1974}
 }
 
@@ -730,7 +731,7 @@
 
 @book{citeotter82,
   address = {Press}
-  author = {Horn, B (1986)}
+  author = {Horn, B 1986}
   title = {Robot Vision, MIT Press}
   year = {1986}
 }
@@ -769,7 +770,7 @@
 @misc{citeotter87,
   address = {54-67}
   author = {W}
-  booktitle = {AT&T Technical Journal, Vol}
+  booktitle = {Boss, "Multimedia Databases and Servers," AT&T Technical Journal, Vol}
   issue = {5}
   pages = {54-67}
   title = {Sterling, F}
@@ -779,7 +780,7 @@
 
 @book{citeotter88,
   address = {Netherlands}
-  author = {Salomons, O (1994)}
+  author = {Salomons, O 1994}
   title = {Computer support in the design of mechanical products}
   year = {1994}
 }
@@ -895,7 +896,7 @@
 
 @book{citeotter101,
   address = {communication}
-  author = {Ling, C X (1995)}
+  author = {Ling, C X 1995}
   title = {Personal communication}
   year = {1995}
 }
@@ -922,7 +923,7 @@
 
 @book{citeotter104,
   address = {493-509}
-  author = {Chernoff, H (1952)}
+  author = {Chernoff, H 1952}
   title = {A measure of the asymptotic efficiency for tests of a hypothesis based on the sum of observations}
   year = {1952}
 }
@@ -970,7 +971,7 @@
 
 @book{citeotter109,
   address = {393-405}
-  author = {Cooper, G F (1990)}
+  author = {Cooper, G F 1990}
   title = {The computational complexity of probabilistic inference using Bayesian belief networks}
   year = {2}
 }
@@ -1099,7 +1100,7 @@
 
 @book{citeotter124,
   address = {MA}
-  author = {Gardenfors, Peter (1988)}
+  author = {Gardenfors, Peter 1988}
   title = {Knowledge in Flux}
   year = {1988}
 }
@@ -1113,7 +1114,7 @@
 
 @book{citeotter126,
   address = {University}
-  author = {Reilly, W S (1996)}
+  author = {Reilly, W S 1996}
   title = {Believable Emotional and Social Agents}
   year = {1996}
 }
@@ -1200,7 +1201,7 @@
 
 @book{citeotter135,
   address = {Berlin}
-  author = {Richter (Eds.), Topics in Case-Based Reasoning}
+  author = {Richter Eds, Topics in Case-Based Reasoning}
   editor = {Eds}
   pages = {167-181}
   publisher = {Springer-Verlag}
@@ -1219,7 +1220,7 @@
 
 @book{citeotter137,
   address = {27-47}
-  author = {Poole, David (1988)}
+  author = {Poole, David 1988}
   title = {A logical framework for default reasoning}
   year = {1988}
 }
@@ -1421,7 +1422,7 @@
 
 @book{citeotter161,
   address = {London}
-  author = {Serra, J (1982)}
+  author = {Serra, J 1982}
   title = {Image Analysis and Mathematical Morphology}
   year = {1982}
 }
@@ -1431,13 +1432,13 @@
   author = {D}
   editor = {Editor}
   pages = {1991}
-  title = {Borman, Editor, ``Telnet Encryption Option,}
+  title = {Borman, Editor, ``Telnet Encryption Option,'' Internet-Draft, Internet Engineering Task Force, Telnet Working Group. (July 1991)}
   year = {1991}
 }
 
 @book{citeotter163,
   address = {Megainduction}
-  author = {Catlett, J (1991b)}
+  author = {Catlett, J 1991b}
   publisher = {Machine Learning on Very Large Databases. Ph.D. thesis}
   title = {Megainduction: Machine Learning on Very Large Databases}
   year = {1991}
@@ -1445,7 +1446,7 @@
 
 @book{citeotter164,
   address = {239-266}
-  author = {Quinlan, J R (1990)}
+  author = {Quinlan, J R 1990}
   title = {Learning logical definitions from relations}
   year = {1990}
 }
@@ -1483,7 +1484,7 @@
 
 @book{citeotter168,
   address = {1992}
-  author = {Ripley, B (1992)}
+  author = {Ripley, B 1992}
   title = {Statistical aspects of neural networks}
   year = {2530}
 }
@@ -1500,7 +1501,7 @@
 
 @book{citeotter170,
   address = {CS-90-25}
-  author = {van Arragon, Paul (1990)}
+  author = {van Arragon, Paul 1990}
   issue = {90}
   title = {Nested Default Reasoning for User Modeling}
   year = {1990}
@@ -1519,7 +1520,7 @@
 
 @book{citeotter172,
   address = {symbols}
-  author = {MacWhinney, B (1993)}
+  author = {MacWhinney, B 1993}
   pages = {49-3}
   publisher = {closing the gap. Cognition}
   title = {Connections and symbols: closing the gap}
@@ -1658,7 +1659,7 @@
 
 @book{citeotter188,
   address = {University}
-  author = {Plotkin, G D (1971a)}
+  author = {Plotkin, G D 1971a}
   title = {Automatic Methods of Inductive Inference}
   year = {1971}
 }
@@ -1693,7 +1694,7 @@
 
 @misc{citeotter192,
   address = {1991}
-  author = {Card, S K Robertson G G Mackinlay J D The Information Visualizer an Information Workspace Proceedings of Human Factors in Computing Systems (CHI91) 181188 ACM New York 1991}
+  author = {Card, S K Robertson G G Mackinlay J D The Information Visualizer an Information Workspace Proceedings of Human Factors in Computing Systems CHI91 181188 ACM New York 1991}
   booktitle = {Card, S. K., Robertson, G. G., Mackinlay, J. D., The Information Visualizer, an Information Workspace, Proceedings of Human Factors in Computing Systems (CHI91), 181188, ACM, New York, 1991}
   number = {181188}
   series = {Proceedings of Human Factors in Computing Systems (CHI91)}
@@ -1704,7 +1705,7 @@
   address = {London}
   author = {M}
   publisher = {MIT Press}
-  title = {Wolfe, ``Optimizing supercompilers for supercomputers,}
+  title = {Wolfe, ``Optimizing supercompilers for supercomputers,'' Pitman Publishing Company, London,: MIT Press, Cambridge, Massachusets, 1989}
   year = {1989}
 }
 
@@ -1750,14 +1751,14 @@
 
 @book{citeotter198,
   address = {229-246}
-  author = {Rivest, R L (1987)}
+  author = {Rivest, R L 1987}
   title = {Learning decision lists}
   year = {1987}
 }
 
 @misc{citeotter199,
   address = {61-76}
-  author = {McKinsey, J C C (1943)}
+  author = {McKinsey, J C C 1943}
   booktitle = {Journal of Symbolic Logic, 8 (3), 61-76}
   title = {The decision problem for some classes of sentences without quantifier}
   year = {1943}

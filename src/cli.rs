@@ -411,7 +411,8 @@ struct DatasetStat {
 #[derive(Debug, Clone, Serialize)]
 struct SampleEntry {
   format: String,
-  output: String
+  output: String,
+  references: usize
 }
 
 #[derive(Serialize)]
@@ -1985,15 +1986,19 @@ fn gather_finder_stats(
     .map(|path| {
       let content =
         fs::read_to_string(path)?;
-      let sequences = Parser::new()
-        .label(&content)
-        .len();
+      let labeled =
+        Parser::new().label(&content);
+      let sequences = labeled.len();
+      let tokens = labeled
+        .iter()
+        .map(|sequence| sequence.len())
+        .sum();
       Ok((path.clone(), DatasetStat {
         path: path
           .display()
           .to_string(),
         sequences,
-        tokens: 0
+        tokens
       }))
     })
     .collect()
@@ -2094,7 +2099,8 @@ fn collect_sample_outputs()
           &formatter,
           &references,
           *format
-        )
+        ),
+        references: references.len()
       }
     })
     .collect()

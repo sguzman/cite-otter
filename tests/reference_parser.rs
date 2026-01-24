@@ -57,9 +57,20 @@ const MONTH_RANGE_REF: &str =
 const MONTH_RANGE_DAY_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, Apr 5–7 1995.";
+const MONTH_RANGE_DAY_PUNCT_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, Apr. 5–7, \
+   1995.";
+const DAY_RANGE_BEFORE_MONTH_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, 5–7 Apr 1995.";
 const PUNCTUATED_AUTHORS_REF: &str =
   "Doe, J.; Smith, A., Jr.; O'Neil, \
    M.-J. Title. City: Pub, 2020.";
+const PUNCTUATED_AUTHORS_WITH_AMP_REF: &str =
+  "Doe, J.; Smith, A., Jr.; O'Neil, \
+   M.-J.; Brown, R. & White, T. \
+   Title. City: Pub, 2020.";
 const ET_AL_REF: &str =
   "Doe, J., et al. Title. City: \
    Pub, 2020.";
@@ -861,6 +872,78 @@ fn parse_prefers_first_day_in_month_ranges()
 }
 
 #[test]
+fn parse_handles_month_ranges_with_punctuation()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MONTH_RANGE_DAY_PUNCT_REF],
+    ParseFormat::Json
+  );
+
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         values, got {other:?}"
+      )
+    }
+  };
+
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string(),
+      "5".to_string()
+    ],
+    "Parser should capture month \
+     range days with punctuation"
+  );
+}
+
+#[test]
+fn parse_handles_day_ranges_before_month_name()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[DAY_RANGE_BEFORE_MONTH_REF],
+    ParseFormat::Json
+  );
+
+  let date_values = match references[0]
+    .fields()
+    .get("date")
+  {
+    | Some(FieldValue::List(
+      values
+    )) => values,
+    | other => {
+      panic!(
+        "Expected list of date \
+         values, got {other:?}"
+      )
+    }
+  };
+
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string(),
+      "5".to_string()
+    ],
+    "Parser should capture day \
+     ranges before month names"
+  );
+}
+
+#[test]
 fn parse_handles_punctuated_author_lists()
  {
   let parser = Parser::new();
@@ -886,6 +969,36 @@ fn parse_handles_punctuated_author_lists()
     authors.len(),
     3,
     "parser should split \
+     punctuation-heavy author lists"
+  );
+}
+
+#[test]
+fn parse_handles_punctuated_author_lists_with_ampersands()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PUNCTUATED_AUTHORS_WITH_AMP_REF],
+    ParseFormat::Json
+  );
+
+  let author_field = references[0]
+    .fields()
+    .get("author")
+    .expect("author field");
+  let authors = match author_field {
+    | FieldValue::Authors(list) => list,
+    | other => {
+      panic!(
+      "Expected FieldValue::Authors, \
+       got {other:?}"
+    )
+    }
+  };
+  assert_eq!(
+    authors.len(),
+    5,
+    "parser should split ampersand \
      punctuation-heavy author lists"
   );
 }

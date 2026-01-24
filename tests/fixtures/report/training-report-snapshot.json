@@ -10,21 +10,24 @@
     {
       "path": "tests/fixtures/report/finder.txt",
       "sequences": 2,
-      "tokens": 0
+      "tokens": 2
     }
   ],
   "samples": [
     {
       "format": "json",
-      "output": "<redacted>"
+      "output": "<redacted>",
+      "references": 2
     },
     {
       "format": "bibtex",
-      "output": "<redacted>"
+      "output": "<redacted>",
+      "references": 2
     },
     {
       "format": "csl",
-      "output": "<redacted>"
+      "output": "<redacted>",
+      "references": 2
     }
   ]
 }

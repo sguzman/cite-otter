@@ -271,9 +271,18 @@ fn normalize_bibtex_entry(
 fn entry_type_for(
   map: &mut Map<String, Value>
 ) -> String {
-  let entry_type =
+  let raw_type =
     extract_first_value(map, "type")
       .unwrap_or_else(|| "misc".into());
+  let entry_type = match raw_type.as_str() {
+    | "article-journal" => "article",
+    | "report" => "techreport",
+    | "paper-conference" => {
+      "inproceedings"
+    }
+    | _ => raw_type.as_str()
+  }
+  .to_string();
   match entry_type.as_str() {
     | "article" => {
       rename_field(
@@ -458,6 +467,23 @@ fn csl_entry(
     );
   }
 
+  if let Some(value) =
+    extract_first_value_from_map(
+      &map,
+      "publisher-place"
+    )
+    .or_else(|| {
+      extract_first_value_from_map(
+        &map, "address"
+      )
+    })
+  {
+    record.insert(
+      "publisher-place".into(),
+      Value::String(value)
+    );
+  }
+
   for key in [
     "note",
     "genre",
@@ -467,8 +493,6 @@ fn csl_entry(
     "collection-number",
     "journal",
     "publisher",
-    "publisher-place",
-    "address",
     "language",
     "volume",
     "issue",

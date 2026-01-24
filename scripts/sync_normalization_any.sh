@@ -26,8 +26,37 @@ sync_from_dir() {
   return 1
 }
 
+validate_output() {
+  local missing=0
+  local required=(
+    "journal-abbrev.txt"
+    "publisher-abbrev.txt"
+    "container-abbrev.txt"
+    "language-locale.txt"
+    "script-locale.txt"
+  )
+  for file in "${required[@]}"; do
+    local path="$OUTPUT_DIR/$file"
+    if [ ! -f "$path" ]; then
+      echo "missing normalization asset: $path" >&2
+      missing=1
+      continue
+    fi
+    if [[ "$file" == *locale* ]] && [ ! -s "$path" ]; then
+      echo "empty locale asset: $path" >&2
+      missing=1
+    elif [ ! -s "$path" ]; then
+      echo "warning: empty abbrev asset: $path" >&2
+    fi
+  done
+  if [ "$missing" -ne 0 ]; then
+    exit 1
+  fi
+}
+
 if [ -n "$NORMALIZATION_DIR" ]; then
   if sync_from_dir "$NORMALIZATION_DIR"; then
+    validate_output
     exit 0
   fi
   echo "no normalization assets found in $NORMALIZATION_DIR" >&2
@@ -46,6 +75,7 @@ if [ -n "$NORMALIZATION_REPO" ]; then
     NORMALIZATION_REPO="$NORMALIZATION_REPO/$NORMALIZATION_SUBDIR"
   fi
   if sync_from_dir "$NORMALIZATION_REPO"; then
+    validate_output
     exit 0
   fi
   echo "no normalization assets found in $NORMALIZATION_REPO" >&2
@@ -60,4 +90,6 @@ fi
 SOURCE_DIR="$TARGET_DIR/res"
 if ! sync_from_dir "$SOURCE_DIR"; then
   echo "no normalization assets found in $SOURCE_DIR" >&2
+  exit 1
 fi
+validate_output

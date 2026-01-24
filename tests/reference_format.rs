@@ -85,6 +85,26 @@ fn bibtex_formatter_round_trips_reference()
 }
 
 #[test]
+fn bibtex_maps_article_journal_types()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[COMPLEX_REF],
+    ParseFormat::BibTeX
+  );
+  let formatter = Format::new();
+  let bibtex =
+    formatter.to_bibtex(&references);
+
+  assert!(
+    bibtex.contains("@article"),
+    "BibTeX formatter should map \
+     article-journal types to \
+     article entries"
+  );
+}
+
+#[test]
 fn bibtex_includes_container_series_and_doi()
  {
   let parser = Parser::new();
@@ -407,6 +427,67 @@ fn bibtex_maps_article_issue_to_number() {
     !bibtex.contains("issue = {7}"),
     "BibTeX output should not retain \
      issue when mapping to number"
+  );
+}
+
+#[test]
+fn bibtex_maps_report_and_conference_types()
+ {
+  let formatter = Format::new();
+  let mut report = Reference::new();
+  report.insert(
+    "type",
+    FieldValue::Single("report".into())
+  );
+  report.insert(
+    "publisher",
+    FieldValue::List(vec![
+      "Test Institute".into(),
+    ])
+  );
+  let report_bibtex =
+    formatter.to_bibtex(&[report]);
+  assert!(
+    report_bibtex.contains("@techreport"),
+    "BibTeX formatter should map \
+     report types to techreport"
+  );
+  assert!(
+    report_bibtex.contains(
+      "institution = {Test Institute}"
+    ),
+    "Techreport entries should map \
+     publisher into institution"
+  );
+
+  let mut conference = Reference::new();
+  conference.insert(
+    "type",
+    FieldValue::Single(
+      "paper-conference".into()
+    )
+  );
+  conference.insert(
+    "container-title",
+    FieldValue::List(vec![
+      "Proceedings of Testing".into(),
+    ])
+  );
+  let conf_bibtex =
+    formatter.to_bibtex(&[conference]);
+  assert!(
+    conf_bibtex.contains("@inproceedings"),
+    "BibTeX formatter should map \
+     paper-conference types to \
+     inproceedings"
+  );
+  assert!(
+    conf_bibtex.contains(
+      "booktitle = {Proceedings of \
+       Testing}"
+    ),
+    "Conference entries should map \
+     container-title into booktitle"
   );
 }
 

@@ -167,6 +167,12 @@ fn training_validation_delta_flow_runs()
     );
   let expected_finder_sequences =
     parser.label(&finder_content).len();
+  let expected_finder_tokens: usize =
+    parser
+      .label(&finder_content)
+      .iter()
+      .map(|sequence| sequence.len())
+      .sum();
 
   let training_parser = training_json
     .get("parser")
@@ -272,9 +278,10 @@ fn training_validation_delta_flow_runs()
      reflect parser labels"
   );
   assert_eq!(
-    recorded_finder_tokens, 0,
-    "finder token counts should be \
-     zero"
+    recorded_finder_tokens,
+    expected_finder_tokens,
+    "finder token counts should \
+     reflect labeled sequences"
   );
 
   let samples = training_json
@@ -320,8 +327,20 @@ fn training_validation_delta_flow_runs()
     );
     assert_report_keys(
       entry,
-      &["format", "output"],
+      &["format", "output", "references"],
       "sample entry"
+    );
+    let reference_count = entry
+      .get("references")
+      .and_then(Value::as_u64)
+      .expect(
+        "sample entry should include \
+         reference count"
+      );
+    assert!(
+      reference_count > 0,
+      "sample entry reference counts \
+       should be non-zero"
     );
     if let Some(format) = entry
       .get("format")
@@ -487,9 +506,10 @@ fn training_validation_delta_flow_runs()
      match the training numbers"
   );
   assert_eq!(
-    validation_finder_tokens, 0,
+    validation_finder_tokens,
+    expected_finder_tokens,
     "finder validation token counts \
-     should be zero"
+     should match labeled sequences"
   );
 
   let delta_comparisons = delta_json
