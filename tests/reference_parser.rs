@@ -44,6 +44,10 @@ const DATE_RANGE_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995-04-02. pp. \
    12-34.";
+const MONTH_NAME_REF: &str =
+  "Perec, Georges. A Void. London: \
+   The Harvill Press, Apr 5 1995. pp. \
+   12-34.";
 
 const MULTI_AUTHOR_REF: &str =
   "Doe, J. and Smith, A. A Title. \
@@ -545,6 +549,39 @@ fn parse_captures_page_ranges_and_date_parts()
       "02".to_string()
     ],
     "Parser should capture date parts"
+  );
+}
+
+#[test]
+fn parse_captures_month_name_dates() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[MONTH_NAME_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  let date_values =
+    match reference.get("date") {
+      | Some(FieldValue::List(
+        values
+      )) => values,
+      | other => {
+        panic!(
+          "Expected list of date \
+           values, got {other:?}"
+        )
+      }
+    };
+  assert_eq!(
+    date_values,
+    &vec![
+      "1995".to_string(),
+      "04".to_string(),
+      "5".to_string()
+    ],
+    "Parser should parse month names \
+     into date parts"
   );
 }
 

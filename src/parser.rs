@@ -600,6 +600,15 @@ fn collect_year_tokens(
   for (candidate, allow_short) in
     capture_year_like(reference)
   {
+    if candidate.len() == 2
+      && candidate
+        .parse::<u32>()
+        .ok()
+        .filter(|value| *value <= 31)
+        .is_some()
+    {
+      continue;
+    }
     if date_parts_found
       && candidate.len() < 4
     {
@@ -632,6 +641,7 @@ fn collect_numeric_date_parts(
 ) -> Vec<String> {
   let mut parts = Vec::new();
   let separators = ['-', '/', '.'];
+  let mut found = false;
   for token in
     reference.split_whitespace()
   {
@@ -668,11 +678,119 @@ fn collect_numeric_date_parts(
             parts.push(normalized);
           }
         }
+        found = true;
         break;
       }
     }
   }
+  if !found {
+    if let Some(month_parts) =
+      collect_month_name_parts(
+        reference
+      )
+    {
+      parts = month_parts;
+    }
+  }
   parts
+}
+
+fn collect_month_name_parts(
+  reference: &str
+) -> Option<Vec<String>> {
+  let tokens = reference
+    .split_whitespace()
+    .map(|token| {
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      })
+    })
+    .filter(|token| !token.is_empty())
+    .collect::<Vec<_>>();
+  let month_index = tokens
+    .iter()
+    .position(|token| {
+      month_number(token).is_some()
+    })?;
+  let month =
+    month_number(tokens[month_index])?;
+
+  let mut year: Option<String> = None;
+  for token in
+    tokens[..month_index].iter().rev()
+  {
+    let digits: String = token
+      .chars()
+      .filter(|c| c.is_ascii_digit())
+      .collect();
+    if digits.len() >= 4 {
+      year =
+        Some(digits[..4].to_string());
+      break;
+    }
+  }
+  if year.is_none() {
+    for token in
+      tokens[month_index + 1..].iter()
+    {
+      let digits: String = token
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .collect();
+      if digits.len() >= 4 {
+        year =
+          Some(digits[..4].to_string());
+        break;
+      }
+    }
+  }
+  let year = year?;
+
+  let mut day = None;
+  if let Some(token) =
+    tokens.get(month_index + 1)
+  {
+    let digits: String = token
+      .chars()
+      .filter(|c| c.is_ascii_digit())
+      .collect();
+    if !digits.is_empty() {
+      day = Some(digits);
+    }
+  }
+
+  let mut parts =
+    vec![year, format!("{month:02}")];
+  if let Some(day) = day {
+    parts.push(day);
+  }
+  Some(parts)
+}
+
+fn month_number(
+  token: &str
+) -> Option<u32> {
+  let lower = token.to_lowercase();
+  let abbrev = lower.trim_end_matches(
+    |c: char| c == '.' || c == ','
+  );
+  match abbrev {
+    | "jan" | "january" => Some(1),
+    | "feb" | "february" => Some(2),
+    | "mar" | "march" => Some(3),
+    | "apr" | "april" => Some(4),
+    | "may" => Some(5),
+    | "jun" | "june" => Some(6),
+    | "jul" | "july" => Some(7),
+    | "aug" | "august" => Some(8),
+    | "sep" | "sept" | "september" => {
+      Some(9)
+    }
+    | "oct" | "october" => Some(10),
+    | "nov" | "november" => Some(11),
+    | "dec" | "december" => Some(12),
+    | _ => None
+  }
 }
 
 fn normalize_date_part(
@@ -718,6 +836,15 @@ fn normalize_year_candidate(
         return Some(format!(
           "{prefix}{digits}"
         ));
+      }
+      if len == 2
+        && digits
+          .parse::<u32>()
+          .ok()
+          .filter(|value| *value > 31)
+          .is_none()
+      {
+        return None;
       }
       let default_prefix =
         default_century_prefix(
