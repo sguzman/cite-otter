@@ -55,7 +55,9 @@ impl Format {
     &self,
     references: &[Reference]
   ) -> String {
-    references
+    let mut key_counts =
+      std::collections::HashMap::new();
+    let mut output = references
       .iter()
       .enumerate()
       .map(|(idx, reference)| {
@@ -69,12 +71,18 @@ impl Format {
         );
         let entry_type =
           entry_type_for(&mut map);
+        let key =
+          bibtex_key_for(&map, idx, &mut key_counts);
         fields_to_bibtex(
-          idx, entry_type, &map
+          &key, entry_type, &map
         )
       })
       .collect::<Vec<_>>()
-      .join("\n\n")
+      .join("\n");
+    if !output.ends_with('\n') {
+      output.push('\n');
+    }
+    output
   }
 
   pub fn to_json(
@@ -166,10 +174,14 @@ fn field_value_strings(
           if author.given.is_empty() {
             author.family.clone()
           } else {
+            let given =
+              normalize_given_initials(
+                &author.given
+              );
             format!(
               "{}, {}",
               author.family,
-              author.given
+              given
             )
           }
         })
@@ -187,30 +199,9 @@ fn normalize_bibtex_entry(
     map.insert("type".into(), value);
   }
 
-  map.remove("date-circa");
-  map.remove("scripts");
+  normalize_bibtex_date(map);
   map.remove("language");
-
-  if let Some(value) = map.remove("date")
-  {
-    if !map.contains_key("year") {
-      if let Some(year) = value
-        .as_array()
-        .and_then(|items| {
-          items
-            .first()
-            .and_then(Value::as_str)
-        })
-      {
-        map.insert(
-          "year".into(),
-          Value::Array(vec![Value::String(
-            year.to_string()
-          )])
-        );
-      }
-    }
-  }
+  map.remove("scripts");
 
   if let Some(value) =
     map.remove("isbn")
@@ -222,17 +213,6 @@ fn normalize_bibtex_entry(
   {
     map.insert("issn".into(), value);
   }
-  if !map.contains_key("number")
-    && !map.contains_key("issue")
-  {
-    if let Some(value) =
-      map.remove("collection-number")
-    {
-      map
-        .insert("number".into(), value);
-    }
-  }
-
   rename_field(
     map,
     "container-title",
@@ -276,6 +256,8 @@ fn entry_type_for(
       .unwrap_or_else(|| "misc".into());
   let entry_type = match raw_type.as_str() {
     | "article-journal" => "article",
+    | "chapter" => "incollection",
+    | "manuscript" => "unpublished",
     | "report" => "techreport",
     | "paper-conference" => {
       "inproceedings"
@@ -316,20 +298,30 @@ fn entry_type_for(
 }
 
 fn fields_to_bibtex(
-  idx: usize,
+  key: &str,
   entry_type: String,
   map: &Map<String, Value>
 ) -> String {
-  let fields = bibtex_fields(map)
-    .into_iter()
-    .map(|(key, value)| {
-      format!("  {key} = {{{value}}},")
-    })
-    .collect::<Vec<_>>()
-    .join("\n");
+  let fields = bibtex_fields(map);
+  let total = fields.len();
+  let mut rendered = Vec::with_capacity(total);
+  for (idx, (key, value)) in
+    fields.into_iter().enumerate()
+  {
+    let suffix =
+      if idx + 1 == total {
+        ""
+      } else {
+        ","
+      };
+    rendered.push(format!(
+      "  {key} = {{{value}}}{suffix}"
+    ));
+  }
+  let fields = rendered.join("\n");
 
   format!(
-    "@{entry_type}{{citeotter{idx},\n{fields}\n}}"
+    "@{entry_type}{{{key},\n{fields}\n}}"
   )
 }
 
@@ -337,94 +329,13 @@ fn csl_entry(
   idx: usize,
   map: Map<String, Value>
 ) -> String {
-  let mut record = Map::new();
-  record.insert(
-    "id".into(),
-    Value::String(format!(
-      "citeotter{idx}"
-    ))
-  );
+  let _ = idx;
 
-  if let Some(entry_type) =
-    extract_first_value_from_map(
-      &map, "type"
-    )
-  {
-    record.insert(
-      "type".into(),
-      Value::String(entry_type)
-    );
-  }
-
-  if let Some(title) =
-    extract_first_value_from_map(
-      &map, "title"
-    )
-  {
-    record.insert(
-      "title".into(),
-      Value::String(title)
-    );
-  }
-
-  if let Some(date_parts) =
-    extract_date_parts(&map)
-  {
-    record.insert(
-      "issued".into(),
-      Value::Object(
-        Map::from_iter([(
-          "date-parts".into(),
-          Value::Array(vec![Value::Array(
-            date_parts
-              .into_iter()
-              .map(|part| {
-                Value::Number(
-                  serde_json::Number::from(
-                    part
-                  )
-                )
-              })
-              .collect()
-          )])
-        )])
-      )
-    );
-  }
-  if extract_first_value_from_map(
-    &map,
-    "date-circa"
-  )
-  .is_some()
-  {
-    record.insert(
-      "circa".into(),
-      Value::Bool(true)
-    );
-  }
-
-  if let Some(pages) =
-    extract_first_value_from_map(
-      &map, "pages"
-    )
-  {
-    if !pages.is_empty() {
-      let page_first_value =
-        page_first(&pages);
-      record.insert(
-        "page".into(),
-        Value::String(pages)
-      );
-      if let Some(first) =
-        page_first_value
-      {
-        record.insert(
-          "page-first".into(),
-          Value::String(first)
-        );
-      }
-    }
-  }
+  let mut entries: Vec<(String, Value)> =
+    Vec::new();
+  let mut push = |key: &str, value: Value| {
+    entries.push((key.to_string(), value));
+  };
 
   for key in
     ["author", "editor", "translator"]
@@ -432,8 +343,8 @@ fn csl_entry(
     if let Some(values) =
       extract_values_from_map(&map, key)
     {
-      record.insert(
-        key.into(),
+      push(
+        key,
         Value::Array(
           values
             .into_iter()
@@ -444,18 +355,76 @@ fn csl_entry(
     }
   }
 
-  if let Some(values) =
-    extract_values_from_map(&map, "scripts")
+  if let Some(title) =
+    extract_first_value_from_map(
+      &map, "title"
+    )
   {
-    record.insert(
-      "scripts".into(),
-      Value::Array(
-        values
-          .into_iter()
-          .map(Value::String)
-          .collect()
-      )
+    push(
+      "title",
+      Value::String(title)
     );
+  }
+
+  for key in [
+    "edition",
+    "publisher",
+    "note",
+    "genre",
+    "container-title",
+    "collection-title",
+    "collection-number",
+    "journal",
+    "volume",
+    "issue",
+    "isbn",
+    "issn"
+  ] {
+    if let Some(value) =
+      extract_first_value_from_map(
+        &map, key
+      )
+    {
+      push(
+        key,
+        Value::String(
+          sanitize_csl_value(&value)
+        )
+      );
+    }
+  }
+
+  if let Some(entry_type) =
+    extract_first_value_from_map(
+      &map, "type"
+    )
+  {
+    push(
+      "type",
+      Value::String(entry_type)
+    );
+  }
+
+  if let Some(issued) =
+    extract_csl_issued(&map)
+  {
+    push(
+      "issued",
+      Value::String(issued)
+    );
+  }
+
+  if let Some(pages) =
+    extract_first_value_from_map(
+      &map, "pages"
+    )
+  {
+    if !pages.is_empty() {
+      push(
+        "page",
+        Value::String(pages)
+      );
+    }
   }
 
   if let Some(value) =
@@ -469,45 +438,54 @@ fn csl_entry(
       )
     })
   {
-    record.insert(
-      "publisher-place".into(),
-      Value::String(value)
+    push(
+      "publisher-place",
+      Value::String(
+        sanitize_csl_value(&value)
+      )
     );
   }
 
-  for key in [
-    "note",
-    "genre",
-    "edition",
-    "container-title",
-    "collection-title",
-    "collection-number",
-    "journal",
-    "publisher",
-    "language",
-    "volume",
-    "issue",
-    "doi",
-    "url",
-    "isbn",
-    "issn"
-  ] {
-    if let Some(value) =
-      extract_first_value_from_map(
-        &map, key
+  if let Some(value) =
+    extract_first_value_from_map(&map, "url")
+  {
+    push(
+      "URL",
+      Value::String(
+        sanitize_csl_value(&value)
       )
-    {
-      record.insert(
-        key.into(),
-        Value::String(value)
-      );
-    }
+    );
+  }
+  if let Some(value) =
+    extract_first_value_from_map(&map, "doi")
+  {
+    push(
+      "DOI",
+      Value::String(
+        sanitize_csl_value(&value)
+      )
+    );
   }
 
-  serde_json::to_string(&Value::Object(
-    record
-  ))
-  .unwrap_or_else(|_| "{}".into())
+  let mut output = String::from("{");
+  for (idx, (key, value)) in
+    entries.iter().enumerate()
+  {
+    let key_json =
+      serde_json::to_string(key)
+        .unwrap_or_else(|_| "\"\"".into());
+    let value_json =
+      serde_json::to_string(value)
+        .unwrap_or_else(|_| "null".into());
+    output.push_str(&key_json);
+    output.push(':');
+    output.push_str(&value_json);
+    if idx + 1 < entries.len() {
+      output.push(',');
+    }
+  }
+  output.push('}');
+  output
 }
 
 fn extract_first_value(
@@ -623,49 +601,36 @@ fn split_name(
   Some((family, given))
 }
 
-fn extract_date_parts(
+fn extract_csl_issued(
   map: &Map<String, Value>
-) -> Option<Vec<i32>> {
-  let array = map.get("date")?.as_array()?;
-  let mut parts = Vec::new();
-  if array.len() > 1 {
-    for value in array {
-      let raw = value.as_str()?;
-      if let Ok(parsed) = raw.parse::<i32>()
-      {
-        parts.push(parsed);
-      }
-    }
-  } else if let Some(value) =
-    array.first().and_then(Value::as_str)
-  {
-    parts.extend(
-      value
-        .split(|c: char| {
-          !c.is_ascii_digit()
-        })
-        .filter(|part| !part.is_empty())
-        .filter_map(|part| part.parse::<i32>().ok())
-    );
-  }
-  if parts.is_empty() {
-    None
-  } else {
-    Some(parts)
-  }
-}
-
-fn page_first(
-  pages: &str
 ) -> Option<String> {
-  let digits: String = pages
-    .chars()
-    .take_while(|c| c.is_ascii_digit())
-    .collect();
-  if digits.is_empty() {
-    None
+  let array = map.get("date")?.as_array()?;
+  let mut parts = array
+    .iter()
+    .filter_map(Value::as_str)
+    .map(|value| value.trim())
+    .filter(|value| !value.is_empty())
+    .collect::<Vec<_>>();
+  if parts.is_empty() {
+    return None;
+  }
+  let issued = if parts.len() == 1 {
+    parts.remove(0).to_string()
+  } else if parts.len() == 2
+    && parts
+      .iter()
+      .all(|value| value.len() == 4)
+  {
+    format!("{}/{}", parts[0], parts[1])
+  } else if parts.len() >= 3 {
+    format!("{}-{}-{}", parts[0], parts[1], parts[2])
   } else {
-    Some(digits)
+    parts.join("-")
+  };
+  if map.get("date-circa").is_some() {
+    Some(format!("{issued}~"))
+  } else {
+    Some(issued)
   }
 }
 
@@ -685,35 +650,54 @@ fn rename_field(
 fn bibtex_fields(
   map: &Map<String, Value>
 ) -> Vec<(String, String)> {
+  let date_is_circa = map
+    .get("date")
+    .and_then(Value::as_array)
+    .and_then(|items| items.first())
+    .and_then(Value::as_str)
+    .map(|value| value.trim_end().ends_with('~'))
+    .unwrap_or(false);
   let mut entries = map
     .iter()
     .filter_map(|(key, value)| {
-      let content = value
-        .as_array()
-        .and_then(|items| {
-          items
-            .first()
-            .and_then(Value::as_str)
-        })
-        .map(sanitize_bibtex_value);
+      let content =
+        if is_bibtex_name_field(key) {
+          value.as_array().map(|items| {
+            items
+              .iter()
+              .filter_map(Value::as_str)
+              .map(sanitize_bibtex_name_value)
+              .collect::<Vec<_>>()
+              .join(" and ")
+          })
+        } else {
+          value
+            .as_array()
+            .and_then(|items| {
+              items
+                .first()
+                .and_then(Value::as_str)
+            })
+            .map(sanitize_bibtex_value)
+        };
       content.map(|value| (key.clone(), value))
     })
     .collect::<Vec<_>>();
   let order = [
     "author",
     "title",
+    "edition",
     "booktitle",
     "journal",
     "series",
     "volume",
     "number",
-    "edition",
     "publisher",
+    "date",
     "institution",
     "school",
-    "address",
-    "year",
     "pages",
+    "address",
     "doi",
     "url",
     "isbn",
@@ -729,6 +713,16 @@ fn bibtex_fields(
       .iter()
       .position(|key| key == right)
       .unwrap_or(usize::MAX);
+    let left_idx = if left == "date" && date_is_circa {
+      1
+    } else {
+      left_idx
+    };
+    let right_idx = if right == "date" && date_is_circa {
+      1
+    } else {
+      right_idx
+    };
     left_idx
       .cmp(&right_idx)
       .then_with(|| left.cmp(right))
@@ -739,10 +733,163 @@ fn bibtex_fields(
 fn sanitize_bibtex_value(
   value: &str
 ) -> String {
+  strip_terminal_punct(value)
+    .replace('\n', " ")
+    .replace('\r', " ")
+    .split_whitespace()
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
+fn sanitize_bibtex_name_value(
+  value: &str
+) -> String {
   value
     .replace('\n', " ")
     .replace('\r', " ")
     .split_whitespace()
     .collect::<Vec<_>>()
     .join(" ")
+}
+
+fn sanitize_csl_value(
+  value: &str
+) -> String {
+  strip_terminal_punct(value)
+    .split_whitespace()
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
+fn strip_terminal_punct(
+  value: &str
+) -> String {
+  value
+    .trim()
+    .trim_end_matches(|c: char| {
+      matches!(c, '.' | ',' | ';')
+    })
+    .to_string()
+}
+
+fn normalize_given_initials(
+  value: &str
+) -> String {
+  value
+    .split_whitespace()
+    .map(|part| {
+      if part.len() == 1
+        && part.chars().all(|c| c.is_alphabetic())
+      {
+        format!("{part}.")
+      } else {
+        part.to_string()
+      }
+    })
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
+fn is_bibtex_name_field(
+  key: &str
+) -> bool {
+  matches!(
+    key,
+    "author" | "editor" | "translator"
+  )
+}
+
+fn normalize_bibtex_date(
+  map: &mut Map<String, Value>
+) {
+  let has_circa =
+    map.get("date-circa").is_some();
+  let Some(value) = map.get_mut("date")
+  else {
+    return;
+  };
+  let Some(items) = value.as_array()
+  else {
+    return;
+  };
+  let mut parts = items
+    .iter()
+    .filter_map(Value::as_str)
+    .map(|value| value.trim())
+    .filter(|value| !value.is_empty())
+    .collect::<Vec<_>>();
+  if parts.is_empty() {
+    return;
+  }
+  let mut date = if parts.len() == 1 {
+    parts.remove(0).to_string()
+  } else if parts.len() == 2
+    && parts
+      .iter()
+      .all(|value| value.len() == 4)
+  {
+    format!("{}/{}", parts[0], parts[1])
+  } else if parts.len() >= 3 {
+    format!("{}-{}-{}", parts[0], parts[1], parts[2])
+  } else {
+    parts.join("-")
+  };
+  if has_circa {
+    date.push('~');
+  }
+  *value = Value::Array(vec![Value::String(
+    date
+  )]);
+  map.remove("date-circa");
+}
+
+fn bibtex_key_for(
+  map: &Map<String, Value>,
+  idx: usize,
+  counts: &mut std::collections::HashMap<
+    String,
+    usize
+  >
+) -> String {
+  let author = map
+    .get("author")
+    .and_then(Value::as_array)
+    .and_then(|items| items.first())
+    .and_then(Value::as_str)
+    .unwrap_or("");
+  let family = author
+    .split(',')
+    .next()
+    .unwrap_or("")
+    .split_whitespace()
+    .next()
+    .unwrap_or("");
+  let family = family
+    .chars()
+    .filter(|c| c.is_ascii_alphanumeric())
+    .collect::<String>()
+    .to_lowercase();
+  let date = map
+    .get("date")
+    .and_then(Value::as_array)
+    .and_then(|items| items.first())
+    .and_then(Value::as_str)
+    .unwrap_or("");
+  let year = date
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .collect::<String>();
+  let year = if year.len() >= 4 {
+    year[..4].to_string()
+  } else {
+    String::new()
+  };
+  if family.is_empty() || year.is_empty() {
+    return format!("citeotter{idx}");
+  }
+  let base = format!("{family}{year}");
+  let count = counts.entry(base.clone()).or_insert(0);
+  let suffix = (*count as u8 + b'a') as char;
+  *count += 1;
+  format!("{base}{suffix}")
 }

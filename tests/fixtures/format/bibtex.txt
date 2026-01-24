@@ -1,17 +1,16 @@
-@book{citeotter0,
-  author = {Derrida, J},
+@book{derrida1967a,
+  author = {Derrida, J.},
+  date = {1967~},
   title = {L’écriture et la différence},
   edition = {1},
-  publisher = {Éditions du Seuil.},
-  address = {Paris},
-  year = {1967},
+  publisher = {Éditions du Seuil},
+  address = {Paris}
 }
-
-@book{citeotter1,
+@book{perec1995a,
   author = {Perec, Georges},
   title = {A Void},
   publisher = {The Harvill Press},
-  address = {London},
-  year = {1995},
+  date = {1995},
   pages = {108},
+  address = {London}
 }

@@ -1,2 +1,2 @@
-{"author":[{"family":"Derrida","given":"J"}],"circa":true,"edition":"1","id":"citeotter0","issued":{"date-parts":[[1967]]},"language":"fr","publisher":"Éditions du Seuil.","publisher-place":"Paris","scripts":["Common","Latin"],"title":"L’écriture et la différence","type":"book"}
-{"author":[{"family":"Perec","given":"Georges"}],"id":"citeotter1","issued":{"date-parts":[[1995]]},"language":"en","page":"108","page-first":"108","publisher":"The Harvill Press","publisher-place":"London","scripts":["Common","Latin"],"title":"A Void","type":"book"}
+{"author":[{"family":"Derrida","given":"J."}],"title":"L’écriture et la différence","edition":"1","publisher":"Éditions du Seuil","type":"book","issued":"1967~","publisher-place":"Paris"}
+{"author":[{"family":"Perec","given":"Georges"}],"title":"A Void","publisher":"The Harvill Press","type":"book","issued":"1995","page":"108","publisher-place":"London"}

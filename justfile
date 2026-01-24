@@ -101,6 +101,9 @@ refresh-fixtures-fast:
 	scripts/sync_normalization_any.sh
 	CITE_OTTER_CORE_LIMIT=200 cargo run --quiet --bin generate_format_fixtures
 
+compare-ruby-format:
+	scripts/compare_ruby_format.sh
+
 # Security (Rust)
 audit:
 	cargo audit
