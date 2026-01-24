@@ -20,7 +20,7 @@
   author = {Solon, G (1999)}
   issue = {1761}
   pages = {1761-1800}
-  publisher = {Elsevier. Retrieved from http}
+  publisher = {Elsevier. Retrieved from. http}
   title = {Chapter 29}
   url = {http://www.sciencedirect.com/science/article/pii/S1573446399030102}
   volume = {3}
@@ -61,23 +61,23 @@
 
 @misc{citeotter7,
   address = {Himself}
-  author = {Adams, Nicholson B “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera ” Proceedings of the Modern Language Association 45 (1930) pp}
-  booktitle = {Adams, Nicholson B., “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera,” Proceedings of the Modern Language Association, 45 (1930), pp}
+  author = {Adams, Nicholson B “A Spanish Romanticist Parodies Himself: Los Hijos del Tı́o Tronera ”}
+  booktitle = {Proceedings of the Modern Language Association, 45 (1930), pp}
   number = {45}
   pages = {573-77}
   publisher = {Los Hijos del Tı́o Tronera}
   series = {Proceedings of the Modern Language Association}
-  title = {573–77}
+  title = {Proceedings of the Modern Language Association, 45 (1930), pp}
   year = {1930}
 }
 
 @misc{citeotter8,
   address = {14}
   author = {Lee, L L W E}
-  booktitle = {Proceedings of the Vertebrate Pest Conference 14: 87-90}
-  number = {87}
+  booktitle = {Proceedings of the Vertebrate Pest Conference}
+  number = {14}
   publisher = {87-90.}
-  series = {Proceedings of the Vertebrate Pest Conference 14}
+  series = {Proceedings of the Vertebrate Pest Conference}
   title = {Howard, and R. E}
   year = {1990}
 }
@@ -118,7 +118,7 @@
 @book{citeotter13,
   address = {pointers}
   author = {W}
-  publisher = {A problem taxonomy. Center for Computer Aids for Industrial Productivity Technical Report CAIP-TR-125}
+  publisher = {A problem taxonomy. Center for Computer Aids for Industrial Productivity. Technical Report CAIP-TR-125}
   title = {Landi and B. G}
   year = {1990}
 }
@@ -312,7 +312,7 @@
 @book{citeotter35,
   address = {1996}
   author = {Ancona, D}
-  booktitle = {Conference on Algebraic and Logic Programming (Berlin, 1996)}
+  booktitle = {Conference on Algebraic and Logic Programming. (Berlin, 1996)}
   title = {An algebraic approach to mixins and modularity}
   year = {1996}
 }
@@ -320,7 +320,7 @@
 @misc{citeotter36,
   address = {Reliability}
   author = {P}
-  booktitle = {Chern "Design for Reliability: The Major Challenge for VLSI," Proceedings of IEEE, Vol}
+  booktitle = {Proceedings of IEEE, Vol}
   collection-number = {81}
   issue = {5}
   pages = {730-744}
@@ -409,7 +409,7 @@
 @book{citeotter45,
   address = {1962}
   author = {Feferman, S Transfinite Recursive Progressions of Axiomatic Theories J}
-  title = {Symbolic Logic, 27, 259-316 (1962)}
+  title = {Symbolic Logic, 27, 259-316. (1962)}
   year = {1316}
 }
 
@@ -478,9 +478,10 @@
 
 @book{citeotter53,
   address = {York}
-  author = {Forsyth, C H Implementation of the Worst-Case Execution Time Analyser June 1992 York Software Engineering Ltd University of York: Task 8 Volume E Deliverable on ESTEC contract 9198}
-  publisher = {Task 8 Volume E Deliverable on ESTEC contract 9198/90/NL/SF}
+  author = {Forsyth, C H Implementation of the Worst-Case Execution Time Analyser}
+  publisher = {Task 8 Volume E Deliverable on ESTEC contract 9198/90/NL/SF.}
   series = {Volume E Deliverable on ESTEC contract 9198/90/NL/SF}
+  title = {June 1992, York Software Engineering Ltd., University of York: Task 8 Volume E Deliverable on ESTEC contract 9198/90/NL/SF}
   volume = {9198}
   year = {1992}
 }
@@ -488,11 +489,11 @@
 @misc{citeotter54,
   address = {292-302}
   author = {J}
-  booktitle = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science 392, Springer Verlag, 1989, pp}
-  number = {1989}
+  booktitle = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science}
+  number = {392}
   pages = {292-302}
-  series = {Lecture Notes in Computer Science 392}
-  title = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science 392, Springer Verlag, 1989, pp}
+  series = {Lecture Notes in Computer Science}
+  title = {Tromp, "How to Construct an Atomic Variable", Proceedings of the Third International Workshop on Distributed Algorithms, Lecture Notes in Computer Science}
   year = {1989}
 }
 
@@ -578,7 +579,7 @@
   address = {Skeletonization}
   author = {Mozer, M C}
   pages = {107-115}
-  publisher = {A technique for trimming the fat from a network via relevance assessment. Advances in Neural Information Processing Systems (Vol. 1)}
+  publisher = {A technique for trimming the fat from a network via relevance assessment. Advances in Neural Information Processing Systems. (Vol. 1)}
   title = {Skeletonization: A technique for trimming the fat from a network via relevance assessment}
   volume = {1}
   year = {1988}
@@ -634,7 +635,7 @@
 @book{citeotter72,
   address = {1990}
   author = {C}
-  title = {Rosene, ``Incremental dependence analysis,'' Ph}
+  title = {Rosene, ``Incremental dependence analysis,}
   year = {1990}
 }
 
@@ -702,18 +703,19 @@
 @misc{citeotter79,
   address = {Box}
   author = {Burton, Robert P}
-  booktitle = {"Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp}
-  number = {513}
+  booktitle = {"Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp}
+  number = {1974}
   pages = {513-520}
-  publisher = {A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp. 513-520.}
-  series = {Proceedings of the National Computer Conference (1974) pp}
-  title = {Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference (1974) pp}
+  publisher = {A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp. 513-520.}
+  series = {Proceedings of the National Computer Conference}
+  title = {Twinkle Box: A Three-dimensional Computer Input Device". in Proceedings of the National Computer Conference. (1974) pp}
   year = {1974}
 }
 
 @book{citeotter80,
   address = {1987}
-  author = {Barry Wilkinson, Digital System Design Prentice Hall 1987}
+  author = {Barry Wilkinson, Digital System Design}
+  title = {Prentice Hall}
   year = {1987}
 }
 
@@ -766,7 +768,7 @@
 @misc{citeotter87,
   address = {54-67}
   author = {W}
-  booktitle = {Boss, "Multimedia Databases and Servers," AT&T Technical Journal, Vol}
+  booktitle = {AT&T Technical Journal, Vol}
   issue = {5}
   pages = {54-67}
   title = {Sterling, F}
@@ -1178,7 +1180,7 @@
   pages = {323-1988}
   publisher = {Definitions}
   series = {Lecture Notes in Computer Science}
-  title = {323, Springer-Verlag, New York, NY (1988)}
+  title = {323, Springer-Verlag, New York, NY. (1988)}
   volume = {323}
   year = {1988}
 }
@@ -1426,7 +1428,8 @@
   address = {1991}
   author = {D}
   editor = {Editor}
-  title = {Borman, Editor, ``Telnet Encryption Option,'' Internet-Draft, Internet Engineering Task Force, Telnet Working Group (July 1991)}
+  pages = {1991}
+  title = {Borman, Editor, ``Telnet Encryption Option,}
   year = {1991}
 }
 
@@ -1448,9 +1451,9 @@
 @misc{citeotter165,
   address = {180-190}
   author = {Felleisen, M}
-  booktitle = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages (1988), 180-190}
-  number = {180}
-  series = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages (1988)}
+  booktitle = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages. (1988), 180-190}
+  number = {1988}
+  series = {Proceedings of the 15th Annual Symposium on Principles of Programming Languages}
   title = {The theory and practice of first-class prompts}
   year = {1988}
 }
@@ -1503,7 +1506,7 @@
 @book{citeotter171,
   address = {theory}
   author = {Eifrig, J Smith S Trifonov V}
-  booktitle = {Conference on Object-Oriented Programming Systems, Languages, and Applications (Oct. 1994), pp}
+  booktitle = {Conference on Object-Oriented Programming Systems, Languages, and Applications. (Oct. 1994), pp}
   pages = {16-30}
   publisher = {State}
   title = {Application of OOP type theory: State, decid-ability, integration}
@@ -1696,7 +1699,7 @@
 @book{citeotter193,
   address = {1989}
   author = {M}
-  title = {Wolfe, ``Optimizing supercompilers for supercomputers,'' Pitman Publishing Company, London, MIT Press, Cambridge, Massachusets, 1989}
+  title = {Wolfe, ``Optimizing supercompilers for supercomputers,}
   year = {1989}
 }
 

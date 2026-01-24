@@ -16,6 +16,29 @@ use cite_otter::parser::{
 mod support;
 use support::assert_snapshot_eq;
 
+#[test]
+fn format_diff_writes_report_for_mismatch() {
+  let tmp =
+    std::path::Path::new("target")
+      .join("reports")
+      .join("format-diff.txt");
+  let _ = std::fs::remove_file(&tmp);
+  let result = std::panic::catch_unwind(
+    || {
+      assert_snapshot_eq(
+        "diff fixture",
+        "actual",
+        "expected"
+      );
+    }
+  );
+  assert!(result.is_err());
+  assert!(
+    tmp.exists(),
+    "diff report should be written"
+  );
+}
+
 const PEREC_REF: &str =
   "Perec, Georges. A Void. London: \
    The Harvill Press, 1995. p.108.";

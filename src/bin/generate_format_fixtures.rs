@@ -146,7 +146,8 @@ fn render_reference(
 ) -> String {
   let mut output = String::new();
   let mut previous = String::new();
-  for (_tag, text) in parts {
+  for (tag, text) in parts {
+    let text = normalize_tag_text(tag, text);
     let text = text.trim();
     if text.is_empty() {
       continue;
@@ -169,6 +170,36 @@ fn render_reference(
     previous = text.to_string();
   }
   output
+}
+
+fn normalize_tag_text(
+  tag: &str,
+  text: &str
+) -> String {
+  let trimmed = text.trim();
+  if trimmed.is_empty() {
+    return String::new();
+  }
+  let needs_period = matches!(
+    tag,
+    "author"
+      | "title"
+      | "location"
+      | "publisher"
+      | "container-title"
+      | "collection-title"
+      | "editor"
+      | "translator"
+      | "note"
+      | "date"
+      | "pages"
+  );
+  if needs_period && !ends_with_punct(trimmed)
+  {
+    format!("{trimmed}.")
+  } else {
+    trimmed.to_string()
+  }
 }
 
 fn ends_with_punct(
