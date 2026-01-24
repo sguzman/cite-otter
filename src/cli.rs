@@ -1183,6 +1183,57 @@ mod tests {
       .expect("resolve repo path");
     assert_eq!(resolved, source);
   }
+
+  #[test]
+  fn normalization_sync_clones_repo() {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let remote_repo =
+      temp_dir.path().join("remote");
+    let _ = ProcessCommand::new("git")
+      .args([
+        "init",
+        remote_repo
+          .to_string_lossy()
+          .as_ref()
+      ])
+      .status()
+      .expect("git init");
+    let journal = remote_repo
+      .join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+    let _ = ProcessCommand::new("git")
+      .current_dir(&remote_repo)
+      .args(["add", "."])
+      .status()
+      .expect("git add");
+    let _ = ProcessCommand::new("git")
+      .current_dir(&remote_repo)
+      .args([
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
+        "commit",
+        "-m",
+        "seed"
+      ])
+      .status()
+      .expect("git commit");
+
+    let cloned =
+      resolve_normalization_source(
+        remote_repo
+          .to_string_lossy()
+          .as_ref()
+      )
+      .expect("clone repo");
+    assert!(cloned.exists());
+  }
 }
 
 fn run_training_with_config(

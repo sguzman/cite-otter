@@ -33,6 +33,9 @@ Cite-Otter is a Rust re-implementation of the Ruby [`AnyStyle`](https://github.c
 3. Use `ROADMAP.md` to decide which phase you are tackling and refer to `REFERENCE.md` for Ruby behaviors to match.
 4. The CLI `parse` command now accepts `--format json|bibtex|csl` so you can request multiple export styles from the same parsing pipeline.
 5. Run `cite-otter sample --format json|bibtex|csl` to see the richer metadata map emitted by the parser/formatter (journal → container-title, collection → series, DOI/URL, etc.).
+6. Normalize output fields with synced abbreviation assets:
+   - `cite-otter normalization-sync --repo https://github.com/inukshuk/anystyle --output-dir target/normalization`
+   - `cite-otter parse --normalization-dir target/normalization --format json "Doe, J. Proc. Test. Proceedings of Testing. City: Univ. Press, 2020."`
 
 ## Goals beyond the docs
 
