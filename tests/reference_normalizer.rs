@@ -422,6 +422,46 @@ fn normalization_config_prefers_manual_locale_overrides()
 }
 
 #[test]
+fn normalization_any_assets_load_locale_mappings()
+ {
+  let config =
+    NormalizationConfig::load_from_dir(
+      std::path::Path::new(
+        "tests/fixtures/normalization-any"
+      )
+    )
+    .expect("normalization assets");
+  let mut map = Map::new();
+  map.insert(
+    "language".into(),
+    Value::String("en".into())
+  );
+  map.insert(
+    "scripts".into(),
+    Value::String("Latin".into())
+  );
+  config.apply_to_map(&mut map);
+  let language = map
+    .get("language")
+    .and_then(Value::as_str);
+  assert_eq!(
+    language,
+    Some("en-US"),
+    "normalization assets should map \
+     language codes"
+  );
+  let scripts = map
+    .get("scripts")
+    .and_then(Value::as_str);
+  assert_eq!(
+    scripts,
+    Some("Latn"),
+    "normalization assets should map \
+     script names"
+  );
+}
+
+#[test]
 fn abbreviations_last_entry_wins() {
   let abbreviations =
     AbbreviationMap::load_from_str(

@@ -127,6 +127,22 @@ const PAGE_RANGE_DATE_REF: &str =
    Intergenerational mobility in the \
    labor market. (Vol. 3, Part A, pp. \
    1761–1800). London: Elsevier.";
+const VOLUME_ISSUE_REF: &str =
+  "Ghezzi, C., Mandriolli, D., \
+   Morzenti, A. Trio: A logic language \
+   for executable specifications of \
+   real-time systems. Journal of \
+   Systems and Software, 12(2), \
+   107-123, May 1990.";
+const ISSUE_PART_REF: &str =
+  "Fischer, H. Centre Pompidou. \
+   Deutsche Bauzeitung, H. 134, Part 3, \
+   2000, 20-21.";
+const IEEE_PROC_REF: &str =
+  "Ramadge, P., Wonham, W. The \
+   Control of Discrete Event Systems. \
+   Proceedings of the IEEE, 77(1), \
+   81-98, 1989.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -1240,6 +1256,79 @@ fn parse_ignores_page_ranges_in_dates()
     "Parser should ignore page ranges \
      in date tokens"
   );
+}
+
+#[test]
+fn parse_captures_volume_with_parts() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[PAGE_RANGE_DATE_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "volume",
+    "3, Part A"
+  );
+}
+
+#[test]
+fn parse_captures_volume_and_issue_pairs() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[VOLUME_ISSUE_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(reference, "volume", "12");
+  assert_list_field(reference, "issue", "2");
+}
+
+#[test]
+fn parse_captures_issue_parts() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[ISSUE_PART_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(reference, "issue", "134, Part 3");
+}
+
+#[test]
+fn parse_prefers_journal_type_for_proceedings() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[IEEE_PROC_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "journal",
+    "Proceedings of the IEEE"
+  );
+  match reference.get("type") {
+    | Some(FieldValue::Single(value)) => {
+      assert_eq!(
+        value,
+        "article-journal",
+        "type should prefer journal \
+         classification"
+      );
+    }
+    | other => {
+      panic!(
+        "Expected FieldValue::Single, \
+         got {other:?}"
+      )
+    }
+  }
 }
 
 #[test]

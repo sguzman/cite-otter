@@ -1140,7 +1140,10 @@ fn extract_day_token(
     .chars()
     .filter(|c| c.is_ascii_digit())
     .count();
-  if total_digits > 2 {
+  let has_dash = token.contains('-')
+    || token.contains('–')
+    || token.contains('—');
+  if total_digits > 2 && !has_dash {
     return None;
   }
   let mut digits = String::new();
@@ -1534,7 +1537,10 @@ impl Parser {
         }
 
         if let Some(journal) =
-          extract_journal(reference)
+          extract_journal_with_dictionary(
+            reference,
+            Some(&self.dictionary)
+          )
         {
           mapped.insert(
             "journal",
@@ -2058,25 +2064,174 @@ fn title_from_first_segment(
 fn segment_is_container(
   segment: &str
 ) -> bool {
+  segment_is_conference(segment)
+    || segment_is_journal_like(segment)
+}
+
+fn segment_is_conference(
+  segment: &str
+) -> bool {
   let lower = segment.to_lowercase();
-  lower.contains("journal")
-    || lower.contains("proceedings")
-    || lower.contains("conference")
-    || lower.contains("symposium")
-    || lower.contains("meeting")
-    || lower.contains("presented")
+  if lower.contains("presented at") {
+    return true;
+  }
+  let keywords = [
+    "conference",
+    "symposium",
+    "workshop",
+    "meeting",
+    "colloquium"
+  ];
+  if keywords
+    .iter()
+    .any(|kw| lower.contains(kw))
+  {
+    return true;
+  }
+  if lower.contains("proceedings") {
+    return keywords
+      .iter()
+      .any(|kw| lower.contains(kw));
+  }
+  if lower.contains("proc.") {
+    if segment_is_journal_like(segment) {
+      return false;
+    }
+    return lower.contains("conf")
+      || lower.contains("symp")
+      || lower.contains("workshop")
+      || lower.contains("proc.");
+  }
+  false
+}
+
+fn segment_is_journal_like(
+  segment: &str
+) -> bool {
+  let lower = segment.to_lowercase();
+  if lower.contains("journal")
+    || lower.contains("trans.")
+    || lower.contains("transactions")
+    || lower.contains("bulletin")
+    || lower.contains("letters")
+    || lower.contains("lett")
+    || lower.contains("annals")
+    || lower.contains("review")
+    || lower.contains("rev.")
+    || lower.contains("acta")
+  {
+    return true;
+  }
+  if lower.contains("proc natl")
+    || lower.contains("proc. natl")
+    || lower.contains("acad")
+  {
+    return true;
+  }
+  let trimmed = segment.trim();
+  if trimmed.starts_with("J ")
+    || trimmed.starts_with("J.")
+    || trimmed.starts_with("J ")
+    || trimmed.starts_with("J-")
+  {
+    return true;
+  }
+  if lower.contains("ieee")
+    || lower.contains("acm")
+    || lower.contains("sig")
+  {
+    return true;
+  }
+  false
+}
+
+fn segment_journal_score(
+  segment: &str,
+  dictionary: Option<&Dictionary>
+) -> usize {
+  let mut score = 0usize;
+  if segment_is_journal_like(segment) {
+    score += 3;
+  }
+  if segment.starts_with("J ")
+    || segment.starts_with("J.")
+  {
+    score += 2;
+  }
+  if let Some(dictionary) = dictionary {
+    let matches = segment
+      .split(|c: char| !c.is_alphanumeric())
+      .filter(|token| !token.is_empty())
+      .filter(|token| {
+        dictionary
+          .lookup(token)
+          .contains(&DictionaryCode::Journal)
+      })
+      .count();
+    score += matches * 2;
+  }
+  score
+}
+
+fn strip_numeric_suffix(
+  segment: &str
+) -> String {
+  let mut digit_pos = None;
+  for (idx, ch) in segment.char_indices() {
+    if ch.is_ascii_digit() {
+      digit_pos = Some(idx);
+      break;
+    }
+  }
+  if let Some(idx) = digit_pos {
+    let prefix = segment[..idx].trim();
+    if let Some((sep_idx, _)) = prefix
+      .match_indices(&[',', ';', '('][..])
+      .last()
+    {
+      let tail = prefix[sep_idx + 1..]
+        .to_lowercase();
+      if tail.contains("vol")
+        || tail.contains("no")
+        || tail.contains("issue")
+        || tail.contains("part")
+        || tail.trim().is_empty()
+      {
+        return prefix[..sep_idx]
+          .trim()
+          .to_string();
+      }
+    }
+  }
+  segment.trim().to_string()
 }
 fn resolve_type(
   reference: &str
 ) -> String {
-  if reference
-    .to_lowercase()
-    .contains("journal")
+  let lower = reference.to_lowercase();
+  if lower.contains("thesis")
+    || lower.contains("dissertation")
   {
-    "article".into()
-  } else {
-    "book".into()
+    return "thesis".into();
   }
+  if lower.contains("report")
+    || lower.contains("technical report")
+  {
+    return "report".into();
+  }
+  if split_reference_segments(reference)
+    .iter()
+    .any(|segment| segment_is_conference(segment))
+  {
+    return "paper-conference".into();
+  }
+  if split_reference_segments(reference)
+    .iter()
+    .any(|segment| segment_is_journal_like(segment))
+  {
+    return "article-journal".into();
+  }
+  "book".into()
 }
 
 fn resolve_type_with_dictionary(
@@ -2097,8 +2252,14 @@ fn resolve_type_with_dictionary(
         &DictionaryCode::Journal
       )
     {
-      return "article".into();
+      return "article-journal".into();
     }
+  }
+  if split_reference_segments(reference)
+    .iter()
+    .any(|segment| segment_is_conference(segment))
+  {
+    return "paper-conference".into();
   }
   resolve_type(reference)
 }
@@ -2308,38 +2469,14 @@ fn extract_collection_number(
 fn extract_container_title(
   reference: &str
 ) -> Option<String> {
-  let keywords = [
-    "journal",
-    "proceedings",
-    "conference",
-    "symposium",
-    "meeting",
-    "presented",
-    "proceedings of"
-  ];
   split_reference_segments(reference)
     .iter()
     .map(|segment| segment.trim())
-    .filter(|segment| {
-      !segment.is_empty()
-    })
-    .find(|segment| {
-      let lower =
-        segment.to_lowercase();
-      keywords
-        .iter()
-        .any(|kw| lower.contains(kw))
-    })
-    .map(|segment| {
-      segment
-        .trim_end_matches(|c: char| {
-          c == ':'
-            || c == ','
-            || c == ';'
-        })
-        .trim()
-        .to_string()
-    })
+    .filter(|segment| !segment.is_empty())
+    .filter(|segment| segment_is_conference(segment))
+    .map(strip_numeric_suffix)
+    .map(|segment| clean_segment(&segment))
+    .next()
 }
 
 fn capture_number_after(
@@ -2363,16 +2500,47 @@ fn capture_number_after(
 fn extract_journal(
   reference: &str
 ) -> Option<String> {
-  split_reference_segments(reference)
-    .iter()
-    .map(|segment| segment.trim())
-    .find(|segment| {
-      let lower =
-        segment.to_lowercase();
-      lower.contains("journal")
-        || lower.contains("proceedings")
-    })
-    .map(clean_segment)
+  extract_journal_with_dictionary(
+    reference, None
+  )
+}
+
+fn extract_journal_with_dictionary(
+  reference: &str,
+  dictionary: Option<&Dictionary>
+) -> Option<String> {
+  let mut best: Option<(usize, String)> =
+    None;
+  for segment in
+    split_reference_segments(reference)
+  {
+    let trimmed = segment.trim();
+    if trimmed.is_empty() {
+      continue;
+    }
+    let score = segment_journal_score(
+      trimmed, dictionary
+    );
+    if score == 0 {
+      continue;
+    }
+    let cleaned = strip_numeric_suffix(
+      trimmed
+    );
+    let cleaned = clean_segment(&cleaned);
+    if cleaned.is_empty() {
+      continue;
+    }
+    match best {
+      | Some((best_score, _))
+        if best_score >= score =>
+      {}
+      | _ => {
+        best = Some((score, cleaned));
+      }
+    }
+  }
+  best.map(|(_, value)| value)
 }
 
 fn extract_editor(
@@ -2637,13 +2805,29 @@ fn extract_volume(
       lower.find(keyword)
     {
       let start = pos + keyword.len();
-      if let Some(digits) =
-        capture_number_after(
-          reference, start
-        )
+      let remainder =
+        reference.get(start..).unwrap_or("");
+      if let Some(volume) =
+        capture_number_after(reference, start)
       {
-        return Some(digits);
+        if let Some(part) =
+          extract_part_suffix(remainder)
+        {
+          return Some(format!(
+            "{volume}, Part {part}"
+          ));
+        }
+        return Some(volume);
       }
+    }
+  }
+  for segment in split_reference_segments(
+    reference
+  ) {
+    if let Some(volume) =
+      extract_volume_from_segment(&segment)
+    {
+      return Some(volume);
     }
   }
   None
@@ -2670,22 +2854,183 @@ fn extract_issue(
 ) -> Option<String> {
   let lower = reference.to_lowercase();
   for keyword in
-    ["number", "no.", "issue", "part"]
+    ["number", "no.", "issue"]
   {
     if let Some(pos) =
       lower.find(keyword)
     {
       let start = pos + keyword.len();
-      if let Some(digits) =
-        capture_number_after(
-          reference, start
-        )
+      let remainder =
+        reference.get(start..).unwrap_or("");
+      if let Some(value) =
+        capture_number_after(reference, start)
       {
-        return Some(digits);
+        if let Some(part) =
+          extract_part_suffix(remainder)
+        {
+          return Some(format!(
+            "{value}, Part {part}"
+          ));
+        }
+        return Some(value);
       }
     }
   }
+  for segment in split_reference_segments(
+    reference
+  ) {
+    if let Some(issue) =
+      extract_issue_from_segment(&segment)
+    {
+      return Some(issue);
+    }
+  }
   None
+}
+
+fn extract_volume_from_segment(
+  segment: &str
+) -> Option<String> {
+  let (volume, issue) =
+    parse_volume_issue_pair(segment);
+  if let Some(volume) = volume {
+    if let Some(part) =
+      extract_part_suffix(segment)
+    {
+      return Some(format!(
+        "{volume}, Part {part}"
+      ));
+    }
+    return Some(volume);
+  }
+  if issue.is_some() {
+    None
+  } else {
+    None
+  }
+}
+
+fn extract_issue_from_segment(
+  segment: &str
+) -> Option<String> {
+  let (volume, issue) =
+    parse_volume_issue_pair(segment);
+  if let Some(issue) = issue {
+    return Some(issue);
+  }
+  if let Some(part) =
+    extract_part_suffix(segment)
+  {
+    let before = segment
+      .to_lowercase()
+      .find("part")
+      .and_then(|pos| segment.get(..pos))
+      .unwrap_or(segment);
+    if let Some(number) =
+      last_number_token(before)
+    {
+      return Some(format!(
+        "{number}, Part {part}"
+      ));
+    }
+  }
+  if volume.is_some() {
+    None
+  } else {
+    None
+  }
+}
+
+fn parse_volume_issue_pair(
+  segment: &str
+) -> (Option<String>, Option<String>) {
+  let mut volume = None;
+  let mut issue = None;
+  if let Some(open) = segment.find('(') {
+    if let Some(close) =
+      segment[open + 1..].find(')')
+    {
+      let inside = &segment
+        [open + 1..open + 1 + close];
+      let inside_digits =
+        number_token(inside);
+      if let Some(value) = inside_digits
+        && value.len() <= 3
+      {
+        issue = Some(value);
+      }
+      if let Some(before) =
+        segment.get(..open)
+      {
+        if let Some(value) =
+          last_number_token(before)
+        {
+          volume = Some(value);
+        }
+      }
+    }
+  }
+  (volume, issue)
+}
+
+fn number_token(
+  segment: &str
+) -> Option<String> {
+  let token = segment
+    .split_whitespace()
+    .map(|part| {
+      part.trim_matches(|c: char| {
+        !c.is_ascii_digit()
+      })
+    })
+    .find(|part| !part.is_empty())?;
+  let digits: String = token
+    .chars()
+    .filter(|c| c.is_ascii_digit())
+    .collect();
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
+  }
+}
+
+fn last_number_token(
+  segment: &str
+) -> Option<String> {
+  segment
+    .split_whitespace()
+    .map(|part| {
+      part.trim_matches(|c: char| {
+        !c.is_ascii_digit()
+      })
+    })
+    .filter(|part| !part.is_empty())
+    .filter(|part| {
+      part.chars().all(|c| c.is_ascii_digit())
+    })
+    .map(|part| part.to_string())
+    .last()
+}
+
+fn extract_part_suffix(
+  segment: &str
+) -> Option<String> {
+  let lower = segment.to_lowercase();
+  let pos = lower.find("part")?;
+  let after = segment.get(pos + 4..)?;
+  let token = after
+    .split_whitespace()
+    .find(|part| !part.is_empty())?;
+  let cleaned = token
+    .trim_matches(|c: char| {
+      !c.is_alphanumeric()
+    });
+  if cleaned.is_empty() {
+    None
+  } else {
+    Some(cleaned.to_string())
+  }
 }
 
 fn extract_genre(

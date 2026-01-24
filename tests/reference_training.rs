@@ -77,6 +77,46 @@ fn training_validation_delta_flow_runs()
     "training report should list \
      parser datasets"
   );
+  let samples = training_json
+    .get("samples")
+    .and_then(Value::as_array)
+    .expect("training samples");
+  let mut formats = samples
+    .iter()
+    .filter_map(|entry| {
+      entry
+        .get("format")
+        .and_then(Value::as_str)
+    })
+    .collect::<Vec<_>>();
+  formats.sort();
+  formats.dedup();
+  assert_eq!(
+    formats,
+    vec!["bibtex", "csl", "json"],
+    "training samples should include \
+     all output formats"
+  );
+  for sample in samples {
+    let references = sample
+      .get("references")
+      .and_then(Value::as_u64)
+      .expect("sample references");
+    assert!(
+      references > 0,
+      "sample references should be \
+       non-zero"
+    );
+    let output = sample
+      .get("output")
+      .and_then(Value::as_str)
+      .expect("sample output");
+    assert!(
+      !output.trim().is_empty(),
+      "sample output should not be \
+       empty"
+    );
+  }
 
   let validation_json: Value =
     serde_json::from_str(&validation)

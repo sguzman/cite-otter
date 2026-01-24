@@ -4,7 +4,8 @@
   title = {L’écriture et la différence},
   edition = {1},
   publisher = {Éditions du Seuil},
-  address = {Paris}
+  address = {Paris},
+  issue = {1}
 }
 @book{perec1995a,
   author = {Perec, Georges},
