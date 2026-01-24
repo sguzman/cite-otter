@@ -143,6 +143,15 @@ const IEEE_PROC_REF: &str =
    Control of Discrete Event Systems. \
    Proceedings of the IEEE, 77(1), \
    81-98, 1989.";
+const ROMERO_REF: &str =
+  "Romero, C., Paunesku, D., & \
+   Dweck, C. (2011). Brainology in \
+   the classroom: An online growth \
+   mindset intervention affects GPA, \
+   conduct, and implicit theories. \
+   Poster session presented at Society \
+   for Research in Child Development \
+   Biennial Meeting, Montreal, Canada.";
 
 #[test]
 fn prepare_returns_expanded_dataset() {
@@ -1330,6 +1339,62 @@ fn parse_prefers_journal_type_for_proceedings() {
       )
     }
   }
+}
+
+#[test]
+fn parse_extracts_etre_et_temps_title() {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[HEIDEGGER_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Être et temps"
+  );
+}
+
+#[test]
+fn parse_extracts_romero_authors_and_title()
+ {
+  let parser = Parser::new();
+  let references = parser.parse(
+    &[ROMERO_REF],
+    ParseFormat::Json
+  );
+
+  let reference = &references[0].0;
+  assert_list_field(
+    reference,
+    "title",
+    "Brainology in the classroom: An online growth mindset intervention affects GPA, conduct, and implicit theories"
+  );
+  let authors = match reference
+    .get("author")
+  {
+    | Some(FieldValue::Authors(list)) => list,
+    | other => {
+      panic!(
+        "Expected FieldValue::Authors, \
+         got {other:?}"
+      )
+    }
+  };
+  assert_eq!(
+    authors.len(),
+    3,
+    "should capture all authors"
+  );
+  assert_eq!(
+    authors[0],
+    Author {
+      family: "Romero".into(),
+      given:  "C".into()
+    }
+  );
 }
 
 #[test]

@@ -138,6 +138,24 @@ fn training_validation_delta_flow_runs()
     "validation report should list \
      parser datasets"
   );
+  let validation_summary = validation_json
+    .get("summary")
+    .expect("validation summary");
+  assert_report_keys(
+    validation_summary,
+    &["parser", "finder"],
+    "validation summary"
+  );
+  for key in ["parser", "finder"] {
+    let summary = validation_summary
+      .get(key)
+      .expect("summary entry");
+    assert_report_keys(
+      summary,
+      &["datasets", "sequences", "tokens"],
+      "validation summary entry"
+    );
+  }
 
   let delta_json: Value =
     serde_json::from_str(&delta)
@@ -157,6 +175,29 @@ fn training_validation_delta_flow_runs()
       .unwrap_or(false),
     "delta report should list \
      comparisons"
+  );
+  let comparisons = delta_json
+    .get("comparisons")
+    .and_then(Value::as_array)
+    .expect("comparisons");
+  let first = comparisons
+    .first()
+    .expect("comparison entry");
+  assert_report_keys(
+    first,
+    &[
+      "path",
+      "kind",
+      "prepared",
+      "labeled",
+      "stored",
+      "delta",
+      "prepared_tokens",
+      "labeled_tokens",
+      "stored_tokens",
+      "delta_tokens"
+    ],
+    "delta comparison entry"
   );
 
   let dataset_path = Path::new(env!(

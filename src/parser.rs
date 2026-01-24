@@ -783,30 +783,74 @@ fn tokens_from_dates(
 fn capture_year_like(
   reference: &str
 ) -> Vec<(String, bool)> {
+  let chars = reference.chars().collect::<Vec<_>>();
   let mut tokens = Vec::new();
-  let mut buffer = String::new();
-  let mut allow_short = false;
+  let mut idx = 0usize;
 
-  for c in reference.chars() {
-    if c.is_ascii_digit() {
-      buffer.push(c);
-    } else {
-      if buffer.len() >= 2 {
-        tokens.push((
-          buffer.clone(),
-          allow_short
-        ));
-      }
-      buffer.clear();
-      allow_short = matches!(
-        c,
-        '/' | '-' | '–' | '—'
-      );
+  while idx < chars.len() {
+    if !chars[idx].is_ascii_digit() {
+      idx += 1;
+      continue;
     }
-  }
-
-  if buffer.len() >= 2 {
-    tokens.push((buffer, allow_short));
+    let start = idx;
+    while idx < chars.len() && chars[idx].is_ascii_digit() {
+      idx += 1;
+    }
+    let end = idx;
+    let digits: String =
+      chars[start..end].iter().collect();
+    if digits.len() < 2 {
+      continue;
+    }
+    let mut prev_idx = start;
+    while prev_idx > 0 && chars[prev_idx - 1].is_whitespace() {
+      prev_idx -= 1;
+    }
+    let prev = if prev_idx > 0 {
+      Some(chars[prev_idx - 1])
+    } else {
+      None
+    };
+    let mut next_idx = end;
+    while next_idx < chars.len()
+      && chars[next_idx].is_whitespace()
+    {
+      next_idx += 1;
+    }
+    let next = chars.get(next_idx).copied();
+    let allow_short = matches!(
+      prev,
+      Some('/') | Some('-') | Some('–') | Some('—')
+    );
+    let is_page_range = if let Some(next) = next
+      && matches!(next, '-' | '–' | '—')
+    {
+      let mut look = next_idx + 1;
+      while look < chars.len()
+        && chars[look].is_whitespace()
+      {
+        look += 1;
+      }
+      let mut next_digits = String::new();
+      while look < chars.len() && chars[look].is_ascii_digit() {
+        next_digits.push(chars[look]);
+        look += 1;
+      }
+      digits.len() == 4 && next_digits.len() <= 2
+    } else {
+      false
+    };
+    let is_short_page_range = if matches!(
+      prev,
+      Some('-') | Some('–') | Some('—')
+    ) {
+      digits.len() <= 2
+    } else {
+      false
+    };
+    if !is_page_range && !is_short_page_range {
+      tokens.push((digits, allow_short));
+    }
   }
 
   tokens
@@ -877,6 +921,7 @@ fn collect_numeric_date_parts(
     tokens.iter().enumerate()
   {
     if is_page_marker(token)
+      || parse_page_range_token(token).is_some()
       || idx
         .checked_sub(1)
         .and_then(|pos| tokens.get(pos))
@@ -974,6 +1019,9 @@ fn date_segment_score(
   }
   if segment_has_page_marker(segment) {
     score -= 3;
+  }
+  if segment_has_page_range(segment) {
+    score -= 2;
   }
   if segment_has_page_range(segment) {
     score -= 2;
@@ -1860,6 +1908,13 @@ fn extract_title(
       candidate = title;
     }
   }
+  if is_title_noise_segment(&candidate) {
+    if let Some(best) =
+      select_title_segment(&segments)
+    {
+      candidate = best;
+    }
+  }
   clean_title_segment(&candidate)
 }
 
@@ -1930,6 +1985,12 @@ fn author_segment_score(
   let mut score = 0;
   if segment_is_container(trimmed) {
     score -= 4;
+  }
+  if trimmed.contains(':') {
+    score -= 2;
+  }
+  if trimmed.to_lowercase().contains("proc.") {
+    score -= 2;
   }
   if trimmed
     .chars()
@@ -2016,6 +2077,90 @@ fn strip_leading_citation_number(
     return remainder[1..].trim_start().to_string();
   }
   trimmed.to_string()
+}
+
+fn is_title_noise_segment(
+  segment: &str
+) -> bool {
+  let lower = segment.to_lowercase();
+  if segment_is_container(segment) {
+    return true;
+  }
+  if lower.contains("http")
+    || lower.contains("doi")
+  {
+    return true;
+  }
+  if lower.contains("ed.")
+    || lower.contains("edition")
+    || lower.contains("éd")
+  {
+    return true;
+  }
+  if lower.contains("pp.")
+    || lower.contains("pages")
+  {
+    return true;
+  }
+  let word_count =
+    segment.split_whitespace().count();
+  if word_count <= 1 {
+    return true;
+  }
+  segment
+    .chars()
+    .all(|c| c.is_ascii_digit() || c == ',')
+}
+
+fn select_title_segment(
+  segments: &[String]
+) -> Option<String> {
+  let mut best = None;
+  let mut best_score = i32::MIN;
+  for (idx, segment) in
+    segments.iter().enumerate()
+  {
+    let trimmed = segment.trim();
+    if trimmed.is_empty() {
+      continue;
+    }
+    let score = title_segment_score(
+      trimmed, idx
+    );
+    if score > best_score {
+      best_score = score;
+      best = Some(trimmed.to_string());
+    }
+  }
+  best
+}
+
+fn title_segment_score(
+  segment: &str,
+  index: usize
+) -> i32 {
+  if is_title_noise_segment(segment) {
+    return i32::MIN;
+  }
+  let mut score = 0;
+  if index <= 1 {
+    score += 2;
+  }
+  if segment_has_year(segment) {
+    score -= 2;
+  }
+  if segment.contains(':') {
+    score += 1;
+  }
+  let word_count =
+    segment.split_whitespace().count();
+  if word_count >= 3 {
+    score += 2;
+  }
+  if word_count >= 8 {
+    score += 1;
+  }
+  score
 }
 
 fn extract_citation_number(
@@ -2557,6 +2702,9 @@ fn extract_container_title(
     .filter(|segment| segment_is_conference(segment))
     .map(strip_numeric_suffix)
     .map(|segment| clean_segment(&segment))
+    .map(|segment| {
+      strip_container_prefix(&segment)
+    })
     .next()
 }
 
@@ -2609,6 +2757,7 @@ fn extract_journal_with_dictionary(
       trimmed
     );
     let cleaned = clean_segment(&cleaned);
+    let cleaned = strip_container_prefix(&cleaned);
     if cleaned.is_empty() {
       continue;
     }
@@ -2622,6 +2771,20 @@ fn extract_journal_with_dictionary(
     }
   }
   best.map(|(_, value)| value)
+}
+
+fn strip_container_prefix(
+  segment: &str
+) -> String {
+  let trimmed = segment.trim();
+  for prefix in ["In ", "in "] {
+    if trimmed.starts_with(prefix) {
+      return trimmed[prefix.len()..]
+        .trim()
+        .to_string();
+    }
+  }
+  trimmed.to_string()
 }
 
 fn extract_editor(

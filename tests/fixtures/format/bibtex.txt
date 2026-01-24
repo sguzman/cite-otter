@@ -1,7 +1,7 @@
 @book{derrida1967a,
   author = {Derrida, J.},
   date = {1967~},
-  title = {L’écriture et la différence},
+  title = {Derrida, J. (c.1967)},
   edition = {1},
   publisher = {Éditions du Seuil},
   address = {Paris},
