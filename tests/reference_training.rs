@@ -184,6 +184,11 @@ fn training_validation_delta_flow_runs()
       "training report should include \
        the core parser dataset"
     );
+  assert_report_keys(
+    training_entry,
+    &["path", "sequences", "tokens"],
+    "training parser entry"
+  );
   let recorded_sequences =
     training_entry
       .get("sequences")
@@ -224,6 +229,11 @@ fn training_validation_delta_flow_runs()
       "training report should include \
        the finder dataset"
     );
+  assert_report_keys(
+    finder_entry,
+    &["path", "sequences", "tokens"],
+    "training finder entry"
+  );
   let recorded_finder_sequences =
     finder_entry
       .get("sequences")
@@ -304,6 +314,11 @@ fn training_validation_delta_flow_runs()
       "validation report should cover \
        the core parser dataset"
     );
+  assert_report_keys(
+    validation_entry,
+    &["path", "sequences", "tokens"],
+    "validation parser entry"
+  );
   let validation_sequences =
     validation_entry
       .get("sequences")
@@ -345,6 +360,11 @@ fn training_validation_delta_flow_runs()
       "validation report should cover \
        the finder dataset"
     );
+  assert_report_keys(
+    validation_finder_entry,
+    &["path", "sequences", "tokens"],
+    "validation finder entry"
+  );
   let validation_finder_sequences =
     validation_finder_entry
       .get("sequences")
@@ -374,6 +394,14 @@ fn training_validation_delta_flow_runs()
   .expect(
     "delta report should include the \
      core parser dataset"
+  );
+  assert_report_keys(
+    delta_entry,
+    &[
+      "path", "kind", "prepared",
+      "labeled", "stored", "delta"
+    ],
+    "delta parser entry"
   );
   let delta_prepared = delta_entry
     .get("prepared")
@@ -426,6 +454,14 @@ fn training_validation_delta_flow_runs()
       "delta report should include \
        the finder dataset"
     );
+  assert_report_keys(
+    delta_finder_entry,
+    &[
+      "path", "kind", "prepared",
+      "labeled", "stored", "delta"
+    ],
+    "delta finder entry"
+  );
   let delta_finder_prepared =
     delta_finder_entry
       .get("prepared")
