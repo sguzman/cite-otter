@@ -252,6 +252,12 @@ fn csl_includes_issued_page_and_volume_issue()
      ranges"
   );
   assert!(
+    csl.contains(
+      "\"page-first\":\"12\""
+    ),
+    "CSL output should emit page-first"
+  );
+  assert!(
     csl.contains("\"volume\":\"42\""),
     "CSL output should emit volume"
   );

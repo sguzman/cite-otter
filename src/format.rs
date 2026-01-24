@@ -332,10 +332,20 @@ fn csl_entry(
     )
   {
     if !pages.is_empty() {
+      let page_first_value =
+        page_first(&pages);
       record.insert(
         "page".into(),
         Value::String(pages)
       );
+      if let Some(first) =
+        page_first_value
+      {
+        record.insert(
+          "page-first".into(),
+          Value::String(first)
+        );
+      }
     }
   }
 
@@ -523,6 +533,20 @@ fn extract_date_parts(
     None
   } else {
     Some(parts)
+  }
+}
+
+fn page_first(
+  pages: &str
+) -> Option<String> {
+  let digits: String = pages
+    .chars()
+    .take_while(|c| c.is_ascii_digit())
+    .collect();
+  if digits.is_empty() {
+    None
+  } else {
+    Some(digits)
   }
 }
 
