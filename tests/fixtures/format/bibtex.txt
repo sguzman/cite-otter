@@ -1,14 +1,15 @@
 @book{derrida1967a,
   author = {Derrida, J.},
   date = {1967~},
+  title = {Derrida, J},
   edition = {1},
   publisher = {Éditions du Seuil},
   address = {Paris},
   issue = {1}\
      n}
 @misc{perec1995a,
-  author = {Perec, Georges},
-  title = {London: The Harvill Press, 1995. p},
+  author = {Perec, Georges A. Void},
+  title = {Georges},
   booktitle = {Perec},
   publisher = {The Harvill Press},
   date = {1995},
