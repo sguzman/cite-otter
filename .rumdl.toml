@@ -25,6 +25,7 @@ exclude = [
     "dist",
     "build",
     "target",
+    "docs/migration/**",
 
     # Specific files or patterns
     "CHANGELOG.md",
