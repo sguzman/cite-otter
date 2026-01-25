@@ -1,2 +1,2 @@
-{"author":[{"family":"Derrida","given":"J."}],"title":"Derrida, J","edition":"1","publisher":"Éditions du Seuil","issue":"1","type":"book","issued":"1967~","publisher-place":"Paris"}
-{"author":[{"family":"Perec","given":"Georges A. Void"}],"title":"Georges","publisher":"The Harvill Press","container-title":"Perec","issued":"1995","page":"108","publisher-place":"London"}
+{"author":[{"family":"Derrida","given":"J."}],"edition":"1","publisher":"Éditions du Seuil","volume":"1","issue":"1","container-title":"Derrida, J. (c.1967)","issued":"1967~","publisher-place":"Paris"}
+{"author":[{"literal":"Perec"}],"title":"Georges","publisher":"The Harvill Press","volume":"108","container-title":"A Void","issued":"1995","page":"108","publisher-place":"London"}
