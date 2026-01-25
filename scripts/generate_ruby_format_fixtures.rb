@@ -38,7 +38,7 @@ sample_refs = read_refs(File.join(root, 'tests', 'fixtures', 'format', 'refs.txt
 
 write_csl(File.join(REPORT_DIR, 'core-csl.txt'), core_refs)
 write_bibtex(File.join(REPORT_DIR, 'core-bibtex.txt'), core_refs)
-write_csl(File.join(REPORT_DIR, 'sample-csl.txt'), sample_refs)
-write_bibtex(File.join(REPORT_DIR, 'sample-bibtex.txt'), sample_refs)
+write_csl(File.join(REPORT_DIR, 'csl.txt'), sample_refs)
+write_bibtex(File.join(REPORT_DIR, 'bibtex.txt'), sample_refs)
 
 puts "ruby format fixtures written to #{REPORT_DIR}"

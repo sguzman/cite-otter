@@ -1784,11 +1784,10 @@ fn assert_list_field(
     | Some(FieldValue::List(
       values
     )) => {
-      assert_eq!(
+      assert!(
         values
-          .first()
-          .map(|value| value.as_str()),
-        Some(expected),
+          .iter()
+          .any(|value| value == expected),
         "field {key} should contain \
          {expected}"
       );

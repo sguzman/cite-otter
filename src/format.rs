@@ -274,8 +274,8 @@ fn entry_type_for(
     | "article" => {
       rename_field(
         map,
-        "booktitle",
-        "journal"
+        "journal",
+        "booktitle"
       );
       rename_field(
         map, "issue", "number"
@@ -538,12 +538,18 @@ fn extract_first_value(
   key: &str
 ) -> Option<String> {
   map.remove(key).and_then(|value| {
-    value.as_array().and_then(|items| {
-      items
-        .first()
-        .and_then(Value::as_str)
-        .map(|s| s.to_string())
-    })
+    match value {
+      | Value::Array(items) => {
+        items
+          .first()
+          .and_then(Value::as_str)
+          .map(|s| s.to_string())
+      }
+      | Value::String(text) => {
+        Some(text)
+      }
+      | _ => None
+    }
   })
 }
 
@@ -552,12 +558,18 @@ fn extract_first_value_from_map(
   key: &str
 ) -> Option<String> {
   map.get(key).and_then(|value| {
-    value.as_array().and_then(|items| {
-      items
-        .first()
-        .and_then(Value::as_str)
-        .map(|s| s.to_string())
-    })
+    match value {
+      | Value::Array(items) => {
+        items
+          .first()
+          .and_then(Value::as_str)
+          .map(|s| s.to_string())
+      }
+      | Value::String(text) => {
+        Some(text.clone())
+      }
+      | _ => None
+    }
   })
 }
 
@@ -856,7 +868,7 @@ fn normalize_page_range(
         .all(|c| c.is_ascii_digit())
     {
       return format!(
-        "{}–{}",
+        "{}-{}",
         parts[0], parts[1]
       );
     }

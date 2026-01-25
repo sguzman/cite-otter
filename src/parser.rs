@@ -284,6 +284,39 @@ fn split_reference_segments(
     ) {
       continue;
     }
+    let before =
+      reference[..idx].trim_end();
+    let mut token_start = 0usize;
+    for (pos, ch) in
+      before.char_indices()
+    {
+      if ch.is_whitespace() {
+        token_start =
+          pos + ch.len_utf8();
+      }
+    }
+    let token =
+      before[token_start..].trim();
+    if !token.is_empty()
+      && parse_month_token(token)
+        .is_some()
+    {
+      let mut next_chars = reference
+        [idx + ch.len_utf8()..]
+        .chars()
+        .skip_while(|c| {
+          c.is_whitespace()
+        });
+      if next_chars
+        .next()
+        .map(|next_char| {
+          next_char.is_ascii_digit()
+        })
+        .unwrap_or(false)
+      {
+        continue;
+      }
+    }
     let mut next_chars = reference
       [idx + ch.len_utf8()..]
       .chars()
@@ -353,6 +386,12 @@ fn is_initial_boundary(
   if let (Some(next), Some(following)) =
     (next, following)
   {
+    if next.is_ascii_digit() {
+      return true;
+    }
+    if next == ';' || next == ',' {
+      return true;
+    }
     if next.is_alphabetic()
       && following.is_lowercase()
     {
@@ -413,6 +452,8 @@ fn parse_authors(
 ) -> Vec<Author> {
   let segment =
     extract_author_segment(reference);
+  let segment =
+    trim_author_segment(&segment);
   let normalized = segment
     .replace('&', ";")
     .replace(" and ", ";")
@@ -498,15 +539,31 @@ fn split_author_candidates(
         )
     })
   {
-    return parts
-      .chunks(2)
-      .map(|pair| {
-        format!(
-          "{}, {}",
-          pair[0], pair[1]
-        )
-      })
-      .collect();
+    let mut grouped = Vec::new();
+    for pair in parts.chunks(2) {
+      if pair.len() != 2 {
+        continue;
+      }
+      let mut family = pair[0]
+        .trim_start_matches('&')
+        .trim();
+      if family
+        .to_lowercase()
+        .starts_with("and ")
+      {
+        family = family[4..].trim();
+      }
+      if family.is_empty() {
+        continue;
+      }
+      grouped.push(format!(
+        "{}, {}",
+        family, pair[1]
+      ));
+    }
+    if !grouped.is_empty() {
+      return grouped;
+    }
   }
   if parts.len() >= 3
     && parts
@@ -1109,6 +1166,15 @@ fn collect_year_tokens(
 fn collect_numeric_date_parts(
   reference: &str
 ) -> Vec<String> {
+  if segment_has_month(reference) {
+    if let Some(parts) =
+      collect_month_name_parts(
+        reference
+      )
+    {
+      return parts;
+    }
+  }
   let mut parts = Vec::new();
   let separators = ['-', '/', '.'];
   let mut found = false;
@@ -1304,6 +1370,20 @@ fn is_page_marker(token: &str) -> bool {
       c.is_ascii_punctuation()
     })
     .to_lowercase();
+  if lower.starts_with("p.")
+    || lower.starts_with("pp.")
+  {
+    return true;
+  }
+  if let Some(rest) =
+    lower.strip_prefix('p')
+    && !rest.is_empty()
+    && rest
+      .chars()
+      .all(|c| c.is_ascii_digit())
+  {
+    return true;
+  }
   matches!(
     lower.as_str(),
     "p"
@@ -1340,28 +1420,59 @@ fn collect_month_name_parts(
   for token in
     tokens[..month_index].iter().rev()
   {
+    if token.contains('-')
+      || token.contains('–')
+      || token.contains('—')
+    {
+      continue;
+    }
     let digits: String = token
       .chars()
       .filter(|c| c.is_ascii_digit())
       .collect();
     if digits.len() >= 4 {
-      year =
-        Some(digits[..4].to_string());
-      break;
+      let candidate = &digits[..4];
+      if let Ok(value) =
+        candidate.parse::<u32>()
+      {
+        if (1800..=2099)
+          .contains(&value)
+        {
+          year =
+            Some(candidate.to_string());
+          break;
+        }
+      }
     }
   }
   if year.is_none() {
     for token in
       tokens[month_index + 1..].iter()
     {
+      if token.contains('-')
+        || token.contains('–')
+        || token.contains('—')
+      {
+        continue;
+      }
       let digits: String = token
         .chars()
         .filter(|c| c.is_ascii_digit())
         .collect();
       if digits.len() >= 4 {
-        year =
-          Some(digits[..4].to_string());
-        break;
+        let candidate = &digits[..4];
+        if let Ok(value) =
+          candidate.parse::<u32>()
+        {
+          if (1800..=2099)
+            .contains(&value)
+          {
+            year = Some(
+              candidate.to_string()
+            );
+            break;
+          }
+        }
       }
     }
   }
@@ -1807,12 +1918,24 @@ impl Parser {
             Some(&self.dictionary)
           )
         {
+          let journal_value = journal.clone();
           mapped.insert(
             "journal",
             FieldValue::List(vec![
               journal,
             ])
           );
+          if !mapped
+            .fields()
+            .contains_key("container-title")
+          {
+            mapped.insert(
+              "container-title",
+              FieldValue::List(vec![
+                journal_value,
+              ])
+            );
+          }
         }
 
         let editors =
@@ -2057,10 +2180,70 @@ fn extract_title(
     strip_leading_citation_number(
       reference
     );
+  if extract_citation_number(reference)
+    .is_some()
+  {
+    let segments =
+      split_reference_segments(
+        &cleaned
+      );
+    if let Some(first) =
+      segments.first()
+    {
+      if !first.is_empty() {
+        return clean_title_segment(
+          first
+        );
+      }
+    }
+  }
+  if let Some(end) =
+    find_author_list_end_by_title(
+      &cleaned
+    )
+  {
+    let after =
+      cleaned[end + 1..].trim_start();
+    if let Some(candidate) =
+      after.split(". ").next()
+    {
+      let candidate = candidate.trim();
+      if !candidate.is_empty() {
+        return clean_title_segment(
+          candidate
+        );
+      }
+    }
+  }
   let segments =
     split_reference_segments(&cleaned);
   if segments.is_empty() {
     return String::new();
+  }
+  if segments.len() > 1 {
+    let first = segments[0].trim();
+    if looks_like_author_list(first)
+      || split_leading_author_by_comma(
+        first
+      )
+      .is_some()
+    {
+      let candidate =
+        segments[1].trim();
+      if !candidate.is_empty()
+        && !segment_is_container(
+          candidate
+        )
+        && !segment_has_year(candidate)
+        && !segment_has_page_marker(
+          candidate
+        )
+      {
+        return clean_title_segment(
+          candidate
+        );
+      }
+    }
   }
   if let Some((_, title)) =
     split_leading_author_by_comma(
@@ -2070,34 +2253,47 @@ fn extract_title(
     if !remainder_has_author_list(
       &title
     ) {
-      let starts_with_initial = title
-        .split_whitespace()
-        .next()
-        .map(|token| {
-          looks_like_initials(token)
-        })
-        .unwrap_or(false);
-      if starts_with_initial {
-        // Skip initial-based author
-        // chunks (e.g., "G.
-        // (1999)") when
-        // extracting titles.
-        // Fall through to other
-        // strategies.
+      if segments.len() > 1
+        && title
+          .split_whitespace()
+          .count()
+          <= 1
+      {
+        // Avoid treating a lone given
+        // name as the title
+        // when the author
+        // segment is followed by a real
+        // title segment.
       } else {
-        let first = title
-          .split(',')
+        let starts_with_initial = title
+          .split_whitespace()
           .next()
-          .unwrap_or(&title)
-          .trim();
-        if !first.is_empty()
-          && !looks_like_author_list(
-            first
-          )
-        {
-          return clean_title_segment(
-            first
-          );
+          .map(|token| {
+            looks_like_initials(token)
+          })
+          .unwrap_or(false);
+        if starts_with_initial {
+          // Skip initial-based author
+          // chunks (e.g., "G.
+          // (1999)") when
+          // extracting titles.
+          // Fall through to other
+          // strategies.
+        } else {
+          let first = title
+            .split(',')
+            .next()
+            .unwrap_or(&title)
+            .trim();
+          if !first.is_empty()
+            && !looks_like_author_list(
+              first
+            )
+          {
+            return clean_title_segment(
+              first
+            );
+          }
         }
       }
     }
@@ -2207,9 +2403,10 @@ fn extract_title(
       candidate = title;
     }
   }
-  if !candidate.chars().any(|c| {
-    c.is_alphabetic()
-  }) {
+  if !candidate
+    .chars()
+    .any(|c| c.is_alphabetic())
+  {
     return String::new();
   }
   clean_title_segment(&candidate)
@@ -2233,23 +2430,23 @@ fn trim_author_segment_before_journal(
     }
     let candidate =
       trimmed.trim_end_matches('.');
-    if segment_is_journal_like(candidate)
-      || looks_like_short_journal(
-        candidate
-      )
-    {
-      if saw_initial && !parts.is_empty()
+    if segment_is_journal_like(
+      candidate
+    ) || looks_like_short_journal(
+      candidate
+    ) {
+      if saw_initial
+        && !parts.is_empty()
       {
         return Some(parts.join(", "));
       }
       return None;
     }
-    if trimmed
-      .split_whitespace()
-      .any(|token| {
+    if trimmed.split_whitespace().any(
+      |token| {
         looks_like_initials(token)
-      })
-    {
+      }
+    ) {
       saw_initial = true;
     }
     parts.push(trimmed);
@@ -2274,9 +2471,9 @@ fn strip_trailing_journal_author_segment(
     && (segment_is_journal_like(last)
       || looks_like_short_journal(last))
   {
-    let trimmed =
-      parts[..parts.len() - 1]
-        .join(", ");
+    let trimmed = parts
+      [..parts.len() - 1]
+      .join(", ");
     if !trimmed.is_empty() {
       return Some(trimmed);
     }
@@ -2291,16 +2488,212 @@ fn extract_author_segment(
     strip_leading_citation_number(
       reference
     );
+  if extract_citation_number(reference)
+    .is_some()
+  {
+    if let Some(pos) =
+      cleaned.find(". ")
+    {
+      let mut candidate = cleaned
+        [pos + 2..]
+        .trim()
+        .trim_end_matches('.');
+      if let Some((before, _)) =
+        candidate.split_once(':')
+      {
+        candidate = before.trim();
+      }
+      if let Some(end) =
+        find_author_list_end_by_title(
+          candidate
+        )
+      {
+        candidate =
+          candidate[..end].trim();
+      }
+      if candidate.contains(',') {
+        return trim_author_segment(
+          candidate
+        );
+      }
+    }
+    for segment in
+      split_reference_segments(&cleaned)
+        .iter()
+        .skip(1)
+    {
+      let trimmed = segment.trim();
+      if trimmed.is_empty() {
+        continue;
+      }
+      if looks_like_author_list(trimmed)
+        || (trimmed.contains(',')
+          && trimmed
+            .split_whitespace()
+            .any(|token| {
+              looks_like_initials(token)
+            }))
+      {
+        return trim_author_segment_at_date(
+          trimmed
+        );
+      }
+    }
+  }
+  if let Some(end) =
+    find_author_list_end_by_title(
+      &cleaned
+    )
+  {
+    let candidate =
+      cleaned[..end].trim();
+    if !candidate.is_empty() {
+      return trim_author_segment(
+        candidate
+      );
+    }
+  }
+  let segments =
+    split_reference_segments(&cleaned);
+  if let Some(first) = segments.first()
+  {
+    if looks_like_author_list(first)
+      || split_leading_author_by_comma(
+        first
+      )
+      .is_some()
+    {
+      return trim_author_segment(first);
+    }
+  }
+  if let Some(and_pos) =
+    cleaned.find(" and ")
+  {
+    if let Some(end) =
+      cleaned[and_pos..].find('.')
+    {
+      let prefix = cleaned
+        [..and_pos + end]
+        .trim()
+        .trim_end_matches('.');
+      if !prefix.is_empty() {
+        return prefix.to_string();
+      }
+    }
+  }
+  if let Some(pos) = cleaned.find('.') {
+    let prefix = cleaned[..pos].trim();
+    if !looks_like_author_list(prefix)
+      && !looks_like_person_name(prefix)
+    {
+      let remainder =
+        cleaned[pos + 1..].trim();
+      if let Some(next_pos) =
+        remainder.find('.')
+      {
+        let candidate =
+          remainder[..next_pos].trim();
+        if candidate.contains(',')
+          && candidate
+            .split_whitespace()
+            .any(|token| {
+              looks_like_initials(token)
+            })
+        {
+          return trim_author_segment(
+            candidate
+          );
+        }
+      }
+    }
+  }
+  let segments =
+    split_reference_segments(&cleaned);
+  if segments.len() > 1 {
+    let first = segments[0].trim();
+    if !looks_like_author_list(first)
+      && !looks_like_person_name(first)
+    {
+      for segment in
+        segments.iter().skip(1)
+      {
+        let trimmed = segment.trim();
+        if trimmed.is_empty() {
+          continue;
+        }
+        if trimmed.contains(',')
+          && trimmed
+            .split_whitespace()
+            .any(|token| {
+              looks_like_initials(token)
+            })
+        {
+          return trim_author_segment(
+            trimmed
+          );
+        }
+      }
+    }
+  }
   if let Some(pos) = cleaned.find('.')
     && pos > 0
   {
     let prefix = cleaned[..pos].trim();
+    if !prefix.contains(',')
+      && looks_like_person_name(prefix)
+    {
+      return prefix.to_string();
+    }
     if looks_like_author_list(prefix) {
       let remainder =
         cleaned[pos + 1..].trim();
       if !remainder_has_author_list(
         remainder
       ) {
+        let tokens = remainder
+          .split_whitespace()
+          .map(|token| {
+            token.trim_matches(
+              |c: char| {
+                c.is_ascii_punctuation()
+              }
+            )
+          })
+          .filter(|token| {
+            !token.is_empty()
+          })
+          .collect::<Vec<_>>();
+        if let Some(first) =
+          tokens.first()
+          && looks_like_initials(first)
+          && !matches!(
+            first
+              .to_lowercase()
+              .as_str(),
+            "a" | "an" | "the"
+          )
+        {
+          let mut expanded =
+            prefix.to_string();
+          expanded.push(' ');
+          expanded.push_str(first);
+          if let Some(second) =
+            tokens.get(1)
+            && looks_like_initials(
+              second
+            )
+            && !matches!(
+              second
+                .to_lowercase()
+                .as_str(),
+              "a" | "an" | "the"
+            )
+          {
+            expanded.push(' ');
+            expanded.push_str(second);
+          }
+          return expanded;
+        }
         return prefix.to_string();
       }
     }
@@ -2332,7 +2725,8 @@ fn extract_author_segment(
           looks_like_initials(token)
         });
       if !author_has_initial
-        && let Some(first) = tokens.first()
+        && let Some(first) =
+          tokens.first()
         && looks_like_given_name(first)
       {
         let mut parts = vec![
@@ -2420,6 +2814,119 @@ fn extract_author_segment(
       .unwrap_or_default();
   }
   strip_parenthetical_date(&candidate)
+}
+
+fn find_author_list_end_by_title(
+  reference: &str
+) -> Option<usize> {
+  for (idx, ch) in
+    reference.char_indices()
+  {
+    if ch != '.' {
+      continue;
+    }
+    let before =
+      reference[..idx].trim();
+    if before.is_empty()
+      || !before.contains(',')
+    {
+      continue;
+    }
+    if !before.split_whitespace().any(
+      |token| {
+        looks_like_initials(token)
+      }
+    ) {
+      continue;
+    }
+    if let Some((_, tail)) =
+      before.rsplit_once(',')
+    {
+      if tail.split_whitespace().count()
+        > 2
+      {
+        continue;
+      }
+    }
+    let after =
+      reference[idx + 1..].trim_start();
+    if after.is_empty() {
+      continue;
+    }
+    let mut words =
+      after.split_whitespace();
+    let first =
+      words.next().unwrap_or("");
+    let first_clean = first
+      .trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      });
+    if is_title_word(first_clean) {
+      return Some(idx);
+    }
+    if first_clean.len() == 1
+      && !first.contains('-')
+      && !first.contains('.')
+      && first_clean
+        .chars()
+        .all(|c| c.is_uppercase())
+    {
+      if let Some(next) = words.next() {
+        let next_clean = next
+          .trim_matches(|c: char| {
+            c.is_ascii_punctuation()
+          });
+        if is_title_word(next_clean) {
+          return Some(idx);
+        }
+      }
+    }
+  }
+  None
+}
+
+fn is_title_word(word: &str) -> bool {
+  if word.len() < 2 {
+    return false;
+  }
+  let mut chars = word.chars();
+  let Some(first) = chars.next() else {
+    return false;
+  };
+  first.is_uppercase()
+    && chars.any(|c| c.is_lowercase())
+}
+
+fn looks_like_person_name(
+  value: &str
+) -> bool {
+  let tokens = value
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if tokens.len() < 2
+    || tokens.len() > 4
+  {
+    return false;
+  }
+  if let Some(first) = tokens.first()
+    && matches!(
+      first.to_lowercase().as_str(),
+      "a" | "an" | "the"
+    )
+  {
+    return false;
+  }
+  tokens.iter().all(|token| {
+    let mut chars = token.chars();
+    let Some(first) = chars.next()
+    else {
+      return false;
+    };
+    first.is_uppercase()
+      && token
+        .chars()
+        .any(|c| c.is_lowercase())
+  })
 }
 
 fn select_author_segment(
@@ -2579,16 +3086,7 @@ fn looks_like_author_list(
   }
   let word_count =
     trimmed.split_whitespace().count();
-  let initial_count = trimmed
-    .split_whitespace()
-    .filter(|token| {
-      looks_like_initials(token)
-    })
-    .count();
-  if initial_count >= 1 {
-    return true;
-  }
-  if word_count > 6 {
+  if word_count > 10 {
     return false;
   }
   let parts = trimmed
@@ -2597,6 +3095,20 @@ fn looks_like_author_list(
     .filter(|part| !part.is_empty())
     .collect::<Vec<_>>();
   if parts.len() < 2 {
+    return false;
+  }
+  if parts[1]
+    .chars()
+    .any(|c| c.is_ascii_digit())
+  {
+    return false;
+  }
+  let family_raw =
+    parts[0].trim().to_lowercase();
+  if family_raw.starts_with("a ")
+    || family_raw.starts_with("an ")
+    || family_raw.starts_with("the ")
+  {
     return false;
   }
   let family_tokens =
@@ -2627,6 +3139,7 @@ fn looks_like_author_list(
   let given_ok =
     given_tokens.clone().any(|token| {
       looks_like_given_name(token)
+        || looks_like_initials(token)
     });
   family_ok && given_ok
 }
@@ -2644,34 +3157,39 @@ fn trim_author_segment(
         .to_string();
     }
   }
-  if let Some((before, after)) =
-    segment.split_once('.')
+  if !segment.contains(';')
+    && !segment.contains('&')
+    && !segment.contains(" and ")
   {
-    let next = after.trim_start();
-    if !next.is_empty()
-      && !next
-        .chars()
+    if let Some((before, after)) =
+      segment.split_once('.')
+    {
+      let next = after.trim_start();
+      if !next.is_empty()
+        && !next
+          .chars()
+          .next()
+          .map(|c| c.is_uppercase())
+          .unwrap_or(false)
+      {
+        return before
+          .trim()
+          .trim_end_matches(',')
+          .to_string();
+      }
+      if next
+        .split_whitespace()
         .next()
-        .map(|c| c.is_uppercase())
+        .map(|token| {
+          !looks_like_initials(token)
+        })
         .unwrap_or(false)
-    {
-      return before
-        .trim()
-        .trim_end_matches(',')
-        .to_string();
-    }
-    if next
-      .split_whitespace()
-      .next()
-      .map(|token| {
-        !looks_like_initials(token)
-      })
-      .unwrap_or(false)
-    {
-      return before
-        .trim()
-        .trim_end_matches(',')
-        .to_string();
+      {
+        return before
+          .trim()
+          .trim_end_matches(',')
+          .to_string();
+      }
     }
   }
   if let Some((before, after)) =
@@ -2679,6 +3197,21 @@ fn trim_author_segment(
   {
     let tail = after.trim();
     if !tail.is_empty()
+      && !segment.contains(';')
+      && !segment.contains('&')
+      && !tail.contains(';')
+      && !tail.contains('&')
+      && !tail.contains(" and ")
+      && !tail.split_whitespace().all(
+        |token| {
+          looks_like_initials(token)
+        }
+      )
+      && !looks_like_family_with_initials(
+        tail
+      )
+      && !looks_like_person_name(tail)
+      && !looks_like_initial_surname(tail)
       && segment_is_journal_like(tail)
     {
       return before
@@ -2725,6 +3258,54 @@ fn trim_author_segment(
     }
   }
   segment.trim().to_string()
+}
+
+fn trim_author_segment_at_date(
+  segment: &str
+) -> String {
+  let tokens = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  for (idx, token) in
+    tokens.iter().enumerate()
+  {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      });
+    if cleaned.is_empty() {
+      continue;
+    }
+    let lower = cleaned.to_lowercase();
+    let is_year = cleaned.len() == 4
+      && cleaned
+        .chars()
+        .all(|c| c.is_ascii_digit());
+    if is_year
+      || parse_month_token(cleaned)
+        .is_some()
+    {
+      if idx > 0 {
+        return tokens[..idx]
+          .join(" ")
+          .trim_end_matches(',')
+          .to_string();
+      }
+      break;
+    }
+    if lower == "c."
+      || lower == "circa"
+      || lower == "ca."
+    {
+      if idx > 0 {
+        return tokens[..idx]
+          .join(" ")
+          .trim_end_matches(',')
+          .to_string();
+      }
+    }
+  }
+  trim_author_segment(segment)
 }
 
 fn strip_leading_citation_number(
@@ -3027,21 +3608,15 @@ fn remainder_has_author_list(
   if snippet.is_empty() {
     return false;
   }
+  if snippet.contains(';') {
+    return true;
+  }
   if snippet.contains('&')
     || snippet.contains(" and ")
   {
     return true;
   }
   if looks_like_author_list(snippet)
-    && snippet.split_whitespace().any(
-      |token| {
-        looks_like_initials(token)
-      }
-    )
-  {
-    return true;
-  }
-  if snippet.contains(',')
     && snippet.split_whitespace().any(
       |token| {
         looks_like_initials(token)
@@ -3105,6 +3680,19 @@ fn find_author_list_end(
         idx += 1;
         continue;
       }
+      if token.ends_with(',')
+        || token.ends_with(';')
+      {
+        idx += 1;
+        continue;
+      }
+      if token_clean.len() == 4
+        && token_clean
+          .chars()
+          .all(|c| c.is_ascii_digit())
+      {
+        return Some(idx);
+      }
       if token_clean == "and"
         || token_clean == "&"
       {
@@ -3124,8 +3712,20 @@ fn find_author_list_end(
           .chars()
           .any(|c| c.is_lowercase());
       if prev_initial && next_surname {
-        idx += 1;
-        continue;
+        let mut after = pos;
+        while after < chars.len()
+          && chars[after]
+            .is_whitespace()
+        {
+          after += 1;
+        }
+        if after < chars.len()
+          && chars[after] == ','
+        {
+          idx += 1;
+          continue;
+        }
+        return Some(idx);
       }
       if !looks_like_initials(&token) {
         return Some(idx);
@@ -3268,13 +3868,32 @@ fn segment_is_conference(
     return true;
   }
   if lower.contains("proceedings") {
-    return keywords
-      .iter()
-      .any(|kw| lower.contains(kw));
+    if lower.contains("ieee")
+      || lower.contains("acm")
+    {
+      return false;
+    }
+    return true;
   }
   if lower.contains("proc.") {
-    if segment_is_journal_like(segment)
+    if lower.contains("ieee")
+      || lower.contains("acm")
     {
+      return false;
+    }
+    let strong_journal = lower
+      .contains("journal")
+      || lower.contains("transactions")
+      || lower.contains("letters")
+      || lower.contains("lett")
+      || lower.contains("review")
+      || lower.contains("rev.")
+      || lower.contains("annals")
+      || lower.contains("acta")
+      || lower.contains("acad")
+      || lower.contains("proc natl")
+      || lower.contains("proc. natl");
+    if strong_journal {
       return false;
     }
     return lower.contains("conf")
@@ -3351,6 +3970,14 @@ fn looks_like_short_journal(
   {
     return false;
   }
+  if let Some(first) = tokens.first()
+    && matches!(
+      first.to_lowercase().as_str(),
+      "a" | "an" | "the"
+    )
+  {
+    return false;
+  }
   if tokens.iter().any(|token| {
     token
       .chars()
@@ -3361,13 +3988,33 @@ fn looks_like_short_journal(
   if segment.contains(':') {
     return false;
   }
-  tokens.iter().all(|token| {
-    token
-      .chars()
-      .next()
-      .map(|c| c.is_uppercase())
-      .unwrap_or(false)
-  })
+  let journal_tokens = [
+    "j", "jr", "lett", "rev", "proc",
+    "acad", "ann", "bull", "trans",
+    "acta", "comm", "conf"
+  ];
+  let has_keyword =
+    tokens.iter().any(|token| {
+      let lowered =
+        token.to_lowercase();
+      journal_tokens
+        .iter()
+        .any(|kw| lowered == *kw)
+    });
+  if has_keyword {
+    return true;
+  }
+  let has_abbrev =
+    tokens.iter().any(|token| {
+      token.ends_with('.')
+        || token
+          .chars()
+          .all(|c| c.is_uppercase())
+    });
+  let short_tokens = tokens
+    .iter()
+    .all(|token| token.len() <= 6);
+  has_abbrev && short_tokens
 }
 
 fn segment_journal_score(
@@ -3378,15 +4025,19 @@ fn segment_journal_score(
   if segment_is_journal_like(segment) {
     score += 3;
   }
+  if looks_like_journal_name(segment) {
+    score += 1;
+  }
   if segment.split(',').any(|part| {
     let trimmed = part.trim();
     !trimmed.is_empty()
       && (segment_is_journal_like(
         trimmed
-      )
-        || looks_like_short_journal(
-          trimmed
-        ))
+      ) || looks_like_short_journal(
+        trimmed
+      ) || looks_like_journal_name(
+        trimmed
+      ))
   }) {
     score += 2;
   }
@@ -3483,6 +4134,7 @@ fn resolve_type(
     .iter()
     .any(|segment| {
       segment_is_journal_like(segment)
+        || looks_like_journal_name(segment)
         || segment.split(',').any(|part| {
           let trimmed = part.trim();
           !trimmed.is_empty()
@@ -3490,6 +4142,9 @@ fn resolve_type(
               trimmed
             )
               || looks_like_short_journal(
+                trimmed
+              )
+              || looks_like_journal_name(
                 trimmed
               ))
         })
@@ -3525,7 +4180,7 @@ fn resolve_type_with_dictionary(
         &DictionaryCode::Journal
       )
     {
-      return "article-journal".into();
+      return "article".into();
     }
   }
   if split_reference_segments(reference)
@@ -3640,20 +4295,125 @@ fn is_location_segment(
 fn extract_pages(
   reference: &str
 ) -> String {
-  let lower = reference.to_lowercase();
-  if let Some(pos) = lower.find("pp.") {
-    return capture_page_range(
-      reference,
-      pos + 3
-    )
-    .unwrap_or_default();
-  }
-  if let Some(pos) = lower.find("p.") {
-    return capture_page_range(
-      reference,
-      pos + 2
-    )
-    .unwrap_or_default();
+  let tokens = reference
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  for (idx, token) in
+    tokens.iter().enumerate()
+  {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c == ',' || c == ';'
+      });
+    let lower = cleaned.to_lowercase();
+    let marker_len = if lower
+      .starts_with("pp.")
+    {
+      Some(3)
+    } else if lower.starts_with("p.") {
+      Some(2)
+    } else {
+      None
+    };
+    if let Some(marker_len) = marker_len
+    {
+      let remainder = cleaned
+        .get(marker_len..)
+        .unwrap_or("");
+      if !remainder.is_empty() {
+        if let Some(range) =
+          parse_page_range_token(
+            remainder
+          )
+          .or_else(|| {
+            parse_short_page_range_token(
+              remainder
+            )
+          })
+        {
+          return range;
+        }
+        let digits: String = remainder
+          .chars()
+          .filter(|c| {
+            c.is_ascii_digit()
+              || matches!(
+                c,
+                '-' | '–' | '—'
+              )
+          })
+          .collect();
+        if !digits.is_empty() {
+          return digits
+            .replace('–', "-")
+            .replace('—', "-");
+        }
+      }
+      if let Some(next) =
+        tokens.get(idx + 1)
+      {
+        if let Some(range) =
+          parse_page_range_token(next)
+            .or_else(|| {
+              parse_short_page_range_token(
+                next
+              )
+            })
+        {
+          return range;
+        }
+        let digits: String = next
+          .chars()
+          .filter(|c| {
+            c.is_ascii_digit()
+              || matches!(
+                c,
+                '-' | '–' | '—'
+              )
+          })
+          .collect();
+        if !digits.is_empty() {
+          return digits
+            .replace('–', "-")
+            .replace('—', "-");
+        }
+      }
+      continue;
+    }
+    if matches!(
+      lower.as_str(),
+      "p" | "pp" | "p." | "pp."
+    ) {
+      if let Some(next) =
+        tokens.get(idx + 1)
+      {
+        if let Some(range) =
+          parse_page_range_token(next)
+            .or_else(|| {
+              parse_short_page_range_token(
+                next
+              )
+            })
+        {
+          return range;
+        }
+        let digits: String = next
+          .chars()
+          .filter(|c| {
+            c.is_ascii_digit()
+              || matches!(
+                c,
+                '-' | '–' | '—'
+              )
+          })
+          .collect();
+        if !digits.is_empty() {
+          return digits
+            .replace('–', "-")
+            .replace('—', "-");
+        }
+      }
+    }
   }
   if let Some(value) =
     pages_from_year_volume(reference)
@@ -3735,7 +4495,8 @@ fn pages_from_year_volume(
     strip_leading_citation_number(
       reference
     );
-  let numbers = numeric_tokens(&cleaned);
+  let numbers =
+    numeric_tokens(&cleaned);
   let Some(year_idx) =
     year_token_index(&numbers)
   else {
@@ -3744,7 +4505,8 @@ fn pages_from_year_volume(
   if year_idx != 0 {
     return None;
   }
-  let volume = numbers.get(year_idx + 1);
+  let volume =
+    numbers.get(year_idx + 1);
   let candidate = numbers.last()?;
   if Some(candidate) == volume {
     return None;
@@ -3898,61 +4660,6 @@ fn parse_short_page_range_token(
   None
 }
 
-fn capture_page_range(
-  reference: &str,
-  start: usize
-) -> Option<String> {
-  let segment =
-    reference.get(start..)?;
-  let mut digits = Vec::new();
-  let mut current = String::new();
-  let mut saw_separator = false;
-  for ch in segment.chars() {
-    if ch.is_ascii_digit() {
-      current.push(ch);
-      continue;
-    }
-    if ch == '-'
-      || ch == '–'
-      || ch == '—'
-    {
-      if !current.is_empty() {
-        digits.push(current.clone());
-        current.clear();
-        saw_separator = true;
-      }
-      continue;
-    }
-    if !current.is_empty() {
-      digits.push(current.clone());
-      current.clear();
-    }
-    if saw_separator
-      || digits.len() >= 2
-    {
-      break;
-    }
-    if !digits.is_empty()
-      && ch.is_whitespace()
-    {
-      continue;
-    }
-  }
-  if !current.is_empty() {
-    digits.push(current);
-  }
-  if digits.is_empty() {
-    return None;
-  }
-  if digits.len() == 1 {
-    return Some(digits[0].clone());
-  }
-  Some(format!(
-    "{}-{}",
-    digits[0], digits[1]
-  ))
-}
-
 fn extract_collection_title(
   reference: &str
 ) -> Option<String> {
@@ -3969,7 +4676,6 @@ fn extract_collection_title(
     "series",
     "collection",
     "notes",
-    "proceedings",
     "symposium",
     "volume"
   ];
@@ -3979,6 +4685,14 @@ fn extract_collection_title(
         reference, keyword
       )
     {
+      let lower =
+        segment.to_lowercase();
+      if matches!(
+        lower.as_str(),
+        "ed" | "ed." | "eds" | "eds."
+      ) {
+        continue;
+      }
       return Some(segment);
     }
   }
@@ -4114,6 +4828,11 @@ fn extract_journal_with_dictionary(
     if trimmed.is_empty() {
       continue;
     }
+    if trimmed.contains(';')
+      || trimmed.contains('&')
+    {
+      continue;
+    }
     if !title_norm.is_empty()
       && normalize_compare_value(
         trimmed
@@ -4121,17 +4840,40 @@ fn extract_journal_with_dictionary(
     {
       continue;
     }
-    let score = segment_journal_score(
-      trimmed, dictionary
-    );
-    if score == 0 {
+    if trimmed.contains(':') {
       continue;
     }
-    let cleaned =
+    if looks_like_author_list(trimmed) {
+      continue;
+    }
+    if looks_like_person_name(trimmed)
+      && !segment_has_year(trimmed)
+      && !segment_has_volume_marker(
+        trimmed
+      )
+      && !segment_has_page_range(
+        trimmed
+      )
+    {
+      continue;
+    }
+    let mut score =
+      segment_journal_score(
+        trimmed, dictionary
+      );
+    let candidate =
       extract_journal_from_segment(
         trimmed,
         title_norm_ref
-      )
+      );
+    if score == 0 && candidate.is_none()
+    {
+      continue;
+    }
+    if score == 0 {
+      score = 1;
+    }
+    let cleaned = candidate
       .unwrap_or_else(|| {
         strip_numeric_suffix(trimmed)
       });
@@ -4156,7 +4898,60 @@ fn extract_journal_with_dictionary(
       }
     }
   }
-  best.map(|(_, value)| value)
+  if let Some((_, value)) = best {
+    return Some(value);
+  }
+  for segment in
+    split_reference_segments(reference)
+  {
+    let trimmed = segment.trim();
+    if trimmed.is_empty() {
+      continue;
+    }
+    if trimmed.contains(':') {
+      continue;
+    }
+    if trimmed.contains(';')
+      || trimmed.contains('&')
+    {
+      continue;
+    }
+    let candidate = trimmed
+      .split(',')
+      .next()
+      .unwrap_or("")
+      .trim();
+    if candidate.is_empty() {
+      continue;
+    }
+    if trimmed.split_whitespace().any(
+      |token| {
+        looks_like_initials(token)
+      }
+    ) {
+      continue;
+    }
+    if !title_norm.is_empty()
+      && normalize_compare_value(
+        candidate
+      ) == title_norm
+    {
+      continue;
+    }
+    if looks_like_author_list(candidate)
+    {
+      continue;
+    }
+    if looks_like_journal_name(
+      candidate
+    ) && trimmed.contains(',')
+    {
+      return Some(clean_segment(
+        candidate
+      ));
+    }
+  }
+  None
 }
 
 fn extract_journal_from_segment(
@@ -4181,10 +4976,30 @@ fn extract_journal_from_segment(
       || lower.contains("pp")
       || lower.contains("no.")
       || lower.contains("issue")
-      || trimmed
-        .chars()
-        .any(|c| c.is_ascii_digit())
     {
+      continue;
+    }
+    if trimmed
+      .chars()
+      .any(|c| c.is_ascii_digit())
+    {
+      if let Some(stripped) =
+        strip_trailing_year_token(
+          trimmed
+        )
+        .or_else(|| {
+          strip_trailing_number_token(
+            trimmed
+          )
+        })
+      {
+        if is_journal_candidate(
+          &stripped
+        ) {
+          best = Some(stripped);
+          break;
+        }
+      }
       continue;
     }
     if looks_like_author_list(trimmed)
@@ -4198,16 +5013,138 @@ fn extract_journal_from_segment(
     {
       continue;
     }
-    if segment_is_journal_like(trimmed)
-      || looks_like_short_journal(
-        trimmed
-      )
-    {
+    if is_journal_candidate(trimmed) {
       best = Some(trimmed.to_string());
       break;
     }
   }
   best
+}
+
+fn is_journal_candidate(
+  value: &str
+) -> bool {
+  segment_is_journal_like(value)
+    || looks_like_short_journal(value)
+    || looks_like_journal_name(value)
+}
+
+fn strip_trailing_year_token(
+  value: &str
+) -> Option<String> {
+  let tokens = value
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if tokens.len() < 2 {
+    return None;
+  }
+  let last = tokens.last()?;
+  if last.len() != 4
+    || !last
+      .chars()
+      .all(|c| c.is_ascii_digit())
+  {
+    return None;
+  }
+  let year =
+    last.parse::<u32>().ok()?;
+  if !(1800..=2099).contains(&year) {
+    return None;
+  }
+  let candidate = tokens
+    [..tokens.len() - 1]
+    .join(" ");
+  if candidate.is_empty() {
+    None
+  } else {
+    Some(candidate)
+  }
+}
+
+fn strip_trailing_number_token(
+  value: &str
+) -> Option<String> {
+  let tokens = value
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if tokens.len() < 2 {
+    return None;
+  }
+  let last = tokens.last()?;
+  if last.len() > 3
+    || !last
+      .chars()
+      .all(|c| c.is_ascii_digit())
+  {
+    return None;
+  }
+  let candidate = tokens
+    [..tokens.len() - 1]
+    .join(" ");
+  if candidate.is_empty() {
+    None
+  } else {
+    Some(candidate)
+  }
+}
+
+fn looks_like_journal_name(
+  segment: &str
+) -> bool {
+  if looks_like_author_list(segment) {
+    return false;
+  }
+  if segment.contains(':') {
+    return false;
+  }
+  let tokens = segment
+    .split_whitespace()
+    .collect::<Vec<_>>();
+  if tokens.len() < 2
+    || tokens.len() > 6
+  {
+    return false;
+  }
+  if tokens.iter().any(|token| {
+    token
+      .chars()
+      .any(|c| c.is_ascii_digit())
+  }) {
+    return false;
+  }
+  let particles = [
+    "of", "de", "la", "le", "du",
+    "der", "van", "von", "the", "and"
+  ];
+  let mut saw_title = false;
+  for token in tokens {
+    let cleaned =
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      });
+    if cleaned.is_empty() {
+      continue;
+    }
+    let lower = cleaned.to_lowercase();
+    if particles
+      .contains(&lower.as_str())
+    {
+      continue;
+    }
+    let mut chars = cleaned.chars();
+    let Some(first) = chars.next()
+    else {
+      continue;
+    };
+    if first.is_uppercase()
+      && chars.any(|c| c.is_lowercase())
+    {
+      saw_title = true;
+    } else {
+      return false;
+    }
+  }
+  saw_title
 }
 
 fn normalize_compare_value(
@@ -4396,6 +5333,19 @@ fn extract_editor(
         reference, keyword
       )
     {
+      let normalized = segment
+        .trim_matches(|c: char| {
+          c.is_ascii_punctuation()
+            || c == '('
+            || c == ')'
+        })
+        .to_lowercase();
+      if matches!(
+        normalized.as_str(),
+        "ed" | "ed." | "eds" | "eds."
+      ) {
+        continue;
+      }
       return Some(segment);
     }
   }
@@ -4498,7 +5448,17 @@ fn extract_container_from_in_segment(
   if segment.is_empty() {
     None
   } else {
-    Some(clean_segment(segment))
+    let cleaned =
+      clean_segment(segment);
+    let cleaned =
+      strip_trailing_metadata(&cleaned);
+    let cleaned =
+      strip_trailing_location(&cleaned);
+    if cleaned.is_empty() {
+      None
+    } else {
+      Some(cleaned)
+    }
   }
 }
 
@@ -4802,16 +5762,21 @@ fn extract_volume(
       return Some(volume);
     }
   }
-  let numbers = numeric_tokens(&cleaned);
-  if let Some(year_idx) =
-    year_token_index(&numbers)
-    && year_idx == 0
+  let numbers =
+    numeric_tokens(&cleaned);
+  if !segment_has_page_marker(&cleaned)
+    && !segment_has_page_range(&cleaned)
   {
-    if let Some(value) =
-      numbers.get(year_idx + 1)
-      && value.len() <= 3
+    if let Some(year_idx) =
+      year_token_index(&numbers)
+      && year_idx == 0
     {
-      return Some(value.clone());
+      if let Some(value) =
+        numbers.get(year_idx + 1)
+        && value.len() <= 3
+      {
+        return Some(value.clone());
+      }
     }
   }
   None
@@ -4880,6 +5845,15 @@ fn extract_issue(
 fn extract_volume_from_segment(
   segment: &str
 ) -> Option<String> {
+  if segment_is_journal_like(segment) {
+    if let Some(volume) =
+      volume_from_segment_before_pages(
+        segment
+      )
+    {
+      return Some(volume);
+    }
+  }
   let (volume, issue) =
     parse_volume_issue_pair(segment);
   if let Some(volume) = volume {
@@ -4893,7 +5867,8 @@ fn extract_volume_from_segment(
     return Some(volume);
   }
   if segment_is_journal_like(segment) {
-    let numbers = numeric_tokens(segment);
+    let numbers =
+      numeric_tokens(segment);
     if let Some(year_idx) =
       year_token_index(&numbers)
       && year_idx == 0
@@ -4918,6 +5893,53 @@ fn extract_volume_from_segment(
   } else {
     None
   }
+}
+
+fn volume_from_segment_before_pages(
+  segment: &str
+) -> Option<String> {
+  let parts = segment
+    .split(',')
+    .map(str::trim)
+    .filter(|part| !part.is_empty())
+    .collect::<Vec<_>>();
+  if parts.is_empty() {
+    return None;
+  }
+  let page_index =
+    parts.iter().position(|part| {
+      parse_page_range_token(part)
+        .is_some()
+        || parse_short_page_range_token(
+          part
+        )
+        .is_some()
+    });
+  let limit = page_index.unwrap_or(
+    parts.len().saturating_sub(1)
+  );
+  for part in
+    parts.iter().take(limit).rev()
+  {
+    let lower = part.to_lowercase();
+    if lower.contains("part")
+      || lower.contains("h.")
+      || lower.contains("no.")
+      || lower.contains("issue")
+      || lower.contains("pp")
+      || lower.contains("p.")
+    {
+      continue;
+    }
+    if let Some(number) =
+      last_number_token(part)
+    {
+      if number.len() <= 3 {
+        return Some(number);
+      }
+    }
+  }
+  None
 }
 
 fn extract_issue_from_segment(
