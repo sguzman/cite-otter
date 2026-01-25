@@ -1,6 +1,8 @@
 exclude = [
   "cliff.toml",
   "release.toml",
+  "target/**",
+  "tmp/**",
 ]
 
 [formatting]
