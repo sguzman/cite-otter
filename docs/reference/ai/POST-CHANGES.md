@@ -46,6 +46,7 @@ Prereqs: `taplo` and `biome` must be installed.
 ## Benchmarks (hyperfine)
 
 - `just bench-ruby-parity`
+- `just bench-rust-baseline`
 
 ## Docs
 

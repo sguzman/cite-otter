@@ -8,3 +8,4 @@
 - Tooling: cargo-release, git-cliff, just, biome, taplo, rustfmt, rumdl, lychee,
   typos, hyperfine
 - Tooling guidelines: docs/ai/tools/ADDING.md
+- Benchmarking: docs/reference/tools/hyperfine.md

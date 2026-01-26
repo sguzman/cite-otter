@@ -112,6 +112,9 @@ compare-ruby-format:
 bench-ruby-parity:
 	scripts/benchmark_ruby_parity.sh
 
+bench-rust-baseline:
+	scripts/benchmark_rust_baseline.sh
+
 # Security (Rust)
 audit:
 	cargo audit
