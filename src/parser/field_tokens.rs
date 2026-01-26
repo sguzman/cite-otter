@@ -159,7 +159,4 @@ impl FieldTokens {
     }
   }
 
-  pub(super) fn apply_author_tokens(&mut self, reference: &str) {
-    self.author.extend(tokens_from_authors(reference));
-  }
 }
