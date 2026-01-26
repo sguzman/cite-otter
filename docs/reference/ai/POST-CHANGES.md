@@ -43,6 +43,10 @@ Prereqs: `taplo` and `biome` must be installed.
 
 - `cargo test`
 
+## Benchmarks (hyperfine)
+
+- `just bench-ruby-parity`
+
 ## Docs
 
 - Update any docs that changed behavior/config/API

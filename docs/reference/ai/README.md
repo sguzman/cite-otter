@@ -6,5 +6,5 @@
 - Release policy: docs/RELEASE.md
 - Roadmap: docs/ROADMAP.md
 - Tooling: cargo-release, git-cliff, just, biome, taplo, rustfmt, rumdl, lychee,
-  typos
+  typos, hyperfine
 - Tooling guidelines: docs/ai/tools/ADDING.md

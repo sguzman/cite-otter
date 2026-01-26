@@ -109,6 +109,9 @@ refresh-fixtures-fast:
 compare-ruby-format:
 	scripts/compare_ruby_format.sh
 
+bench-ruby-parity:
+	scripts/benchmark_ruby_parity.sh
+
 # Security (Rust)
 audit:
 	cargo audit
