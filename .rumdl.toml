@@ -141,7 +141,7 @@ style = "fixed"  # Indentation style: "text-aligned" (default) or "fixed" (defau
 # MD009 - Remove trailing spaces
 # trailing_spaces = 2  # Number of allowed trailing spaces (default: 0)
 [MD009]
-br-spaces = 0                  # Number of spaces for hard line breaks (default: 2)
+br-spaces = 2                 # Number of spaces for hard line breaks (default: 2)
 strict = true                 # Remove all trailing spaces, even line breaks (default: false)
 list-item-empty-lines = true  # Allow trailing spaces in empty list item lines (default: false)
 
@@ -170,26 +170,6 @@ strict = false  # Disables exceptions for URLs, etc. (default: false)
 reflow = true  # Enable automatic text reflow/wrapping (default: false)
 reflow-mode = "sentence-per-line"  # Reflow mode: "default", "normalize", or "sentence-per-line" (default: "default")
 length-mode = "visual"  # How to count line length: "visual", "chars", or "bytes" (default: "visual")
-# Add custom abbreviations for sentence-per-line mode
-abbreviations = [
-  # built-in defaults (included here explicitly)
-  "Mr",
-  "Mrs",
-  "Ms",
-  "Dr",
-  "Prof",
-  "Sr",
-  "Jr",
-  "i.e",
-  "e.g",
-
-  # extra common docs/academic abbrevs (your explicit additions)
-  "Assn",
-  "Univ",
-  "Dept",
-  "Fig",
-  "Eq",
-]
 
 # [MD014]
 # MD014 - Show command output in documentation
@@ -211,9 +191,8 @@ show-output = false  # Whether commands should show output (default: true)
 # [MD022]
 # MD022 - Add blank lines around headings
 [MD022]
-# Different spacing for each level: [h1, h2, h3, h4, h5, h6]
-lines-above = [1, 1, 1, 1, 1, 1]  # h1 needs 2 blank lines above, others need 1
-lines-below = [1, 0, 0, 0, 0, 0]  # h2-h6 don't need blank lines below
+lines-above = 1
+lines-below = 0
 allowed-at-start = true  # Allow headings at document start without blank line above (default: true)
 
 # [MD023]
@@ -444,8 +423,8 @@ allow-sentence-double-space = false # Allow double spaces after periods for sent
 # [MD065]
 # MD065 - Blank lines around horizontal rules
 [MD065]
-minimum-before = 1  # Minimum blank lines before horizontal rule (default: 1)
-minimum-after = 1   # Minimum blank lines after horizontal rule (default: 1)
+# minimum-before = 1  # Minimum blank lines before horizontal rule (default: 1)
+# minimum-after = 1   # Minimum blank lines after horizontal rule (default: 1)
 
 # [MD066]
 # MD066 - Footnote validation
