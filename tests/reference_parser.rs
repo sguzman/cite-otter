@@ -1785,9 +1785,9 @@ fn assert_list_field(
       values
     )) => {
       assert!(
-        values
-          .iter()
-          .any(|value| value == expected),
+        values.iter().any(|value| {
+          value == expected
+        }),
         "field {key} should contain \
          {expected}"
       );

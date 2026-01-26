@@ -18,4 +18,5 @@ exclude = [
 # Ignore a specific markdown file by path
 exclude_path = [
   "docs/migration/.*-DeepWiki.md",
+  "tests/",
 ]
