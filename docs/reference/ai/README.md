@@ -5,5 +5,5 @@
 - Branding assets: branding/
 - Release policy: docs/RELEASE.md
 - Roadmap: docs/ROADMAP.md
-- Tooling: cargo-release, git-cliff, just, biome, taplo, rustfmt, lychee, typos
+- Tooling: cargo-release, git-cliff, just, biome, taplo, rustfmt, rumdl, lychee, typos
 - Tooling guidelines: docs/ai/tools/ADDING.md

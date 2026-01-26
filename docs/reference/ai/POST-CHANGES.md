@@ -27,6 +27,10 @@ Prereqs: `taplo` and `biome` must be installed.
   - Example: `biome format --write path/to/file.json`
   - Example: `biome format --write .`
 
+## Format Markdown (rumdl)
+
+- `rumdl fmt .`
+
 
 ## Link check (Lychee)
 

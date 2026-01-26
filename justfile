@@ -59,6 +59,7 @@ fmt:
 	cargo fmt
 	taplo fmt
 	biome check --write .
+	rumdl fmt .
 
 # Validate (configs)
 validate:
@@ -77,6 +78,9 @@ clippy:
 
 biome:
 	biome check .
+
+rumdl:
+	rumdl check .
 
 # Test
 test:
@@ -125,6 +129,7 @@ fmt-check:
 	cargo fmt --check
 	taplo fmt --check
 	biome check .
+	rumdl check .
 
 # "CI local" = what you'd run before pushing
 ci: fmt-check validate typos links biome clippy test doc build
