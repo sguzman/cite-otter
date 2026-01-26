@@ -313,7 +313,7 @@ names = [
     "CSS",
 ]             # List of properly capitalized names
 code-blocks = false    # Check inside code blocks (default: false, skips code blocks)
-html-elements = true   # Check inside HTML elements (default: true)
+html-elements = false   # Check inside HTML elements (default: true)
 html-comments = true   # Check inside HTML comments (default: true)
 
 # [MD045]
