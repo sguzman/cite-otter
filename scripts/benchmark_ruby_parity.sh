@@ -6,6 +6,7 @@ BOOK_PATH="${BOOK_PATH:-${ROOT_DIR}/tmp/book.txt}"
 RUBY_REPO="${RUBY_REPO:-${ROOT_DIR}/tmp/anystyle}"
 OUT_DIR="${OUT_DIR:-${ROOT_DIR}/target/reports}"
 HYPERFINE_BIN="${HYPERFINE_BIN:-hyperfine}"
+HYPERFINE_ARGS="${HYPERFINE_ARGS:-}"
 RUST_CMD="${RUST_CMD:-cargo run --quiet --bin cite-otter --}"
 PARSER_PATTERN="${PARSER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/parser/core.xml}"
 FINDER_PATTERN="${FINDER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/finder/*.ttx}"
@@ -28,7 +29,9 @@ if [[ ! -d "${RUBY_REPO}" ]]; then
   exit 1
 fi
 
-if command -v anystyle >/dev/null 2>&1; then
+if [[ -n "${ANYSTYLE_CMD:-}" ]]; then
+  :
+elif command -v anystyle >/dev/null 2>&1; then
   ANYSTYLE_CMD="anystyle"
 elif command -v anystyle-cli >/dev/null 2>&1; then
   ANYSTYLE_CMD="anystyle-cli"
@@ -42,24 +45,24 @@ mkdir -p "${OUT_DIR}"
 HYPERFINE_EXPORT="${OUT_DIR}/benchmark-ruby-parity.json"
 HYPERFINE_TRAIN_EXPORT="${OUT_DIR}/benchmark-ruby-parity-training.json"
 
-${HYPERFINE_BIN} \
+${HYPERFINE_BIN} ${HYPERFINE_ARGS} \
   --warmup 1 \
   --min-runs "${FAST_RUNS}" \
   --export-json "${HYPERFINE_EXPORT}" \
   --command-name "ruby:parse-json" "${ANYSTYLE_CMD} -f json parse \"${BOOK_PATH}\"" \
-  --command-name "rust:parse-json" "${RUST_CMD} parse -f json \"${BOOK_PATH}\"" \
+  --command-name "rust:parse-json" "${RUST_CMD} parse -o json \"${BOOK_PATH}\"" \
   --command-name "ruby:parse-bibtex" "${ANYSTYLE_CMD} -f bibtex parse \"${BOOK_PATH}\"" \
-  --command-name "rust:parse-bibtex" "${RUST_CMD} parse -f bibtex \"${BOOK_PATH}\"" \
+  --command-name "rust:parse-bibtex" "${RUST_CMD} parse -o bibtex \"${BOOK_PATH}\"" \
   --command-name "ruby:parse-csl" "${ANYSTYLE_CMD} -f csl parse \"${BOOK_PATH}\"" \
-  --command-name "rust:parse-csl" "${RUST_CMD} parse -f csl \"${BOOK_PATH}\"" \
+  --command-name "rust:parse-csl" "${RUST_CMD} parse -o csl \"${BOOK_PATH}\"" \
   --command-name "ruby:find-json" "${ANYSTYLE_CMD} -f json find \"${BOOK_PATH}\"" \
-  --command-name "rust:find-json" "${RUST_CMD} find -f json \"${BOOK_PATH}\""
+  --command-name "rust:find-json" "${RUST_CMD} find -o json \"${BOOK_PATH}\""
 
 if [[ "${ENABLE_TRAINING_BENCHMARKS}" == "1" ]]; then
   RUBY_TRAIN_CMD="${RUBY_TRAIN_CMD:-${ANYSTYLE_CMD} train \"${PARSER_PATTERN}\" \"${FINDER_PATTERN}\"}"
   RUBY_CHECK_CMD="${RUBY_CHECK_CMD:-${ANYSTYLE_CMD} check \"${PARSER_PATTERN}\" \"${FINDER_PATTERN}\"}"
   RUBY_DELTA_CMD="${RUBY_DELTA_CMD:-${ANYSTYLE_CMD} delta \"${PARSER_PATTERN}\" \"${FINDER_PATTERN}\"}"
-  ${HYPERFINE_BIN} \
+  ${HYPERFINE_BIN} ${HYPERFINE_ARGS} \
     --warmup 0 \
     --min-runs "${TRAINING_RUNS}" \
     --export-json "${HYPERFINE_TRAIN_EXPORT}" \
