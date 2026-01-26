@@ -8,6 +8,8 @@ disable = [
     "MD052",
     "MD053",
     "MD057",
+    "MD059",
+    "MD061",
 ]
 
 # List of rules to enable exclusively (if provided, only these rules will run)
@@ -60,6 +62,19 @@ enable = [
     "MD054",
     "MD055",
     "MD056",
+    "MD058",
+    "MD060",
+    "MD062",
+    "MD063",
+    "MD064",
+    "MD065",
+    "MD066",
+    "MD067",
+    "MD068",
+    "MD069",
+    "MD070",
+    "MD071",
+    "MD072",
 ]
 
 # List of file/directory patterns to include for linting (if provided, only these will be linted)
@@ -391,4 +406,65 @@ style = "leading-and-trailing"  # Options: see below
 
 # [MD057]
 # MD057 - Check that file links work
+
+# [MD058]
+# MD058 - Add blank lines around tables
+[MD058]
+minimum-before = 1  # Blank lines before table
+minimum-after = 1  # Blank lines after table
+
+# [MD059]
+# MD059 - Link Text Should Be Descriptive
+
+# [MD060]
+# MD060 - Table Format
+[MD060]
+enabled = true      # Default: opt-in for conservative adoption
+style = "aligned"    # Options: "aligned", "aligned-no-space", "compact", "tight", "any"
+max-width = 0        # Default: inherit from MD013's line-length
+column-align = "left"  # Options: "auto", "left", "center", "right"
+
+# [MD061]
+# MD061 - Forbidden terms
+
+# [MD062]
+# MD062 - No whitespace in link destinations
+
+# [MD063]
+# MD063 - Heading Capitalization
+[MD063]
+enabled = true
+style = "title_case"  # Options: "sentence_case", "title_case", "all_upper", "all_lower"
+
+# [MD064]
+# MD064 - No Multiple Consecutive Spaces
+[MD064]
+allow-sentence-double-space = false # Allow double spaces after periods for sentence breaks (default: true)
+
+# [MD065]
+# MD065 - Blank lines around horizontal rules
+[MD065]
+minimum-before = 1  # Minimum blank lines before horizontal rule (default: 1)
+minimum-after = 1   # Minimum blank lines after horizontal rule (default: 1)
+
+# [MD066]
+# MD066 - Footnote validation
+
+# [MD067]
+# MD067 - Footnote definition order
+
+# [MD068]
+# MD068 - Empty footnote definitions
+
+# [MD069]
+# MD069 - No duplicate list markers
+
+# [MD070]
+# MD070 - Nested Code Fence Collision
+
+# [MD071]
+# MD071 - Blank line after frontmatter
+
+# [MD072]
+# MD072 - Frontmatter key sort
 
