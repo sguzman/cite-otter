@@ -29,6 +29,8 @@ for parsing, modeling, and CLI tooling.
 - **Implementation strategy**: `ROADMAP.md` breaks the work into SemVer
   milestones (`v0.1.0` → `v1.0.0`), prioritizing CLI/parser foundations & tests
   first, then training/finder logic, and finally documentation + parity polish.
+- **Docs layout**: `docs/reference/` for shared rules, `docs/migration/` for
+  migration notes, and `docs/cite-otter/` for project-specific documentation.
 - **Cargo scaffold**: `Cargo.toml`, `src/`, and Rust tooling files are ready for
   the first wave of parser and CLI work.
 
