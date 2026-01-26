@@ -1,9 +1,4 @@
-use std::collections::{
-  BTreeMap,
-  BTreeSet
-};
-
-use serde::Serialize;
+use std::collections::BTreeSet;
 
 use crate::dictionary::{
   Dictionary,
@@ -16,6 +11,13 @@ use crate::language::{
   detect_scripts
 };
 use crate::normalizer::NormalizationConfig;
+use crate::parser::field_tokens::FieldTokens;
+use crate::parser::types::{
+  Author,
+  FieldValue,
+  Reference,
+  TaggedToken,
+};
 
 const PREPARED_LINES: [&str; 2] = [
   "Hello, hello Lu P H He , o, \
@@ -25,228 +27,6 @@ const PREPARED_LINES: [&str; 2] = [
    none T F T T none last other none \
    weak F"
 ];
-#[derive(Debug, Clone)]
-pub struct TaggedToken {
-  pub token: String,
-  pub label: String
-}
-
-#[derive(
-  Debug, Clone, Serialize, PartialEq, Eq,
-)]
-pub struct Author {
-  pub family: String,
-  pub given:  String
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(untagged)]
-pub enum FieldValue {
-  Single(String),
-  List(Vec<String>),
-  Authors(Vec<Author>)
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(transparent)]
-pub struct Reference(
-  pub BTreeMap<String, FieldValue>
-);
-
-impl Reference {
-  pub fn new() -> Self {
-    Self(BTreeMap::new())
-  }
-
-  pub fn insert(
-    &mut self,
-    key: impl Into<String>,
-    value: FieldValue
-  ) {
-    self.0.insert(key.into(), value);
-  }
-
-  pub fn fields(
-    &self
-  ) -> &BTreeMap<String, FieldValue> {
-    &self.0
-  }
-
-  pub fn from_map(
-    map: BTreeMap<String, FieldValue>
-  ) -> Self {
-    Self(map)
-  }
-}
-
-impl Default for Reference {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
-#[derive(Debug, Clone, Default)]
-struct FieldTokens {
-  author:     BTreeSet<String>,
-  title:      BTreeSet<String>,
-  location:   BTreeSet<String>,
-  publisher:  BTreeSet<String>,
-  date:       BTreeSet<String>,
-  pages:      BTreeSet<String>,
-  container:  BTreeSet<String>,
-  collection: BTreeSet<String>,
-  journal:    BTreeSet<String>,
-  editor:     BTreeSet<String>,
-  translator: BTreeSet<String>,
-  note:       BTreeSet<String>,
-  identifier: BTreeSet<String>,
-  volume:     BTreeSet<String>,
-  issue:      BTreeSet<String>,
-  genre:      BTreeSet<String>,
-  edition:    BTreeSet<String>
-}
-
-impl FieldTokens {
-  fn from_reference(
-    reference: &str
-  ) -> Self {
-    Self {
-      author:     tokens_from_authors(
-        reference
-      ),
-      title:      tokens_from_segment(
-        &extract_title(reference)
-      ),
-      location:   tokens_from_segment(
-        &extract_location(reference)
-      ),
-      publisher:  tokens_from_segment(
-        &extract_publisher(reference)
-      ),
-      date:       tokens_from_dates(
-        reference
-      ),
-      pages:      tokens_from_segment(
-        &extract_pages(reference)
-      ),
-      container:  tokens_from_segment(
-        extract_container_title(
-          reference
-        )
-        .unwrap_or_default()
-        .as_str()
-      ),
-      collection: tokens_from_segment(
-        extract_collection_title(
-          reference
-        )
-        .unwrap_or_default()
-        .as_str()
-      ),
-      journal:    tokens_from_segment(
-        extract_journal(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      editor:     tokens_from_segment(
-        extract_editor(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      translator: tokens_from_segment(
-        extract_translator(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      note:       tokens_from_segment(
-        extract_note(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      identifier:
-        tokens_from_identifiers(
-          reference
-        ),
-      volume:     tokens_from_segment(
-        extract_volume(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      issue:      tokens_from_segment(
-        extract_issue(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      genre:      tokens_from_segment(
-        extract_genre(reference)
-          .unwrap_or_default()
-          .as_str()
-      ),
-      edition:    tokens_from_segment(
-        extract_edition(reference)
-          .unwrap_or_default()
-          .as_str()
-      )
-    }
-  }
-
-  fn from_reference_with_dictionary(
-    reference: &str,
-    dictionary: &Dictionary
-  ) -> Self {
-    let mut tokens =
-      Self::from_reference(reference);
-    tokens.apply_dictionary(
-      reference, dictionary
-    );
-    tokens
-  }
-
-  fn apply_dictionary(
-    &mut self,
-    reference: &str,
-    dictionary: &Dictionary
-  ) {
-    for term in
-      reference.split(|c: char| {
-        !c.is_alphanumeric()
-      })
-    {
-      let term = term.trim();
-      if term.is_empty() {
-        continue;
-      }
-      let normalized =
-        normalize_token(term);
-      if normalized.is_empty() {
-        continue;
-      }
-      for code in
-        dictionary.lookup(term)
-      {
-        match code {
-          | DictionaryCode::Name => {
-            self.author
-              .insert(normalized.clone());
-          }
-          | DictionaryCode::Place => {
-            self.location
-              .insert(normalized.clone());
-          }
-          | DictionaryCode::Publisher => {
-            self.publisher
-              .insert(normalized.clone());
-          }
-          | DictionaryCode::Journal => {
-            self.journal
-              .insert(normalized.clone());
-          }
-        }
-      }
-    }
-  }
-}
-
 fn split_references(
   input: &str
 ) -> Vec<String> {
@@ -405,7 +185,7 @@ fn is_initial_boundary(
   )
 }
 
-fn tokens_from_segment(
+pub(crate) fn tokens_from_segment(
   segment: &str
 ) -> BTreeSet<String> {
   let mut tokens = BTreeSet::new();
@@ -957,7 +737,7 @@ fn strip_et_al_suffix(
   }
 }
 
-fn tokens_from_authors(
+pub(crate) fn tokens_from_authors(
   reference: &str
 ) -> BTreeSet<String> {
   let author_segment =
@@ -987,7 +767,7 @@ fn tokens_from_authors(
   tokens
 }
 
-fn tokens_from_dates(
+pub(crate) fn tokens_from_dates(
   reference: &str
 ) -> BTreeSet<String> {
   collect_year_tokens(reference)
@@ -2159,7 +1939,7 @@ impl ParsedDataset {
   }
 }
 
-fn extract_title(
+pub(crate) fn extract_title(
   reference: &str
 ) -> String {
   let cleaned =
@@ -4149,7 +3929,7 @@ fn resolve_type_with_dictionary(
   resolve_type(reference)
 }
 
-fn extract_location(
+pub(crate) fn extract_location(
   reference: &str
 ) -> String {
   let (location, _) =
@@ -4159,7 +3939,7 @@ fn extract_location(
   location
 }
 
-fn extract_publisher(
+pub(crate) fn extract_publisher(
   reference: &str
 ) -> String {
   let (_, publisher) =
@@ -4247,7 +4027,7 @@ fn is_location_segment(
   true
 }
 
-fn extract_pages(
+pub(crate) fn extract_pages(
   reference: &str
 ) -> String {
   let tokens = reference
@@ -4608,7 +4388,7 @@ fn parse_short_page_range_token(
   None
 }
 
-fn extract_collection_title(
+pub(crate) fn extract_collection_title(
   reference: &str
 ) -> Option<String> {
   if let Some(segment) =
@@ -4693,7 +4473,7 @@ fn extract_collection_number(
   }
 }
 
-fn extract_container_title(
+pub(crate) fn extract_container_title(
   reference: &str
 ) -> Option<String> {
   split_reference_segments(reference)
@@ -4744,7 +4524,7 @@ fn capture_number_after(
   }
 }
 
-fn extract_journal(
+pub(crate) fn extract_journal(
   reference: &str
 ) -> Option<String> {
   extract_journal_with_dictionary(
@@ -4752,7 +4532,7 @@ fn extract_journal(
   )
 }
 
-fn extract_journal_with_dictionary(
+pub(crate) fn extract_journal_with_dictionary(
   reference: &str,
   dictionary: Option<&Dictionary>
 ) -> Option<String> {
@@ -5262,7 +5042,7 @@ fn strip_leading_date(
   trimmed.to_string()
 }
 
-fn extract_editor(
+pub(crate) fn extract_editor(
   reference: &str
 ) -> Option<String> {
   let keywords = [
@@ -5468,7 +5248,7 @@ fn strip_parenthetical_date(
   output.trim().to_string()
 }
 
-fn extract_translator(
+pub(crate) fn extract_translator(
   reference: &str
 ) -> Option<String> {
   let keywords = [
@@ -5490,7 +5270,7 @@ fn extract_translator(
   None
 }
 
-fn extract_note(
+pub(crate) fn extract_note(
   reference: &str
 ) -> Option<String> {
   let keywords = [
@@ -5659,7 +5439,7 @@ fn segment_after_keyword(
     .map(clean_segment)
 }
 
-fn extract_volume(
+pub(crate) fn extract_volume(
   reference: &str
 ) -> Option<String> {
   let cleaned =
@@ -5721,7 +5501,7 @@ fn extract_volume(
   None
 }
 
-fn tokens_from_identifiers(
+pub(crate) fn tokens_from_identifiers(
   reference: &str
 ) -> BTreeSet<String> {
   let mut tokens = BTreeSet::new();
@@ -5737,7 +5517,7 @@ fn tokens_from_identifiers(
   tokens
 }
 
-fn extract_issue(
+pub(crate) fn extract_issue(
   reference: &str
 ) -> Option<String> {
   let lower = reference.to_lowercase();
@@ -6040,7 +5820,7 @@ fn extract_part_suffix(
   }
 }
 
-fn extract_genre(
+pub(crate) fn extract_genre(
   reference: &str
 ) -> Option<String> {
   let start = reference.find('[')?;
@@ -6060,7 +5840,7 @@ fn extract_genre(
   Some(value)
 }
 
-fn extract_edition(
+pub(crate) fn extract_edition(
   reference: &str
 ) -> Option<String> {
   let lower = reference.to_lowercase();
@@ -6231,7 +6011,7 @@ fn expand_token(token: &str) -> String {
   )
 }
 
-fn normalize_token(
+pub(crate) fn normalize_token(
   token: &str
 ) -> String {
   token
