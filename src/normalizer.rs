@@ -351,30 +351,13 @@ use serde_json::{
 
 use crate::parser::FieldValue;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NormalizationConfig {
   journal:   AbbreviationMap,
   publisher: AbbreviationMap,
   container: AbbreviationMap,
   language:  AbbreviationMap,
   scripts:   AbbreviationMap
-}
-
-impl Default for NormalizationConfig {
-  fn default() -> Self {
-    Self {
-      journal:
-        AbbreviationMap::default(),
-      publisher:
-        AbbreviationMap::default(),
-      container:
-        AbbreviationMap::default(),
-      language:
-        AbbreviationMap::default(),
-      scripts:
-        AbbreviationMap::default()
-    }
-  }
 }
 
 impl NormalizationConfig {

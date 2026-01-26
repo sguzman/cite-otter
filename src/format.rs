@@ -453,15 +453,11 @@ fn csl_entry(
     extract_first_value_from_map(
       &map, "pages"
     )
+    && !pages.is_empty()
   {
-    if !pages.is_empty() {
-      let pages =
-        normalize_page_range(&pages);
-      push(
-        "page",
-        Value::String(pages)
-      );
-    }
+    let pages =
+      normalize_page_range(&pages);
+    push("page", Value::String(pages));
   }
 
   if let Some(value) =
@@ -813,8 +809,7 @@ fn sanitize_bibtex_value(
   value: &str
 ) -> String {
   strip_terminal_punct(value)
-    .replace('\n', " ")
-    .replace('\r', " ")
+    .replace(['\n', '\r'], " ")
     .split_whitespace()
     .collect::<Vec<_>>()
     .join(" ")
@@ -824,8 +819,7 @@ fn sanitize_bibtex_name_value(
   value: &str
 ) -> String {
   value
-    .replace('\n', " ")
-    .replace('\r', " ")
+    .replace(['\n', '\r'], " ")
     .split_whitespace()
     .collect::<Vec<_>>()
     .join(" ")

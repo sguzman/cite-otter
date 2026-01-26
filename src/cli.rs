@@ -929,7 +929,7 @@ fn load_dictionary_terms(
       continue;
     }
     let term = line
-      .split(|c| c == '\t' || c == ',')
+      .split(['\t', ','])
       .next()
       .unwrap_or("")
       .trim();
@@ -950,11 +950,10 @@ fn collect_dictionary_files(
       .join(pattern)
       .to_string_lossy()
       .to_string();
-    for entry in glob(&pattern)? {
-      if let Ok(path) = entry {
-        if path.is_file() {
-          files.push(path);
-        }
+    for path in glob(&pattern)?.flatten()
+    {
+      if path.is_file() {
+        files.push(path);
       }
     }
   }
@@ -1160,489 +1159,6 @@ fn is_score_token(token: &str) -> bool {
       .all(|c| c.is_ascii_digit())
 }
 
-#[cfg(test)]
-mod tests {
-  use std::collections::HashMap;
-  use std::fs;
-  #[cfg(unix)]
-  use std::os::unix::fs::PermissionsExt;
-
-  use serde_json::Value;
-  use tempfile::tempdir;
-
-  use super::*;
-
-  #[test]
-  fn load_anystyle_entries_reads_tagged_lines()
-   {
-    let path = Path::new(
-      "tests/fixtures/\
-       dictionary-sample.txt"
-    );
-    let entries =
-      load_anystyle_entries(path)
-        .expect("load entries");
-    let mut map =
-      HashMap::<String, u32>::new();
-    for (term, value) in entries {
-      *map.entry(term).or_insert(0) |=
-        value;
-    }
-
-    assert_eq!(
-      map.get("Italy"),
-      Some(
-        &DictionaryCode::Place.bit()
-      )
-    );
-    let nature =
-      map.get("Nature").copied();
-    let expected =
-      DictionaryCode::Journal.bit()
-        | DictionaryCode::Publisher
-          .bit();
-    assert_eq!(nature, Some(expected));
-  }
-
-  #[test]
-  fn normalization_sync_copies_files() {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let source =
-      temp_dir.path().join("src");
-    let output =
-      temp_dir.path().join("out");
-    fs::create_dir_all(&source)
-      .expect("create source");
-
-    let journal =
-      source.join("journal-abbrev.txt");
-    fs::write(
-      &journal,
-      "J. Test.\tJournal of Testing"
-    )
-    .expect("write journal file");
-
-    let count = sync_normalization_files(
-      &source,
-      &["**/*abbrev*.txt".to_string()],
-      &output
-    )
-    .expect("sync");
-
-    assert_eq!(count, 1);
-    let copied = fs::read_to_string(
-      output.join("journal-abbrev.txt")
-    )
-    .expect("read copy");
-    assert!(
-      copied
-        .contains("Journal of Testing")
-    );
-  }
-
-  #[test]
-  fn normalization_sync_accepts_repo_path()
-   {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let source =
-      temp_dir.path().join("repo");
-    fs::create_dir_all(&source)
-      .expect("create repo dir");
-
-    let journal =
-      source.join("journal-abbrev.txt");
-    fs::write(
-      &journal,
-      "J. Test.\tJournal of Testing"
-    )
-    .expect("write journal file");
-
-    let resolved =
-      resolve_normalization_source(
-        source
-          .to_string_lossy()
-          .as_ref(),
-        None
-      )
-      .expect("resolve repo path");
-    assert_eq!(resolved, source);
-  }
-
-  #[test]
-  fn normalization_sync_accepts_repo_subdir()
-   {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let source =
-      temp_dir.path().join("repo");
-    let subdir = source.join("assets");
-    fs::create_dir_all(&subdir)
-      .expect("create repo dir");
-
-    let journal =
-      subdir.join("journal-abbrev.txt");
-    fs::write(
-      &journal,
-      "J. Test.\tJournal of Testing"
-    )
-    .expect("write journal file");
-
-    let resolved =
-      resolve_normalization_source(
-        source
-          .to_string_lossy()
-          .as_ref(),
-        Some(&PathBuf::from("assets"))
-      )
-      .expect("resolve repo path");
-    assert_eq!(resolved, subdir);
-  }
-
-  #[test]
-  fn normalization_sync_clones_repo() {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let remote_repo =
-      temp_dir.path().join("remote");
-    let _ = ProcessCommand::new("git")
-      .args([
-        "init",
-        remote_repo
-          .to_string_lossy()
-          .as_ref()
-      ])
-      .status()
-      .expect("git init");
-    let journal = remote_repo
-      .join("journal-abbrev.txt");
-    fs::write(
-      &journal,
-      "J. Test.\tJournal of Testing"
-    )
-    .expect("write journal file");
-    let _ = ProcessCommand::new("git")
-      .current_dir(&remote_repo)
-      .args(["add", "."])
-      .status()
-      .expect("git add");
-    let _ = ProcessCommand::new("git")
-      .current_dir(&remote_repo)
-      .args([
-        "-c",
-        "user.email=test@example.com",
-        "-c",
-        "user.name=Test",
-        "commit",
-        "-m",
-        "seed"
-      ])
-      .status()
-      .expect("git commit");
-
-    let cloned =
-      resolve_normalization_source(
-        remote_repo
-          .to_string_lossy()
-          .as_ref(),
-        None
-      )
-      .expect("clone repo");
-    assert!(cloned.exists());
-  }
-
-  #[test]
-  fn collect_files_rejects_invalid_glob()
-   {
-    let result = collect_files("[");
-    assert!(
-      result.is_err(),
-      "invalid glob patterns should \
-       error"
-    );
-  }
-
-  #[test]
-  fn training_rejects_invalid_glob() {
-    let paths = CliPaths::default();
-    let result =
-      run_training_with_config(
-        "[",
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    assert!(
-      result.is_err(),
-      "training should error on \
-       invalid glob"
-    );
-  }
-
-  #[test]
-  fn validation_rejects_invalid_glob() {
-    let paths = CliPaths::default();
-    let result =
-      run_validation_with_config(
-        "[",
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    assert!(
-      result.is_err(),
-      "validation should error on \
-       invalid glob"
-    );
-  }
-
-  #[test]
-  fn delta_rejects_invalid_glob() {
-    let paths = CliPaths::default();
-    let result = run_delta_with_config(
-      "[",
-      DEFAULT_FINDER_PATTERN,
-      &paths
-    );
-    assert!(
-      result.is_err(),
-      "delta should error on invalid \
-       glob"
-    );
-  }
-
-  #[test]
-  fn training_errors_on_missing_dataset()
-   {
-    let paths = CliPaths::default();
-    let result =
-      run_training_with_config(
-        "target/missing-parser.xml",
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    assert!(
-      result.is_ok(),
-      "training should succeed with \
-       zero parser datasets"
-    );
-  }
-
-  #[test]
-  fn validation_errors_on_missing_dataset()
-   {
-    let paths = CliPaths::default();
-    let result =
-      run_validation_with_config(
-        "target/missing-parser.xml",
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    assert!(
-      result.is_ok(),
-      "validation should succeed with \
-       zero parser datasets"
-    );
-  }
-
-  #[test]
-  fn delta_errors_on_missing_dataset() {
-    let paths = CliPaths::default();
-    let result = run_delta_with_config(
-      "target/missing-parser.xml",
-      DEFAULT_FINDER_PATTERN,
-      &paths
-    );
-    assert!(
-      result.is_ok(),
-      "delta should succeed with zero \
-       parser datasets"
-    );
-  }
-
-  #[cfg(unix)]
-  #[test]
-  fn training_errors_on_unreadable_dataset()
-   {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let dataset = temp_dir
-      .path()
-      .join("unreadable.xml");
-    fs::write(&dataset, "test")
-      .expect("write dataset");
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o000)
-    )
-    .expect("chmod dataset");
-
-    let paths = CliPaths::default();
-    let result =
-      run_training_with_config(
-        dataset
-          .to_string_lossy()
-          .as_ref(),
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o644)
-    )
-    .expect("restore permissions");
-    assert!(
-      result.is_err(),
-      "training should error on \
-       unreadable datasets"
-    );
-  }
-
-  #[cfg(unix)]
-  #[test]
-  fn validation_errors_on_unreadable_dataset()
-   {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let dataset = temp_dir
-      .path()
-      .join("unreadable.xml");
-    fs::write(&dataset, "test")
-      .expect("write dataset");
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o000)
-    )
-    .expect("chmod dataset");
-
-    let paths = CliPaths::default();
-    let result =
-      run_validation_with_config(
-        dataset
-          .to_string_lossy()
-          .as_ref(),
-        DEFAULT_FINDER_PATTERN,
-        &paths
-      );
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o644)
-    )
-    .expect("restore permissions");
-    assert!(
-      result.is_err(),
-      "validation should error on \
-       unreadable datasets"
-    );
-  }
-
-  #[cfg(unix)]
-  #[test]
-  fn delta_errors_on_unreadable_dataset()
-   {
-    let temp_dir = tempfile::tempdir()
-      .expect("temp dir");
-    let dataset = temp_dir
-      .path()
-      .join("unreadable.xml");
-    fs::write(&dataset, "test")
-      .expect("write dataset");
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o000)
-    )
-    .expect("chmod dataset");
-
-    let paths = CliPaths::default();
-    let result = run_delta_with_config(
-      dataset
-        .to_string_lossy()
-        .as_ref(),
-      DEFAULT_FINDER_PATTERN,
-      &paths
-    );
-    fs::set_permissions(
-      &dataset,
-      fs::Permissions::from_mode(0o644)
-    )
-    .expect("restore permissions");
-    assert!(
-      result.is_err(),
-      "delta should error on \
-       unreadable datasets"
-    );
-  }
-
-  #[test]
-  fn training_report_matches_fixture_snapshot()
-   {
-    let temp_dir =
-      tempdir().expect("temp dir");
-    let report_dir =
-      temp_dir.path().join("reports");
-    let paths = CliPaths {
-      parser_model:     temp_dir
-        .path()
-        .join("parser-model.json"),
-      finder_model:     temp_dir
-        .path()
-        .join("finder-model.json"),
-      parser_sequences: temp_dir
-        .path()
-        .join("parser-sequences.json"),
-      finder_sequences: temp_dir
-        .path()
-        .join("finder-sequences.json"),
-      report_dir:       report_dir
-        .clone()
-    };
-
-    run_training_with_config(
-      "tests/fixtures/report/parser.\
-       txt",
-      "tests/fixtures/report/finder.\
-       txt",
-      &paths
-    )
-    .expect("training report");
-
-    let report_path = report_dir
-      .join("training-report.json");
-    let report =
-      fs::read_to_string(&report_path)
-        .expect("read report");
-    let mut actual: Value =
-      serde_json::from_str(&report)
-        .expect("parse report json");
-    if let Some(samples) = actual
-      .get_mut("samples")
-      .and_then(Value::as_array_mut)
-    {
-      for sample in samples {
-        if let Some(obj) =
-          sample.as_object_mut()
-        {
-          obj.insert(
-            "output".into(),
-            Value::String(
-              "<redacted>".into()
-            )
-          );
-        }
-      }
-    }
-
-    let expected = fs::read_to_string(
-      "tests/fixtures/report/\
-       training-report-snapshot.json"
-    )
-    .expect("read snapshot");
-    let expected: Value =
-      serde_json::from_str(&expected)
-        .expect("parse snapshot");
-
-    assert_eq!(actual, expected);
-  }
-}
 
 fn run_training_with_config(
   parser_pattern: &str,
@@ -2352,3 +1868,487 @@ const SAMPLE_REFERENCES: [&str; 2] = [
    Edited by Doe, J. (Note: Preprint \
    release). doi:10.1000/test https://example.org."
 ];
+
+#[cfg(test)]
+mod tests {
+  use std::collections::HashMap;
+  use std::fs;
+  #[cfg(unix)]
+  use std::os::unix::fs::PermissionsExt;
+
+  use serde_json::Value;
+  use tempfile::tempdir;
+
+  use super::*;
+
+  #[test]
+  fn load_anystyle_entries_reads_tagged_lines()
+   {
+    let path = Path::new(
+      "tests/fixtures/\
+       dictionary-sample.txt"
+    );
+    let entries =
+      load_anystyle_entries(path)
+        .expect("load entries");
+    let mut map =
+      HashMap::<String, u32>::new();
+    for (term, value) in entries {
+      *map.entry(term).or_insert(0) |=
+        value;
+    }
+
+    assert_eq!(
+      map.get("Italy"),
+      Some(
+        &DictionaryCode::Place.bit()
+      )
+    );
+    let nature =
+      map.get("Nature").copied();
+    let expected =
+      DictionaryCode::Journal.bit()
+        | DictionaryCode::Publisher
+          .bit();
+    assert_eq!(nature, Some(expected));
+  }
+
+  #[test]
+  fn normalization_sync_copies_files() {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("src");
+    let output =
+      temp_dir.path().join("out");
+    fs::create_dir_all(&source)
+      .expect("create source");
+
+    let journal =
+      source.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let count = sync_normalization_files(
+      &source,
+      &["**/*abbrev*.txt".to_string()],
+      &output
+    )
+    .expect("sync");
+
+    assert_eq!(count, 1);
+    let copied = fs::read_to_string(
+      output.join("journal-abbrev.txt")
+    )
+    .expect("read copy");
+    assert!(
+      copied
+        .contains("Journal of Testing")
+    );
+  }
+
+  #[test]
+  fn normalization_sync_accepts_repo_path()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("repo");
+    fs::create_dir_all(&source)
+      .expect("create repo dir");
+
+    let journal =
+      source.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let resolved =
+      resolve_normalization_source(
+        source
+          .to_string_lossy()
+          .as_ref(),
+        None
+      )
+      .expect("resolve repo path");
+    assert_eq!(resolved, source);
+  }
+
+  #[test]
+  fn normalization_sync_accepts_repo_subdir()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let source =
+      temp_dir.path().join("repo");
+    let subdir = source.join("assets");
+    fs::create_dir_all(&subdir)
+      .expect("create repo dir");
+
+    let journal =
+      subdir.join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+
+    let resolved =
+      resolve_normalization_source(
+        source
+          .to_string_lossy()
+          .as_ref(),
+        Some(&PathBuf::from("assets"))
+      )
+      .expect("resolve repo path");
+    assert_eq!(resolved, subdir);
+  }
+
+  #[test]
+  fn normalization_sync_clones_repo() {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let remote_repo =
+      temp_dir.path().join("remote");
+    let _ = ProcessCommand::new("git")
+      .args([
+        "init",
+        remote_repo
+          .to_string_lossy()
+          .as_ref()
+      ])
+      .status()
+      .expect("git init");
+    let journal = remote_repo
+      .join("journal-abbrev.txt");
+    fs::write(
+      &journal,
+      "J. Test.\tJournal of Testing"
+    )
+    .expect("write journal file");
+    let _ = ProcessCommand::new("git")
+      .current_dir(&remote_repo)
+      .args(["add", "."])
+      .status()
+      .expect("git add");
+    let _ = ProcessCommand::new("git")
+      .current_dir(&remote_repo)
+      .args([
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
+        "commit",
+        "-m",
+        "seed"
+      ])
+      .status()
+      .expect("git commit");
+
+    let cloned =
+      resolve_normalization_source(
+        remote_repo
+          .to_string_lossy()
+          .as_ref(),
+        None
+      )
+      .expect("clone repo");
+    assert!(cloned.exists());
+  }
+
+  #[test]
+  fn collect_files_rejects_invalid_glob()
+   {
+    let result = collect_files("[");
+    assert!(
+      result.is_err(),
+      "invalid glob patterns should \
+       error"
+    );
+  }
+
+  #[test]
+  fn training_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        "[",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_err(),
+      "training should error on \
+       invalid glob"
+    );
+  }
+
+  #[test]
+  fn validation_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        "[",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_err(),
+      "validation should error on \
+       invalid glob"
+    );
+  }
+
+  #[test]
+  fn delta_rejects_invalid_glob() {
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      "[",
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    assert!(
+      result.is_err(),
+      "delta should error on invalid \
+       glob"
+    );
+  }
+
+  #[test]
+  fn training_errors_on_missing_dataset()
+   {
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        "target/missing-parser.xml",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_ok(),
+      "training should succeed with \
+       zero parser datasets"
+    );
+  }
+
+  #[test]
+  fn validation_errors_on_missing_dataset()
+   {
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        "target/missing-parser.xml",
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    assert!(
+      result.is_ok(),
+      "validation should succeed with \
+       zero parser datasets"
+    );
+  }
+
+  #[test]
+  fn delta_errors_on_missing_dataset() {
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      "target/missing-parser.xml",
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    assert!(
+      result.is_ok(),
+      "delta should succeed with zero \
+       parser datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn training_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result =
+      run_training_with_config(
+        dataset
+          .to_string_lossy()
+          .as_ref(),
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "training should error on \
+       unreadable datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn validation_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result =
+      run_validation_with_config(
+        dataset
+          .to_string_lossy()
+          .as_ref(),
+        DEFAULT_FINDER_PATTERN,
+        &paths
+      );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "validation should error on \
+       unreadable datasets"
+    );
+  }
+
+  #[cfg(unix)]
+  #[test]
+  fn delta_errors_on_unreadable_dataset()
+   {
+    let temp_dir = tempfile::tempdir()
+      .expect("temp dir");
+    let dataset = temp_dir
+      .path()
+      .join("unreadable.xml");
+    fs::write(&dataset, "test")
+      .expect("write dataset");
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o000)
+    )
+    .expect("chmod dataset");
+
+    let paths = CliPaths::default();
+    let result = run_delta_with_config(
+      dataset
+        .to_string_lossy()
+        .as_ref(),
+      DEFAULT_FINDER_PATTERN,
+      &paths
+    );
+    fs::set_permissions(
+      &dataset,
+      fs::Permissions::from_mode(0o644)
+    )
+    .expect("restore permissions");
+    assert!(
+      result.is_err(),
+      "delta should error on \
+       unreadable datasets"
+    );
+  }
+
+  #[test]
+  fn training_report_matches_fixture_snapshot()
+   {
+    let temp_dir =
+      tempdir().expect("temp dir");
+    let report_dir =
+      temp_dir.path().join("reports");
+    let paths = CliPaths {
+      parser_model:     temp_dir
+        .path()
+        .join("parser-model.json"),
+      finder_model:     temp_dir
+        .path()
+        .join("finder-model.json"),
+      parser_sequences: temp_dir
+        .path()
+        .join("parser-sequences.json"),
+      finder_sequences: temp_dir
+        .path()
+        .join("finder-sequences.json"),
+      report_dir:       report_dir
+        .clone()
+    };
+
+    run_training_with_config(
+      "tests/fixtures/report/parser.\
+       txt",
+      "tests/fixtures/report/finder.\
+       txt",
+      &paths
+    )
+    .expect("training report");
+
+    let report_path = report_dir
+      .join("training-report.json");
+    let report =
+      fs::read_to_string(&report_path)
+        .expect("read report");
+    let mut actual: Value =
+      serde_json::from_str(&report)
+        .expect("parse report json");
+    if let Some(samples) = actual
+      .get_mut("samples")
+      .and_then(Value::as_array_mut)
+    {
+      for sample in samples {
+        if let Some(obj) =
+          sample.as_object_mut()
+        {
+          obj.insert(
+            "output".into(),
+            Value::String(
+              "<redacted>".into()
+            )
+          );
+        }
+      }
+    }
+
+    let expected = fs::read_to_string(
+      "tests/fixtures/report/\
+       training-report-snapshot.json"
+    )
+    .expect("read snapshot");
+    let expected: Value =
+      serde_json::from_str(&expected)
+        .expect("parse snapshot");
+
+    assert_eq!(actual, expected);
+  }
+}

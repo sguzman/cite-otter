@@ -534,12 +534,11 @@ fn training_validation_delta_flow_runs()
     if let Some(format) = entry
       .get("format")
       .and_then(Value::as_str)
-    {
-      if let Some(output) = entry
+      && let Some(output) = entry
         .get("output")
         .and_then(Value::as_str)
-      {
-        match format {
+    {
+      match format {
           | "json" => {
             let parsed: Value =
               serde_json::from_str(
@@ -589,7 +588,6 @@ fn training_validation_delta_flow_runs()
             );
           }
           | _ => {}
-        }
       }
     }
   }
