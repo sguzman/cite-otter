@@ -6,9 +6,10 @@ use std::path::{
 
 use anyhow::{
   Context,
-  Result,
-  anyhow
+  Result
 };
+#[cfg(not(feature = "gdbm"))]
+use anyhow::anyhow;
 #[cfg(feature = "gdbm")]
 use gnudbm::{
   Error as GdbmError,
@@ -591,7 +592,7 @@ impl GdbmBackend {
     match self.handle.fetch(term) {
       | Ok(bytes) => {
         DictionaryValue::from_bytes(
-          &bytes
+          bytes.as_bytes()
         )
         .map(|v| v.0)
       }
@@ -614,7 +615,7 @@ impl GdbmBackend {
       {
         | Ok(bytes) => {
           DictionaryValue::from_bytes(
-            &bytes
+            bytes.as_bytes()
           )
           .map(|v| v.0)
           .unwrap_or(0)

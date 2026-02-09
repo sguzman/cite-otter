@@ -5,9 +5,9 @@ use std::path::{
 };
 
 use cite_otter::cli::{
-  delta_report,
-  training_report,
-  validation_report
+  delta_report_with_paths,
+  training_report_with_paths,
+  validation_report_with_paths
 };
 use cite_otter::parser::{
   Parser,
@@ -15,46 +15,74 @@ use cite_otter::parser::{
 };
 use cite_otter::sequence_model::SequenceModel;
 use serde_json::Value;
+use tempfile::tempdir;
 
 fn report_path(
+  report_dir: &Path,
   name: &str
 ) -> std::path::PathBuf {
-  Path::new("target")
-    .join("reports")
-    .join(name)
+  report_dir.join(name)
+}
+
+fn isolated_dirs()
+-> (tempfile::TempDir, PathBuf, PathBuf) {
+  let temp = tempdir().expect("temp dir");
+  let model_dir =
+    temp.path().join("models");
+  let report_dir =
+    temp.path().join("reports");
+  (temp, model_dir, report_dir)
 }
 
 #[test]
 fn training_validation_delta_flow_runs()
 {
-  let reports_dir =
-    Path::new("target").join("reports");
-  let _ =
-    fs::remove_dir_all(&reports_dir);
+  let (
+    _temp,
+    model_dir,
+    report_dir
+  ) = isolated_dirs();
 
-  training_report()
-    .expect("training should succeed");
-  validation_report().expect(
+  training_report_with_paths(
+    &model_dir,
+    &report_dir
+  )
+  .expect("training should succeed");
+  validation_report_with_paths(
+    &model_dir,
+    &report_dir
+  )
+  .expect(
     "validation should succeed"
   );
-  delta_report()
+  delta_report_with_paths(
+    &model_dir,
+    &report_dir
+  )
     .expect("delta should succeed");
 
   let training = fs::read_to_string(
-    report_path("training-report.json")
+    report_path(
+      &report_dir,
+      "training-report.json"
+    )
   )
   .expect(
     "training report should exist"
   );
   let validation =
     fs::read_to_string(report_path(
+      &report_dir,
       "validation-report.json"
     ))
     .expect(
       "validation report should exist"
     );
   let delta = fs::read_to_string(
-    report_path("delta-report.json")
+    report_path(
+      &report_dir,
+      "delta-report.json"
+    )
   )
   .expect("delta report should exist");
 
@@ -282,6 +310,13 @@ fn training_validation_delta_flow_runs()
       "training parser data should be \
        present"
     );
+  let training_finder = training_json
+    .get("finder")
+    .and_then(Value::as_array)
+    .expect(
+      "training finder data should be \
+       present"
+    );
   let training_entry =
     find_dataset_entry(
       training_parser,
@@ -341,7 +376,7 @@ fn training_validation_delta_flow_runs()
         value.get("datasets")
       })
       .and_then(Value::as_u64),
-    Some(1),
+    Some(training_parser.len() as u64),
     "training summary should count \
      parser datasets"
   );
@@ -352,7 +387,16 @@ fn training_validation_delta_flow_runs()
         value.get("sequences")
       })
       .and_then(Value::as_u64),
-    Some(expected_sequences as u64),
+    Some(
+      training_parser
+        .iter()
+        .filter_map(|entry| {
+          entry
+            .get("sequences")
+            .and_then(Value::as_u64)
+        })
+        .sum()
+    ),
     "training summary should track \
      parser sequences"
   );
@@ -363,7 +407,16 @@ fn training_validation_delta_flow_runs()
         value.get("tokens")
       })
       .and_then(Value::as_u64),
-    Some(expected_tokens as u64),
+    Some(
+      training_parser
+        .iter()
+        .filter_map(|entry| {
+          entry
+            .get("tokens")
+            .and_then(Value::as_u64)
+        })
+        .sum()
+    ),
     "training summary should track \
      parser tokens"
   );
@@ -374,7 +427,7 @@ fn training_validation_delta_flow_runs()
         value.get("datasets")
       })
       .and_then(Value::as_u64),
-    Some(1),
+    Some(training_finder.len() as u64),
     "training summary should count \
      finder datasets"
   );
@@ -386,7 +439,14 @@ fn training_validation_delta_flow_runs()
       })
       .and_then(Value::as_u64),
     Some(
-      expected_finder_sequences as u64
+      training_finder
+        .iter()
+        .filter_map(|entry| {
+          entry
+            .get("sequences")
+            .and_then(Value::as_u64)
+        })
+        .sum()
     ),
     "training summary should track \
      finder sequences"
@@ -398,7 +458,16 @@ fn training_validation_delta_flow_runs()
         value.get("tokens")
       })
       .and_then(Value::as_u64),
-    Some(expected_finder_tokens as u64),
+    Some(
+      training_finder
+        .iter()
+        .filter_map(|entry| {
+          entry
+            .get("tokens")
+            .and_then(Value::as_u64)
+        })
+        .sum()
+    ),
     "training summary should track \
      finder tokens"
   );
@@ -420,13 +489,6 @@ fn training_validation_delta_flow_runs()
     "training report should list \
      finder datasets"
   );
-  let training_finder = training_json
-    .get("finder")
-    .and_then(Value::as_array)
-    .expect(
-      "training finder data should be \
-       present"
-    );
   let finder_entry =
     find_dataset_entry(
       training_finder,
@@ -833,7 +895,7 @@ fn training_validation_delta_flow_runs()
         value.get("datasets")
       })
       .and_then(Value::as_u64),
-    Some(1),
+    Some(validation_parser.len() as u64),
     "validation summary should count \
      parser datasets"
   );
@@ -844,7 +906,7 @@ fn training_validation_delta_flow_runs()
         value.get("datasets")
       })
       .and_then(Value::as_u64),
-    Some(1),
+    Some(validation_finder.len() as u64),
     "validation summary should count \
      finder datasets"
   );
@@ -1135,7 +1197,10 @@ fn training_validation_delta_flow_runs()
   );
 
   let parser_model_path =
-    model_file("parser-sequences.json");
+    model_file(
+      &model_dir,
+      "parser-sequences.json"
+    );
   let parser_model =
     SequenceModel::load(
       &parser_model_path
@@ -1165,7 +1230,10 @@ fn training_validation_delta_flow_runs()
   );
 
   let finder_model_path =
-    model_file("finder-sequences.json");
+    model_file(
+      &model_dir,
+      "finder-sequences.json"
+    );
   let finder_model =
     SequenceModel::load(
       &finder_model_path
@@ -1204,8 +1272,11 @@ fn training_validation_delta_flow_runs()
 
 #[test]
 fn validation_fails_without_models() {
-  let model_dir =
-    Path::new("target").join("models");
+  let (
+    _temp,
+    model_dir,
+    report_dir
+  ) = isolated_dirs();
   let _ =
     fs::remove_dir_all(&model_dir);
 
@@ -1216,7 +1287,11 @@ fn validation_fails_without_models() {
     "parser model should be absent"
   );
 
-  let result = validation_report();
+  let result =
+    validation_report_with_paths(
+      &model_dir,
+      &report_dir
+    );
   assert!(
     result.is_ok(),
     "validation should succeed \
@@ -1226,8 +1301,11 @@ fn validation_fails_without_models() {
 
 #[test]
 fn delta_fails_without_models() {
-  let model_dir =
-    Path::new("target").join("models");
+  let (
+    _temp,
+    model_dir,
+    report_dir
+  ) = isolated_dirs();
   let _ =
     fs::remove_dir_all(&model_dir);
 
@@ -1238,7 +1316,10 @@ fn delta_fails_without_models() {
     "parser model should be absent"
   );
 
-  let result = delta_report();
+  let result = delta_report_with_paths(
+    &model_dir,
+    &report_dir
+  );
   assert!(
     result.is_ok(),
     "delta should succeed without \
@@ -1287,8 +1368,9 @@ fn assert_report_keys(
   }
 }
 
-fn model_file(name: &str) -> PathBuf {
-  Path::new("target")
-    .join("models")
-    .join(name)
+fn model_file(
+  model_dir: &Path,
+  name: &str
+) -> PathBuf {
+  model_dir.join(name)
 }

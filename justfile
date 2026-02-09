@@ -107,7 +107,7 @@ refresh-fixtures-fast:
 	CITE_OTTER_CORE_LIMIT=200 cargo run --quiet --bin generate_format_fixtures
 
 compare-ruby-format:
-	scripts/compare_ruby_format.sh
+	bash scripts/compare_ruby_format.sh
 
 bench-ruby-parity:
 	scripts/benchmark_ruby_parity.sh

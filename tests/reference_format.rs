@@ -14,15 +14,16 @@ use cite_otter::parser::{
   Reference
 };
 mod support;
-use support::assert_snapshot_eq;
+use support::{
+  assert_snapshot_eq,
+  snapshot_report_path
+};
 
 #[test]
 fn format_diff_writes_report_for_mismatch()
  {
   let tmp =
-    std::path::Path::new("target")
-      .join("reports")
-      .join("format-diff.txt");
+    snapshot_report_path("diff fixture");
   let _ = std::fs::remove_file(&tmp);
   let result =
     std::panic::catch_unwind(|| {

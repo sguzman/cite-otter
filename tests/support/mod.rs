@@ -13,6 +13,18 @@ pub fn fixture_path(
 }
 
 #[allow(dead_code)]
+pub fn snapshot_report_path(
+  label: &str
+) -> PathBuf {
+  let slug = snapshot_label_slug(label);
+  Path::new("target")
+    .join("reports")
+    .join(format!(
+      "format-diff-{slug}.txt"
+    ))
+}
+
+#[allow(dead_code)]
 pub fn assert_snapshot_eq(
   label: &str,
   actual: &str,
@@ -30,9 +42,8 @@ pub fn assert_snapshot_eq(
     snapshot_header(label, &summary);
   let report =
     format!("{header}\n{diff}");
-  let report_path = Path::new("target")
-    .join("reports")
-    .join("format-diff.txt");
+  let report_path =
+    snapshot_report_path(label);
   if let Some(parent) =
     report_path.parent()
   {
@@ -168,4 +179,27 @@ fn split_label(
   label: &str
 ) -> Option<(&str, &str)> {
   label.split_once(':')
+}
+
+fn snapshot_label_slug(
+  label: &str
+) -> String {
+  let mut slug = String::new();
+  for ch in label.chars() {
+    if ch.is_ascii_alphanumeric() {
+      slug.push(ch.to_ascii_lowercase());
+      continue;
+    }
+    if !slug.ends_with('-') {
+      slug.push('-');
+    }
+  }
+  let slug = slug
+    .trim_matches('-')
+    .to_string();
+  if slug.is_empty() {
+    "snapshot".into()
+  } else {
+    slug
+  }
 }

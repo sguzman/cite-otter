@@ -16,10 +16,7 @@ pub(crate) fn tag_token(
   token: &str,
   context: &FieldTokens,
 ) -> String {
-  let original = token
-    .split_whitespace()
-    .next()
-    .unwrap_or(token);
+  let original = token.trim();
   let lower = original.to_lowercase();
   let normalized = normalize_token(original);
 

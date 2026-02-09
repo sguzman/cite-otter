@@ -4568,27 +4568,75 @@ pub(crate) fn extract_note(
 pub(crate) fn extract_identifiers(
   reference: &str
 ) -> Vec<String> {
-  reference
-    .split_whitespace()
-    .map(|token| {
-      token.trim_matches(|c: char| {
-        c.is_ascii_punctuation()
-      })
-    })
-    .filter(|token| !token.is_empty())
+  identifier_tokens(reference)
+    .into_iter()
     .filter(|token| {
-      let lower = token.to_lowercase();
-      lower.starts_with("doi")
-        || lower.contains("doi:")
-        || lower.contains("isbn")
-        || lower.contains("issn")
-        || lower.starts_with("http")
-        || lower.starts_with("www")
-        || lower.contains("url")
-        || lower.contains("urn")
+      looks_like_identifier_token(token)
     })
-    .map(|token| token.to_string())
     .collect()
+}
+
+pub(crate) fn extract_doi(
+  reference: &str
+) -> Option<String> {
+  let tokens = identifier_tokens(reference);
+  for (idx, token) in tokens.iter().enumerate()
+  {
+    let lower = token.to_lowercase();
+    if lower.starts_with("doi:") {
+      return Some(token.clone());
+    }
+    if let Some(pos) = lower.find("doi.org/") {
+      let value_start = pos + "doi.org/".len();
+      let value = token
+        .get(value_start..)
+        .unwrap_or("")
+        .trim_matches(|c: char| {
+          c.is_ascii_punctuation()
+        });
+      if looks_like_doi_value(value) {
+        return Some(format!("doi:{value}"));
+      }
+    }
+    if lower == "doi"
+      && let Some(next) = tokens.get(idx + 1)
+    {
+      if next.to_lowercase().starts_with("doi:")
+      {
+        return Some(next.clone());
+      }
+      if looks_like_doi_value(next) {
+        return Some(format!("doi:{next}"));
+      }
+    }
+  }
+  None
+}
+
+pub(crate) fn extract_url(
+  reference: &str
+) -> Option<String> {
+  let tokens = identifier_tokens(reference);
+  for (idx, token) in tokens.iter().enumerate()
+  {
+    let lower = token.to_lowercase();
+    if looks_like_url(token) {
+      return Some(token.clone());
+    }
+    if lower == "url"
+      && let Some(next) = tokens.get(idx + 1)
+      && looks_like_url(next)
+    {
+      return Some(next.clone());
+    }
+    if lower.starts_with("url:") {
+      let value = token.get(4..).unwrap_or("");
+      if looks_like_url(value) {
+        return Some(value.to_string());
+      }
+    }
+  }
+  None
 }
 
 pub(crate) fn extract_isbn(
@@ -4605,6 +4653,49 @@ pub(crate) fn extract_issn(
   extract_labeled_identifier_value(
     reference, "issn"
   )
+}
+
+fn identifier_tokens(
+  reference: &str
+) -> Vec<String> {
+  reference
+    .split_whitespace()
+    .map(|token| {
+      token.trim_matches(|c: char| {
+        c.is_ascii_punctuation()
+      })
+    })
+    .filter(|token| !token.is_empty())
+    .map(|token| token.to_string())
+    .collect()
+}
+
+fn looks_like_identifier_token(
+  token: &str
+) -> bool {
+  let lower = token.to_lowercase();
+  lower.starts_with("doi")
+    || lower.contains("doi:")
+    || lower.contains("isbn")
+    || lower.contains("issn")
+    || lower.starts_with("http")
+    || lower.starts_with("www")
+    || lower.contains("url")
+    || lower.contains("urn")
+}
+
+fn looks_like_doi_value(
+  token: &str
+) -> bool {
+  token.starts_with("10.")
+    && token.contains('/')
+}
+
+fn looks_like_url(token: &str) -> bool {
+  let lower = token.to_lowercase();
+  lower.starts_with("http://")
+    || lower.starts_with("https://")
+    || lower.starts_with("www.")
 }
 
 fn extract_labeled_identifier_value(

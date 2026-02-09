@@ -16,6 +16,7 @@ use crate::parser::extract::{
   extract_collection_number,
   extract_collection_title,
   extract_container_title,
+  extract_doi,
   extract_edition,
   extract_editor_list,
   extract_genre,
@@ -30,6 +31,7 @@ use crate::parser::extract::{
   extract_publisher,
   extract_title,
   extract_translator,
+  extract_url,
   extract_volume,
   resolve_type_with_dictionary,
   split_references,
@@ -300,6 +302,19 @@ impl Parser {
           mapped.insert(
             "note",
             FieldValue::List(vec![note]),
+          );
+        }
+
+        if let Some(doi) = extract_doi(reference) {
+          mapped.insert(
+            "doi",
+            FieldValue::List(vec![doi]),
+          );
+        }
+        if let Some(url) = extract_url(reference) {
+          mapped.insert(
+            "url",
+            FieldValue::List(vec![url]),
           );
         }
 

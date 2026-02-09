@@ -1294,6 +1294,19 @@ pub fn training_report()
   run_training()
 }
 
+pub fn training_report_with_paths(
+  model_dir: &Path,
+  report_dir: &Path
+) -> anyhow::Result<()> {
+  run_training_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &cli_paths_for_dirs(
+      model_dir, report_dir
+    )
+  )
+}
+
 fn run_validation_with_config(
   parser_pattern: &str,
   finder_pattern: &str,
@@ -1471,6 +1484,19 @@ pub fn validation_report()
   run_validation()
 }
 
+pub fn validation_report_with_paths(
+  model_dir: &Path,
+  report_dir: &Path
+) -> anyhow::Result<()> {
+  run_validation_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &cli_paths_for_dirs(
+      model_dir, report_dir
+    )
+  )
+}
+
 fn run_delta_with_config(
   parser_pattern: &str,
   finder_pattern: &str,
@@ -1630,6 +1656,19 @@ fn run_delta() -> anyhow::Result<()> {
 pub fn delta_report()
 -> anyhow::Result<()> {
   run_delta()
+}
+
+pub fn delta_report_with_paths(
+  model_dir: &Path,
+  report_dir: &Path
+) -> anyhow::Result<()> {
+  run_delta_with_config(
+    DEFAULT_PARSER_PATTERN,
+    DEFAULT_FINDER_PATTERN,
+    &cli_paths_for_dirs(
+      model_dir, report_dir
+    )
+  )
 }
 
 fn gather_parser_stats(
@@ -1845,6 +1884,28 @@ fn report_path(
   filename: &str
 ) -> PathBuf {
   report_dir.join(filename)
+}
+
+fn cli_paths_for_dirs(
+  model_dir: &Path,
+  report_dir: &Path
+) -> CliPaths {
+  CliPaths {
+    parser_model:     model_dir.join(
+      "parser-model.json"
+    ),
+    finder_model:     model_dir.join(
+      "finder-model.json"
+    ),
+    parser_sequences: model_dir.join(
+      "parser-sequences.json"
+    ),
+    finder_sequences: model_dir.join(
+      "finder-sequences.json"
+    ),
+    report_dir:       report_dir
+      .to_path_buf()
+  }
 }
 
 fn percent_delta(
