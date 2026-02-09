@@ -4,12 +4,12 @@ use std::path::{
   PathBuf
 };
 
+#[cfg(not(feature = "gdbm"))]
+use anyhow::anyhow;
 use anyhow::{
   Context,
   Result
 };
-#[cfg(not(feature = "gdbm"))]
-use anyhow::anyhow;
 #[cfg(feature = "gdbm")]
 use gnudbm::{
   Error as GdbmError,

@@ -115,6 +115,9 @@ bench-ruby-parity:
 bench-rust-baseline:
 	scripts/benchmark_rust_baseline.sh
 
+summarize-hyperfine report:
+	cargo run --quiet --bin summarize_hyperfine -- {{report}}
+
 # Security (Rust)
 audit:
 	cargo audit

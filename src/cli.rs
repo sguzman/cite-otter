@@ -950,7 +950,8 @@ fn collect_dictionary_files(
       .join(pattern)
       .to_string_lossy()
       .to_string();
-    for path in glob(&pattern)?.flatten()
+    for path in
+      glob(&pattern)?.flatten()
     {
       if path.is_file() {
         files.push(path);
@@ -1158,7 +1159,6 @@ fn is_score_token(token: &str) -> bool {
       .chars()
       .all(|c| c.is_ascii_digit())
 }
-
 
 fn run_training_with_config(
   parser_pattern: &str,
@@ -1891,18 +1891,14 @@ fn cli_paths_for_dirs(
   report_dir: &Path
 ) -> CliPaths {
   CliPaths {
-    parser_model:     model_dir.join(
-      "parser-model.json"
-    ),
-    finder_model:     model_dir.join(
-      "finder-model.json"
-    ),
-    parser_sequences: model_dir.join(
-      "parser-sequences.json"
-    ),
-    finder_sequences: model_dir.join(
-      "finder-sequences.json"
-    ),
+    parser_model:     model_dir
+      .join("parser-model.json"),
+    finder_model:     model_dir
+      .join("finder-model.json"),
+    parser_sequences: model_dir
+      .join("parser-sequences.json"),
+    finder_sequences: model_dir
+      .join("finder-sequences.json"),
     report_dir:       report_dir
       .to_path_buf()
   }

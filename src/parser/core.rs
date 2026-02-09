@@ -1,11 +1,11 @@
 use crate::dictionary::{
   Dictionary,
-  DictionaryAdapter,
+  DictionaryAdapter
 };
 use crate::format::ParseFormat;
 use crate::language::{
   detect_language,
-  detect_scripts,
+  detect_scripts
 };
 use crate::normalizer::NormalizationConfig;
 use crate::parser::extract::{
@@ -22,8 +22,8 @@ use crate::parser::extract::{
   extract_genre,
   extract_identifiers,
   extract_isbn,
-  extract_issue,
   extract_issn,
+  extract_issue,
   extract_journal_with_dictionary,
   extract_location,
   extract_note,
@@ -35,13 +35,13 @@ use crate::parser::extract::{
   extract_volume,
   resolve_type_with_dictionary,
   split_references,
-  tag_token,
+  tag_token
 };
 use crate::parser::field_tokens::FieldTokens;
 use crate::parser::types::{
   FieldValue,
   Reference,
-  TaggedToken,
+  TaggedToken
 };
 
 const PREPARED_LINES: [&str; 2] = [
@@ -50,13 +50,13 @@ const PREPARED_LINES: [&str; 2] = [
    other none weak F",
   "world! world Ll P w wo ! d! lower \
    none T F T T none last other none \
-   weak F",
+   weak F"
 ];
 
 #[derive(Debug)]
 pub struct Parser {
-  dictionary: Dictionary,
-  normalization: NormalizationConfig,
+  dictionary:    Dictionary,
+  normalization: NormalizationConfig
 }
 
 impl Default for Parser {
@@ -66,45 +66,52 @@ impl Default for Parser {
 }
 
 #[derive(Debug, Clone)]
-pub struct ParsedDataset(pub Vec<Vec<String>>);
+pub struct ParsedDataset(
+  pub Vec<Vec<String>>
+);
 
 impl Parser {
   pub fn new() -> Self {
     Self {
-      dictionary: Dictionary::create(
-        DictionaryAdapter::Memory,
-      )
-      .open(),
-      normalization: NormalizationConfig::default(),
+      dictionary:
+        Dictionary::create(
+          DictionaryAdapter::Memory
+        )
+        .open(),
+      normalization:
+        NormalizationConfig::default()
     }
   }
 
-  pub fn with_dictionary(dictionary: Dictionary) -> Self {
+  pub fn with_dictionary(
+    dictionary: Dictionary
+  ) -> Self {
     Self {
       dictionary,
-      normalization: NormalizationConfig::default(),
+      normalization:
+        NormalizationConfig::default()
     }
   }
 
   pub fn with_normalization(
-    normalization: NormalizationConfig,
+    normalization: NormalizationConfig
   ) -> Self {
     Self {
       dictionary: Dictionary::create(
-        DictionaryAdapter::Memory,
+        DictionaryAdapter::Memory
       )
       .open(),
-      normalization,
+      normalization
     }
   }
 
   pub fn with_dictionary_and_normalization(
     dictionary: Dictionary,
-    normalization: NormalizationConfig,
+    normalization: NormalizationConfig
   ) -> Self {
     Self {
       dictionary,
-      normalization,
+      normalization
     }
   }
 
@@ -115,19 +122,25 @@ impl Parser {
   pub fn prepare(
     &self,
     input: &str,
-    expand: bool,
+    expand: bool
   ) -> ParsedDataset {
-    if expand && input.trim() == "Hello, world!" {
+    if expand
+      && input.trim() == "Hello, world!"
+    {
       let prepared = PREPARED_LINES
         .iter()
         .map(|line| line.to_string())
         .collect::<Vec<_>>();
-      return ParsedDataset(vec![prepared]);
+      return ParsedDataset(vec![
+        prepared,
+      ]);
     }
 
     let sequences = input
       .lines()
-      .filter(|line| !line.trim().is_empty())
+      .filter(|line| {
+        !line.trim().is_empty()
+      })
       .map(|line| {
         line
           .split_whitespace()
@@ -145,8 +158,12 @@ impl Parser {
     ParsedDataset(sequences)
   }
 
-  pub fn label(&self, input: &str) -> Vec<Vec<TaggedToken>> {
-    let references = split_references(input);
+  pub fn label(
+    &self,
+    input: &str
+  ) -> Vec<Vec<TaggedToken>> {
+    let references =
+      split_references(input);
     let contexts: Vec<FieldTokens> = references
       .iter()
       .map(|reference| {
@@ -156,9 +173,11 @@ impl Parser {
         )
       })
       .collect();
-    let default_context = FieldTokens::default();
+    let default_context =
+      FieldTokens::default();
 
-    self.prepare(input, true)
+    self
+      .prepare(input, true)
       .0
       .iter()
       .enumerate()
@@ -168,9 +187,13 @@ impl Parser {
           .unwrap_or(&default_context);
         sequence
           .iter()
-          .map(|token| TaggedToken {
-            token: token.clone(),
-            label: tag_token(token, context),
+          .map(|token| {
+            TaggedToken {
+              token: token.clone(),
+              label: tag_token(
+                token, context
+              )
+            }
           })
           .collect::<Vec<_>>()
       })
@@ -180,7 +203,7 @@ impl Parser {
   pub fn parse(
     &self,
     refs: &[&str],
-    _format: ParseFormat,
+    _format: ParseFormat
   ) -> Vec<Reference> {
     refs
       .iter()
@@ -407,8 +430,12 @@ impl Parser {
       .collect()
   }
 
-  fn apply_normalization(&self, reference: Reference) -> Reference {
-    let mut map = reference.fields().clone();
+  fn apply_normalization(
+    &self,
+    reference: Reference
+  ) -> Reference {
+    let mut map =
+      reference.fields().clone();
     self
       .normalization
       .apply_to_fields(&mut map);
@@ -417,7 +444,9 @@ impl Parser {
 }
 
 impl ParsedDataset {
-  pub fn to_vec(&self) -> &Vec<Vec<String>> {
+  pub fn to_vec(
+    &self
+  ) -> &Vec<Vec<String>> {
     &self.0
   }
 }

@@ -21,6 +21,8 @@ This writes JSON reports to:
 
 - `target/reports/benchmark-ruby-parity.json`
 - `target/reports/benchmark-ruby-parity-training.json` (train/check/delta)
+- `target/reports/benchmark-ruby-parity-summary.md`
+- `target/reports/benchmark-ruby-parity-training-summary.md`
 
 ## Rust Baseline Benchmarks
 
@@ -33,6 +35,7 @@ just bench-rust-baseline
 This writes JSON output to:
 
 - `target/reports/benchmark-rust-baseline.json`
+- `target/reports/benchmark-rust-baseline-summary.md`
 
 ## Environment Overrides
 
@@ -47,6 +50,8 @@ This writes JSON output to:
 - `FINDER_PATTERN` (default: `tmp/anystyle/res/finder/*.ttx`)
 - `RUST_CMD` (default: `cargo run --quiet --bin cite-otter --`)
 - `HYPERFINE_ARGS` (extra hyperfine flags, e.g. `--warmup 0`)
+- `HYPERFINE_SUMMARIZER` (default:
+  `cargo run --quiet --bin summarize_hyperfine --`)
 - `RUBY_TRAIN_CMD` (override Ruby train command)
 - `RUBY_CHECK_CMD` (override Ruby check command)
 - `RUBY_DELTA_CMD` (override Ruby delta command)

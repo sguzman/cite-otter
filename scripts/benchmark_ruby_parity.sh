@@ -8,6 +8,7 @@ OUT_DIR="${OUT_DIR:-${ROOT_DIR}/target/reports}"
 HYPERFINE_BIN="${HYPERFINE_BIN:-hyperfine}"
 HYPERFINE_ARGS="${HYPERFINE_ARGS:-}"
 RUST_CMD="${RUST_CMD:-cargo run --quiet --bin cite-otter --}"
+HYPERFINE_SUMMARIZER="${HYPERFINE_SUMMARIZER:-cargo run --quiet --bin summarize_hyperfine --}"
 PARSER_PATTERN="${PARSER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/parser/core.xml}"
 FINDER_PATTERN="${FINDER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/finder/*.ttx}"
 FAST_RUNS="${FAST_RUNS:-3}"
@@ -44,6 +45,14 @@ mkdir -p "${OUT_DIR}"
 
 HYPERFINE_EXPORT="${OUT_DIR}/benchmark-ruby-parity.json"
 HYPERFINE_TRAIN_EXPORT="${OUT_DIR}/benchmark-ruby-parity-training.json"
+HYPERFINE_SUMMARY="${OUT_DIR}/benchmark-ruby-parity-summary.md"
+HYPERFINE_TRAIN_SUMMARY="${OUT_DIR}/benchmark-ruby-parity-training-summary.md"
+
+run_summarizer() {
+  local input_path="$1"
+  local output_path="$2"
+  eval "${HYPERFINE_SUMMARIZER} \"${input_path}\" \"${output_path}\""
+}
 
 ${HYPERFINE_BIN} ${HYPERFINE_ARGS} \
   --warmup 1 \
@@ -57,6 +66,8 @@ ${HYPERFINE_BIN} ${HYPERFINE_ARGS} \
   --command-name "rust:parse-csl" "${RUST_CMD} parse -o csl \"${BOOK_PATH}\"" \
   --command-name "ruby:find-json" "${ANYSTYLE_CMD} -f json find \"${BOOK_PATH}\"" \
   --command-name "rust:find-json" "${RUST_CMD} find -o json \"${BOOK_PATH}\""
+
+run_summarizer "${HYPERFINE_EXPORT}" "${HYPERFINE_SUMMARY}"
 
 if [[ "${ENABLE_TRAINING_BENCHMARKS}" == "1" ]]; then
   RUBY_TRAIN_CMD="${RUBY_TRAIN_CMD:-${ANYSTYLE_CMD} train \"${PARSER_PATTERN}\" \"${FINDER_PATTERN}\"}"
@@ -72,7 +83,10 @@ if [[ "${ENABLE_TRAINING_BENCHMARKS}" == "1" ]]; then
     --command-name "rust:check" "${RUST_CMD} check --parser-dataset \"${PARSER_PATTERN}\" --finder-dataset \"${FINDER_PATTERN}\"" \
     --command-name "ruby:delta" "${RUBY_DELTA_CMD}" \
     --command-name "rust:delta" "${RUST_CMD} delta --parser-dataset \"${PARSER_PATTERN}\" --finder-dataset \"${FINDER_PATTERN}\""
+  run_summarizer "${HYPERFINE_TRAIN_EXPORT}" "${HYPERFINE_TRAIN_SUMMARY}"
   echo "hyperfine training report written to ${HYPERFINE_TRAIN_EXPORT}"
+  echo "hyperfine training summary written to ${HYPERFINE_TRAIN_SUMMARY}"
 fi
 
 echo "hyperfine report written to ${HYPERFINE_EXPORT}"
+echo "hyperfine summary written to ${HYPERFINE_SUMMARY}"

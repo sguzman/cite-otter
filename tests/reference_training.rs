@@ -25,8 +25,10 @@ fn report_path(
 }
 
 fn isolated_dirs()
--> (tempfile::TempDir, PathBuf, PathBuf) {
-  let temp = tempdir().expect("temp dir");
+-> (tempfile::TempDir, PathBuf, PathBuf)
+{
+  let temp =
+    tempdir().expect("temp dir");
   let model_dir =
     temp.path().join("models");
   let report_dir =
@@ -37,11 +39,8 @@ fn isolated_dirs()
 #[test]
 fn training_validation_delta_flow_runs()
 {
-  let (
-    _temp,
-    model_dir,
-    report_dir
-  ) = isolated_dirs();
+  let (_temp, model_dir, report_dir) =
+    isolated_dirs();
 
   training_report_with_paths(
     &model_dir,
@@ -52,24 +51,21 @@ fn training_validation_delta_flow_runs()
     &model_dir,
     &report_dir
   )
-  .expect(
-    "validation should succeed"
-  );
+  .expect("validation should succeed");
   delta_report_with_paths(
     &model_dir,
     &report_dir
   )
-    .expect("delta should succeed");
+  .expect("delta should succeed");
 
-  let training = fs::read_to_string(
-    report_path(
+  let training =
+    fs::read_to_string(report_path(
       &report_dir,
       "training-report.json"
-    )
-  )
-  .expect(
-    "training report should exist"
-  );
+    ))
+    .expect(
+      "training report should exist"
+    );
   let validation =
     fs::read_to_string(report_path(
       &report_dir,
@@ -601,55 +597,53 @@ fn training_validation_delta_flow_runs()
         .and_then(Value::as_str)
     {
       match format {
-          | "json" => {
-            let parsed: Value =
-              serde_json::from_str(
-                output
-              )
-              .expect(
-                "json sample should \
-                 parse"
-              );
-            assert!(
-              parsed.is_array(),
-              "json sample should be \
-               an array"
+        | "json" => {
+          let parsed: Value =
+            serde_json::from_str(
+              output
+            )
+            .expect(
+              "json sample should \
+               parse"
             );
-          }
-          | "csl" => {
-            let first = output
-              .lines()
-              .find(|line| {
-                !line.trim().is_empty()
-              })
-              .expect(
-                "csl sample should \
-                 have lines"
-              );
-            let parsed: Value =
-              serde_json::from_str(
-                first
-              )
+          assert!(
+            parsed.is_array(),
+            "json sample should be an \
+             array"
+          );
+        }
+        | "csl" => {
+          let first = output
+            .lines()
+            .find(|line| {
+              !line.trim().is_empty()
+            })
+            .expect(
+              "csl sample should have \
+               lines"
+            );
+          let parsed: Value =
+            serde_json::from_str(first)
               .expect(
                 "csl sample line \
                  should parse"
               );
-            assert!(
-              parsed.is_object(),
-              "csl sample should be \
-               JSON objects"
-            );
-          }
-          | "bibtex" => {
-            assert!(
-              output
-                .trim_start()
-                .starts_with('@'),
-              "bibtex sample should \
-               start with @"
-            );
-          }
-          | _ => {}
+          assert!(
+            parsed.is_object(),
+            "csl sample should be \
+             JSON objects"
+          );
+        }
+        | "bibtex" => {
+          assert!(
+            output
+              .trim_start()
+              .starts_with('@'),
+            "bibtex sample should \
+             start with @"
+          );
+        }
+        | _ => {}
       }
     }
   }
@@ -1196,11 +1190,10 @@ fn training_validation_delta_flow_runs()
      entries"
   );
 
-  let parser_model_path =
-    model_file(
-      &model_dir,
-      "parser-sequences.json"
-    );
+  let parser_model_path = model_file(
+    &model_dir,
+    "parser-sequences.json"
+  );
   let parser_model =
     SequenceModel::load(
       &parser_model_path
@@ -1229,11 +1222,10 @@ fn training_validation_delta_flow_runs()
      training"
   );
 
-  let finder_model_path =
-    model_file(
-      &model_dir,
-      "finder-sequences.json"
-    );
+  let finder_model_path = model_file(
+    &model_dir,
+    "finder-sequences.json"
+  );
   let finder_model =
     SequenceModel::load(
       &finder_model_path
@@ -1272,11 +1264,8 @@ fn training_validation_delta_flow_runs()
 
 #[test]
 fn validation_fails_without_models() {
-  let (
-    _temp,
-    model_dir,
-    report_dir
-  ) = isolated_dirs();
+  let (_temp, model_dir, report_dir) =
+    isolated_dirs();
   let _ =
     fs::remove_dir_all(&model_dir);
 
@@ -1301,11 +1290,8 @@ fn validation_fails_without_models() {
 
 #[test]
 fn delta_fails_without_models() {
-  let (
-    _temp,
-    model_dir,
-    report_dir
-  ) = isolated_dirs();
+  let (_temp, model_dir, report_dir) =
+    isolated_dirs();
   let _ =
     fs::remove_dir_all(&model_dir);
 

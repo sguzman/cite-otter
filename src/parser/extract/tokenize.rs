@@ -1,10 +1,11 @@
 use std::collections::BTreeSet;
 
+use super::parse_month_token;
 use crate::parser::types::TaggedToken;
 
-use super::parse_month_token;
-
-pub(crate) fn split_references(input: &str) -> Vec<String> {
+pub(crate) fn split_references(
+  input: &str
+) -> Vec<String> {
   input
     .lines()
     .map(str::trim)
@@ -13,12 +14,16 @@ pub(crate) fn split_references(input: &str) -> Vec<String> {
     .collect()
 }
 
-pub(crate) fn split_reference_segments(reference: &str) -> Vec<String> {
+pub(crate) fn split_reference_segments(
+  reference: &str
+) -> Vec<String> {
   let mut segments = Vec::new();
   let mut last_start = 0usize;
   let mut depth = 0usize;
 
-  for (idx, ch) in reference.char_indices() {
+  for (idx, ch) in
+    reference.char_indices()
+  {
     if ch == '(' {
       depth = depth.saturating_add(1);
     } else if ch == ')' && depth > 0 {
@@ -30,49 +35,76 @@ pub(crate) fn split_reference_segments(reference: &str) -> Vec<String> {
     if depth > 0 {
       continue;
     }
-    if is_initial_boundary(reference, idx) {
+    if is_initial_boundary(
+      reference, idx
+    ) {
       continue;
     }
-    let before = reference[..idx].trim_end();
+    let before =
+      reference[..idx].trim_end();
     let mut token_start = 0usize;
-    for (pos, ch) in before.char_indices() {
+    for (pos, ch) in
+      before.char_indices()
+    {
       if ch.is_whitespace() {
-        token_start = pos + ch.len_utf8();
+        token_start =
+          pos + ch.len_utf8();
       }
     }
-    let token = before[token_start..].trim();
-    if !token.is_empty() && parse_month_token(token).is_some() {
-      let mut next_chars = reference[idx + ch.len_utf8()..]
+    let token =
+      before[token_start..].trim();
+    if !token.is_empty()
+      && parse_month_token(token)
+        .is_some()
+    {
+      let mut next_chars = reference
+        [idx + ch.len_utf8()..]
         .chars()
-        .skip_while(|c| c.is_whitespace());
+        .skip_while(|c| {
+          c.is_whitespace()
+        });
       if next_chars
         .next()
-        .map(|next_char| next_char.is_ascii_digit())
+        .map(|next_char| {
+          next_char.is_ascii_digit()
+        })
         .unwrap_or(false)
       {
         continue;
       }
     }
-    let mut next_chars = reference[idx + ch.len_utf8()..]
+    let mut next_chars = reference
+      [idx + ch.len_utf8()..]
       .chars()
-      .skip_while(|c| c.is_whitespace());
+      .skip_while(|c| {
+        c.is_whitespace()
+      });
     let next = next_chars.next();
-    let is_boundary = next.is_none_or(|next_char| {
-      next_char.is_uppercase()
-        || next_char.is_ascii_digit()
-        || matches!(next_char, '"' | '“' | '‘')
-    });
+    let is_boundary =
+      next.is_none_or(|next_char| {
+        next_char.is_uppercase()
+          || next_char.is_ascii_digit()
+          || matches!(
+            next_char,
+            '"' | '“' | '‘'
+          )
+      });
     if !is_boundary {
       continue;
     }
-    let segment = reference[last_start..idx].trim().to_string();
+    let segment = reference
+      [last_start..idx]
+      .trim()
+      .to_string();
     if !segment.is_empty() {
       segments.push(segment);
     }
     last_start = idx + ch.len_utf8();
   }
 
-  let tail = reference[last_start..].trim().to_string();
+  let tail = reference[last_start..]
+    .trim()
+    .to_string();
   if !tail.is_empty() {
     segments.push(tail);
   }
@@ -80,16 +112,26 @@ pub(crate) fn split_reference_segments(reference: &str) -> Vec<String> {
   segments
 }
 
-fn is_initial_boundary(reference: &str, idx: usize) -> bool {
-  let before = reference[..idx].trim_end();
+fn is_initial_boundary(
+  reference: &str,
+  idx: usize
+) -> bool {
+  let before =
+    reference[..idx].trim_end();
   let mut token_start = 0usize;
-  for (pos, ch) in before.char_indices() {
+  for (pos, ch) in before.char_indices()
+  {
     if ch.is_whitespace() {
       token_start = pos + ch.len_utf8();
     }
   }
-  let token = before[token_start..].trim();
-  if token.len() != 1 || !token.chars().all(|c| c.is_alphabetic()) {
+  let token =
+    before[token_start..].trim();
+  if token.len() != 1
+    || !token
+      .chars()
+      .all(|c| c.is_alphabetic())
+  {
     return false;
   }
   let mut chars = reference[idx + 1..]
@@ -97,14 +139,18 @@ fn is_initial_boundary(reference: &str, idx: usize) -> bool {
     .skip_while(|c| c.is_whitespace());
   let next = chars.next();
   let following = chars.next();
-  if let (Some(next), Some(following)) = (next, following) {
+  if let (Some(next), Some(following)) =
+    (next, following)
+  {
     if next.is_ascii_digit() {
       return true;
     }
     if next == ';' || next == ',' {
       return true;
     }
-    if next.is_alphabetic() && following.is_lowercase() {
+    if next.is_alphabetic()
+      && following.is_lowercase()
+    {
       return true;
     }
   }
@@ -114,10 +160,13 @@ fn is_initial_boundary(reference: &str, idx: usize) -> bool {
   )
 }
 
-pub(crate) fn tokens_from_segment(segment: &str) -> BTreeSet<String> {
+pub(crate) fn tokens_from_segment(
+  segment: &str
+) -> BTreeSet<String> {
   let mut tokens = BTreeSet::new();
 
-  let normalized = normalize_token(segment);
+  let normalized =
+    normalize_token(segment);
   if !normalized.is_empty() {
     tokens.insert(normalized);
   }
@@ -135,7 +184,8 @@ pub(crate) fn tokens_from_segment(segment: &str) -> BTreeSet<String> {
     .map(str::trim)
     .filter(|part| !part.is_empty())
     .for_each(|part| {
-      let normalized_part = normalize_token(part);
+      let normalized_part =
+        normalize_token(part);
       if !normalized_part.is_empty() {
         tokens.insert(normalized_part);
       }
@@ -152,28 +202,38 @@ pub(crate) fn tokens_from_segment(segment: &str) -> BTreeSet<String> {
   tokens
 }
 
-pub(crate) fn normalize_compare_value(value: &str) -> String {
+pub(crate) fn normalize_compare_value(
+  value: &str
+) -> String {
   value
     .to_lowercase()
     .chars()
-    .filter(|c| c.is_ascii_alphanumeric() || c.is_whitespace())
+    .filter(|c| {
+      c.is_ascii_alphanumeric()
+        || c.is_whitespace()
+    })
     .collect::<String>()
     .split_whitespace()
     .collect::<Vec<_>>()
     .join(" ")
 }
 
-pub(crate) fn normalize_token(token: &str) -> String {
+pub(crate) fn normalize_token(
+  token: &str
+) -> String {
   let mut normalized = String::new();
   for ch in token.chars() {
     if ch.is_ascii_alphanumeric() {
-      normalized.push(ch.to_ascii_lowercase());
+      normalized
+        .push(ch.to_ascii_lowercase());
     }
   }
   normalized
 }
 
-pub fn sequence_signature(tokens: &[String]) -> String {
+pub fn sequence_signature(
+  tokens: &[String]
+) -> String {
   tokens
     .iter()
     .map(|token| token.trim())
@@ -183,7 +243,9 @@ pub fn sequence_signature(tokens: &[String]) -> String {
     .join(" ")
 }
 
-pub fn tagged_sequence_signature(sequence: &[TaggedToken]) -> String {
+pub fn tagged_sequence_signature(
+  sequence: &[TaggedToken]
+) -> String {
   sequence
     .iter()
     .map(|token| token.token.trim())

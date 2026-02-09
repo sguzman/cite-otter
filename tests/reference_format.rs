@@ -22,8 +22,9 @@ use support::{
 #[test]
 fn format_diff_writes_report_for_mismatch()
  {
-  let tmp =
-    snapshot_report_path("diff fixture");
+  let tmp = snapshot_report_path(
+    "diff fixture"
+  );
   let _ = std::fs::remove_file(&tmp);
   let result =
     std::panic::catch_unwind(|| {

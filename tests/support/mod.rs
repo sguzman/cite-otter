@@ -187,16 +187,16 @@ fn snapshot_label_slug(
   let mut slug = String::new();
   for ch in label.chars() {
     if ch.is_ascii_alphanumeric() {
-      slug.push(ch.to_ascii_lowercase());
+      slug
+        .push(ch.to_ascii_lowercase());
       continue;
     }
     if !slug.ends_with('-') {
       slug.push('-');
     }
   }
-  let slug = slug
-    .trim_matches('-')
-    .to_string();
+  let slug =
+    slug.trim_matches('-').to_string();
   if slug.is_empty() {
     "snapshot".into()
   } else {

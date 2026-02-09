@@ -4,9 +4,7 @@ use crate::dictionary::{
   Dictionary,
   DictionaryCode
 };
-use crate::parser::types::{
-  Author,
-};
+use crate::parser::types::Author;
 
 mod tagging;
 mod tokenize;
@@ -17,7 +15,7 @@ pub(crate) use tokenize::{
   normalize_token,
   split_reference_segments,
   split_references,
-  tokens_from_segment,
+  tokens_from_segment
 };
 pub use tokenize::{
   sequence_signature,
@@ -1010,7 +1008,8 @@ fn collect_month_name_parts(
         && (1800..=2099)
           .contains(&value)
       {
-        year = Some(candidate.to_string());
+        year =
+          Some(candidate.to_string());
         break;
       }
     }
@@ -1288,49 +1287,49 @@ pub(crate) fn extract_title(
       &title
     )
   {
-      if segments.len() > 1
-        && title
-          .split_whitespace()
-          .count()
-          <= 1
-      {
-        // Avoid treating a lone given
-        // name as the title
-        // when the author
-        // segment is followed by a real
-        // title segment.
+    if segments.len() > 1
+      && title
+        .split_whitespace()
+        .count()
+        <= 1
+    {
+      // Avoid treating a lone given
+      // name as the title
+      // when the author
+      // segment is followed by a real
+      // title segment.
+    } else {
+      let starts_with_initial = title
+        .split_whitespace()
+        .next()
+        .map(|token| {
+          looks_like_initials(token)
+        })
+        .unwrap_or(false);
+      if starts_with_initial {
+        // Skip initial-based author
+        // chunks (e.g., "G.
+        // (1999)") when
+        // extracting titles.
+        // Fall through to other
+        // strategies.
       } else {
-        let starts_with_initial = title
-          .split_whitespace()
+        let first = title
+          .split(',')
           .next()
-          .map(|token| {
-            looks_like_initials(token)
-          })
-          .unwrap_or(false);
-        if starts_with_initial {
-          // Skip initial-based author
-          // chunks (e.g., "G.
-          // (1999)") when
-          // extracting titles.
-          // Fall through to other
-          // strategies.
-        } else {
-          let first = title
-            .split(',')
-            .next()
-            .unwrap_or(&title)
-            .trim();
-          if !first.is_empty()
-            && !looks_like_author_list(
-              first
-            )
-          {
-            return clean_title_segment(
-              first
-            );
-          }
+          .unwrap_or(&title)
+          .trim();
+        if !first.is_empty()
+          && !looks_like_author_list(
+            first
+          )
+        {
+          return clean_title_segment(
+            first
+          );
         }
       }
+    }
   }
   if let Some((_, title)) =
     split_author_title_segment(
@@ -1381,7 +1380,9 @@ pub(crate) fn extract_title(
       .count()
       < 3
       || (segments[0].contains(',')
-        && segment_has_year(&segments[0])))
+        && segment_has_year(
+          &segments[0]
+        )))
     && let Some(title) =
       title_from_first_segment(
         &segments[0]
@@ -3388,9 +3389,8 @@ pub(crate) fn extract_pages(
     if matches!(
       lower.as_str(),
       "p" | "pp" | "p." | "pp."
-    )
-      && let Some(next) =
-        tokens.get(idx + 1)
+    ) && let Some(next) =
+      tokens.get(idx + 1)
     {
       if let Some(range) =
         parse_page_range_token(next)
@@ -3992,7 +3992,9 @@ fn extract_journal_from_segment(
             trimmed
           )
         })
-        && is_journal_candidate(&stripped)
+        && is_journal_candidate(
+          &stripped
+        )
       {
         best = Some(stripped);
         break;
@@ -4152,7 +4154,9 @@ fn strip_container_prefix(
     if let Some(stripped) =
       trimmed.strip_prefix(prefix)
     {
-      return stripped.trim().to_string();
+      return stripped
+        .trim()
+        .to_string();
     }
   }
   trimmed.to_string()
@@ -4579,15 +4583,20 @@ pub(crate) fn extract_identifiers(
 pub(crate) fn extract_doi(
   reference: &str
 ) -> Option<String> {
-  let tokens = identifier_tokens(reference);
-  for (idx, token) in tokens.iter().enumerate()
+  let tokens =
+    identifier_tokens(reference);
+  for (idx, token) in
+    tokens.iter().enumerate()
   {
     let lower = token.to_lowercase();
     if lower.starts_with("doi:") {
       return Some(token.clone());
     }
-    if let Some(pos) = lower.find("doi.org/") {
-      let value_start = pos + "doi.org/".len();
+    if let Some(pos) =
+      lower.find("doi.org/")
+    {
+      let value_start =
+        pos + "doi.org/".len();
       let value = token
         .get(value_start..)
         .unwrap_or("")
@@ -4595,18 +4604,25 @@ pub(crate) fn extract_doi(
           c.is_ascii_punctuation()
         });
       if looks_like_doi_value(value) {
-        return Some(format!("doi:{value}"));
+        return Some(format!(
+          "doi:{value}"
+        ));
       }
     }
     if lower == "doi"
-      && let Some(next) = tokens.get(idx + 1)
+      && let Some(next) =
+        tokens.get(idx + 1)
     {
-      if next.to_lowercase().starts_with("doi:")
+      if next
+        .to_lowercase()
+        .starts_with("doi:")
       {
         return Some(next.clone());
       }
       if looks_like_doi_value(next) {
-        return Some(format!("doi:{next}"));
+        return Some(format!(
+          "doi:{next}"
+        ));
       }
     }
   }
@@ -4616,21 +4632,25 @@ pub(crate) fn extract_doi(
 pub(crate) fn extract_url(
   reference: &str
 ) -> Option<String> {
-  let tokens = identifier_tokens(reference);
-  for (idx, token) in tokens.iter().enumerate()
+  let tokens =
+    identifier_tokens(reference);
+  for (idx, token) in
+    tokens.iter().enumerate()
   {
     let lower = token.to_lowercase();
     if looks_like_url(token) {
       return Some(token.clone());
     }
     if lower == "url"
-      && let Some(next) = tokens.get(idx + 1)
+      && let Some(next) =
+        tokens.get(idx + 1)
       && looks_like_url(next)
     {
       return Some(next.clone());
     }
     if lower.starts_with("url:") {
-      let value = token.get(4..).unwrap_or("");
+      let value =
+        token.get(4..).unwrap_or("");
       if looks_like_url(value) {
         return Some(value.to_string());
       }
@@ -4907,8 +4927,7 @@ fn extract_volume_from_segment(
     }
     return Some(volume);
   }
-  let numbers =
-    numeric_tokens(segment);
+  let numbers = numeric_tokens(segment);
   if segment_is_journal_like(segment)
     && let Some(year_idx) =
       year_token_index(&numbers)
@@ -5028,8 +5047,7 @@ fn parse_volume_issue_pair(
     if !inside_lower.contains("vol")
       && !inside_lower.contains("part")
       && !inside_lower.contains("no.")
-      && let Some(value) =
-        inside_digits
+      && let Some(value) = inside_digits
       && value.len() <= 3
     {
       issue = Some(value);

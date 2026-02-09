@@ -1,10 +1,5 @@
 use std::collections::BTreeSet;
 
-use crate::dictionary::{
-  Dictionary,
-  DictionaryCode,
-};
-
 use super::extract::{
   extract_collection_title,
   extract_container_title,
@@ -24,7 +19,11 @@ use super::extract::{
   tokens_from_authors,
   tokens_from_dates,
   tokens_from_identifiers,
-  tokens_from_segment,
+  tokens_from_segment
+};
+use crate::dictionary::{
+  Dictionary,
+  DictionaryCode
 };
 
 #[derive(Debug, Clone, Default)]
@@ -32,111 +31,145 @@ pub(super) struct FieldTokens {
   pub(super) author: BTreeSet<String>,
   pub(super) title: BTreeSet<String>,
   pub(super) location: BTreeSet<String>,
-  pub(super) publisher: BTreeSet<String>,
+  pub(super) publisher:
+    BTreeSet<String>,
   pub(super) date: BTreeSet<String>,
   pub(super) pages: BTreeSet<String>,
-  pub(super) container: BTreeSet<String>,
-  pub(super) collection: BTreeSet<String>,
+  pub(super) container:
+    BTreeSet<String>,
+  pub(super) collection:
+    BTreeSet<String>,
   pub(super) journal: BTreeSet<String>,
   pub(super) editor: BTreeSet<String>,
-  pub(super) translator: BTreeSet<String>,
+  pub(super) translator:
+    BTreeSet<String>,
   pub(super) note: BTreeSet<String>,
-  pub(super) identifier: BTreeSet<String>,
+  pub(super) identifier:
+    BTreeSet<String>,
   pub(super) volume: BTreeSet<String>,
   pub(super) issue: BTreeSet<String>,
   pub(super) genre: BTreeSet<String>,
-  pub(super) edition: BTreeSet<String>,
+  pub(super) edition: BTreeSet<String>
 }
 
 impl FieldTokens {
-  pub(super) fn from_reference(reference: &str) -> Self {
+  pub(super) fn from_reference(
+    reference: &str
+  ) -> Self {
     Self {
-      author: tokens_from_authors(reference),
-      title: tokens_from_segment(&extract_title(reference)),
-      location: tokens_from_segment(&extract_location(reference)),
-      publisher: tokens_from_segment(&extract_publisher(reference)),
-      date: tokens_from_dates(reference),
-      pages: tokens_from_segment(&extract_pages(reference)),
-      container: tokens_from_segment(
-        extract_container_title(reference)
-          .unwrap_or_default()
-          .as_str(),
+      author:     tokens_from_authors(
+        reference
+      ),
+      title:      tokens_from_segment(
+        &extract_title(reference)
+      ),
+      location:   tokens_from_segment(
+        &extract_location(reference)
+      ),
+      publisher:  tokens_from_segment(
+        &extract_publisher(reference)
+      ),
+      date:       tokens_from_dates(
+        reference
+      ),
+      pages:      tokens_from_segment(
+        &extract_pages(reference)
+      ),
+      container:  tokens_from_segment(
+        extract_container_title(
+          reference
+        )
+        .unwrap_or_default()
+        .as_str()
       ),
       collection: tokens_from_segment(
-        extract_collection_title(reference)
-          .unwrap_or_default()
-          .as_str(),
+        extract_collection_title(
+          reference
+        )
+        .unwrap_or_default()
+        .as_str()
       ),
-      journal: tokens_from_segment(
+      journal:    tokens_from_segment(
         extract_journal(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      editor: tokens_from_segment(
+      editor:     tokens_from_segment(
         extract_editor(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
       translator: tokens_from_segment(
         extract_translator(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      note: tokens_from_segment(
+      note:       tokens_from_segment(
         extract_note(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      identifier: tokens_from_identifiers(reference),
-      volume: tokens_from_segment(
+      identifier:
+        tokens_from_identifiers(
+          reference
+        ),
+      volume:     tokens_from_segment(
         extract_volume(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      issue: tokens_from_segment(
+      issue:      tokens_from_segment(
         extract_issue(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      genre: tokens_from_segment(
+      genre:      tokens_from_segment(
         extract_genre(reference)
           .unwrap_or_default()
-          .as_str(),
+          .as_str()
       ),
-      edition: tokens_from_segment(
+      edition:    tokens_from_segment(
         extract_edition(reference)
           .unwrap_or_default()
-          .as_str(),
-      ),
+          .as_str()
+      )
     }
   }
 
   pub(super) fn from_reference_with_dictionary(
     reference: &str,
-    dictionary: &Dictionary,
+    dictionary: &Dictionary
   ) -> Self {
-    let mut tokens = Self::from_reference(reference);
-    tokens.apply_dictionary(reference, dictionary);
+    let mut tokens =
+      Self::from_reference(reference);
+    tokens.apply_dictionary(
+      reference, dictionary
+    );
     tokens
   }
 
   pub(super) fn apply_dictionary(
     &mut self,
     reference: &str,
-    dictionary: &Dictionary,
+    dictionary: &Dictionary
   ) {
-    for term in reference.split(|c: char| {
-      !c.is_alphanumeric()
-    }) {
+    for term in
+      reference.split(|c: char| {
+        !c.is_alphanumeric()
+      })
+    {
       let term = term.trim();
       if term.is_empty() {
         continue;
       }
-      let normalized = normalize_token(term);
+      let normalized =
+        normalize_token(term);
       if normalized.is_empty() {
         continue;
       }
-      for code in dictionary.lookup(term) {
+      for code in
+        dictionary.lookup(term)
+      {
         match code {
           | DictionaryCode::Name => {
             self.author
@@ -158,5 +191,4 @@ impl FieldTokens {
       }
     }
   }
-
 }
