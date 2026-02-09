@@ -1,7 +1,7 @@
 # Cite-Otter Roadmap
 
 This migration roadmap translates `tmp/anystyle`’s structure (
-`docs/migration/structure.md`) into an incremental Rustimplementation so the
+`docs/migration/structure.md`) into an incremental Rust implementation so the
 final release meets the stated `v1.0.0` SemVer goal. Each milestone builds on
 the prior (base features + tests first) and references the reference project’s
 modules, CLI surface, and validation suite.
@@ -61,16 +61,17 @@ modules, CLI surface, and validation suite.
     output token/sequence error rates, surface delta results, and keep
     config/adapter overrides in sync with `docs/migration/structure.md`
     observations.
-  - Produce comprehensive documentation (`README.md`, `REFERENCE.md`, `docs/…`)
-    explaining feature parity, training data, and references to the AnyStyle
-    project as required by the migration instructions.
+  - Produce comprehensive documentation (`README.md`,
+    `docs/migration/REFERENCE.md`, `docs/…`) explaining feature parity, training
+    data, and references to the AnyStyle project as required by the migration
+    instructions.
   - Run full test suite (`cargo test`, `cargo fmt`, any additional validation
     scripts) and document release steps in `release.toml`.
   - Tag and publish `cite-otter v1.0.0`, emphasizing that every behavior
     referenced in `tmp/anystyle` is now implemented in Rust, with tests and docs
     covering the migration claims.
 
-## Testing & Validation (cross-Cutting)
+## Testing & Validation (Cross-Cutting)
 
 - Mirror the Ruby `spec/` expectations by translating their assertions into Rust
   unit/integration tests. Each CLI command should have at least one scenario
@@ -88,5 +89,3 @@ modules, CLI surface, and validation suite.
   expectations.
 - `tmp/anystyle` for CLI behavior, training data layout, and Rake orchestration
   logic.
-
-*** End Patch

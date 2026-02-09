@@ -86,6 +86,14 @@ rumdl:
 test:
 	cargo test --all-features
 
+test-fast:
+	cargo test --all-features --no-run
+	cargo test --test reference_parser
+	cargo test --test reference_format
+	cargo test --test reference_training
+	cargo test --test reference_ruby_format_parity
+	cargo test --bin summarize_hyperfine
+
 # Docs
 doc:
 	cargo doc --no-deps
@@ -110,7 +118,10 @@ compare-ruby-format:
 	bash scripts/compare_ruby_format.sh
 
 bench-ruby-parity:
-	scripts/benchmark_ruby_parity.sh
+	ENABLE_TRAINING_BENCHMARKS=0 scripts/benchmark_ruby_parity.sh
+
+bench-ruby-parity-full:
+	ENABLE_TRAINING_BENCHMARKS=1 scripts/benchmark_ruby_parity.sh
 
 bench-rust-baseline:
 	scripts/benchmark_rust_baseline.sh
@@ -142,6 +153,15 @@ fmt-check:
 
 # "CI local" = what you'd run before pushing
 ci: fmt-check validate typos links biome clippy test doc build
+
+# "Fast" = default local checks without long parity/benchmark steps
+verify-fast: fmt-check validate test-fast build
+
+# "Full" = full CI + Ruby fixture parity (still no hyperfine by default)
+verify-full: ci compare-ruby-format
+
+# "Extended" = full verification plus long-running hyperfine suites
+verify-full-with-benchmarks: verify-full bench-rust-baseline bench-ruby-parity-full
 
 # "All" = auto-fix + run the suite
 all: fmt validate typos links biome clippy test doc build

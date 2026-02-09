@@ -13,7 +13,7 @@ PARSER_PATTERN="${PARSER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/parser/core.xml}"
 FINDER_PATTERN="${FINDER_PATTERN:-${ROOT_DIR}/tmp/anystyle/res/finder/*.ttx}"
 FAST_RUNS="${FAST_RUNS:-3}"
 TRAINING_RUNS="${TRAINING_RUNS:-1}"
-ENABLE_TRAINING_BENCHMARKS="${ENABLE_TRAINING_BENCHMARKS:-1}"
+ENABLE_TRAINING_BENCHMARKS="${ENABLE_TRAINING_BENCHMARKS:-0}"
 
 if ! command -v "${HYPERFINE_BIN}" >/dev/null 2>&1; then
   echo "error: hyperfine not found (install hyperfine and retry)" >&2
@@ -86,6 +86,8 @@ if [[ "${ENABLE_TRAINING_BENCHMARKS}" == "1" ]]; then
   run_summarizer "${HYPERFINE_TRAIN_EXPORT}" "${HYPERFINE_TRAIN_SUMMARY}"
   echo "hyperfine training report written to ${HYPERFINE_TRAIN_EXPORT}"
   echo "hyperfine training summary written to ${HYPERFINE_TRAIN_SUMMARY}"
+else
+  echo "skipping train/check/delta benchmarks (set ENABLE_TRAINING_BENCHMARKS=1 to include them)"
 fi
 
 echo "hyperfine report written to ${HYPERFINE_EXPORT}"

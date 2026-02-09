@@ -4,7 +4,8 @@ This repository keeps documentation organized by intent. For other projects,
 replace `docs/cite-otter/` with the current project name.
 
 - `docs/reference/` — AI rules and cross-project templates shared across repos.
-- `docs/migration/` — Migration-specific docs when a project is a port or rewrite.
+- `docs/migration/` — Migration-specific docs when a project is a port or
+  rewrite.
 - `docs/<project-name>/` — Project-specific docs for the current project.
 
 ## Repository Directories

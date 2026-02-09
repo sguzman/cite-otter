@@ -6,11 +6,12 @@ When adding a new tool to this repo:
 
 - Add the tool to `scripts/post-change.sh` if it is part of
   validation/formatting.
-- Add the tool to `docs/ai/POST-CHANGES.md`.
+- Add the tool to `docs/reference/ai/POST-CHANGES.md`.
 
 2. Update the tooling lists
 
-- Add the tool to the tooling lists in `README.md` and `docs/ai/README.md`.
+- Add the tool to the tooling lists in `README.md` and
+  `docs/reference/ai/README.md`.
 
 3. Add any required config files
 

@@ -9,9 +9,9 @@ capture Rust-only performance baselines.
 - Ensure `tmp/book.txt` is present (used as the shared benchmark input).
 - For parity runs, keep the Ruby repo in `tmp/anystyle`.
 
-## Parity Benchmarks (Ruby vs Rust)
+## Parity Benchmarks (Ruby Vs Rust)
 
-Run the parity suite with:
+Run the fast parity suite with:
 
 ```bash
 just bench-ruby-parity
@@ -20,8 +20,17 @@ just bench-ruby-parity
 This writes JSON reports to:
 
 - `target/reports/benchmark-ruby-parity.json`
-- `target/reports/benchmark-ruby-parity-training.json` (train/check/delta)
 - `target/reports/benchmark-ruby-parity-summary.md`
+
+To include train/check/delta benchmarks (long-running), use:
+
+```bash
+just bench-ruby-parity-full
+```
+
+This additionally writes:
+
+- `target/reports/benchmark-ruby-parity-training.json`
 - `target/reports/benchmark-ruby-parity-training-summary.md`
 
 ## Rust Baseline Benchmarks
@@ -45,7 +54,7 @@ This writes JSON output to:
 - `ANYSTYLE_CMD` (override the AnyStyle CLI command)
 - `FAST_RUNS` (default: `3`)
 - `TRAINING_RUNS` (default: `1`)
-- `ENABLE_TRAINING_BENCHMARKS` (default: `1`)
+- `ENABLE_TRAINING_BENCHMARKS` (default: `0`)
 - `PARSER_PATTERN` (default: `tmp/anystyle/res/parser/core.xml`)
 - `FINDER_PATTERN` (default: `tmp/anystyle/res/finder/*.ttx`)
 - `RUST_CMD` (default: `cargo run --quiet --bin cite-otter --`)

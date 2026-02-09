@@ -35,11 +35,11 @@ git cliff --config cliff.toml --output CHANGELOG.md
 
 ## Release Flow (manual)
 
-1. Update version with cargo-release (workspace)
-2. Generate changelog
-3. Tag
-
-the release (no publish)
+1. Run verification (`just verify-full`; use `just verify-full-with-benchmarks`
+   when you need benchmark evidence for a release).
+2. Update version with cargo-release (workspace).
+3. Generate changelog.
+4. Tag the release (no publish).
 
 Example:
 

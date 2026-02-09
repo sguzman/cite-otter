@@ -3,11 +3,21 @@
 Run these commands after a change is completed and confirmed to compile. Run
 from the repo root.
 
-Prereqs: `taplo` and `biome` must be installed.
+Prereqs: `just`, `taplo`, and `biome` must be installed.
 
 ## Script
 
-- `./scripts/post-change.sh`
+- `./scripts/post-change.sh fast`
+- `./scripts/post-change.sh full`
+- `./scripts/post-change.sh full-benchmarks`
+
+## Fast Verification (default)
+
+- `just verify-fast`
+
+## Full Verification
+
+- `just verify-full`
 
 ## Format Rust
 
@@ -43,9 +53,10 @@ Prereqs: `taplo` and `biome` must be installed.
 
 - `cargo test`
 
-## Benchmarks (hyperfine)
+## Benchmarks (hyperfine, Optional and Long-Running)
 
 - `just bench-ruby-parity`
+- `just bench-ruby-parity-full`
 - `just bench-rust-baseline`
 
 ## Docs

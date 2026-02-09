@@ -24,11 +24,13 @@ for parsing, modeling, and CLI tooling.
 
 ## What’s Here
 
-- **Reference alignment**: `REFERENCE.md` records the Ruby repo structure,
-  dependencies, build/training surfaces, and validation steps we aim to mirror.
-- **Implementation strategy**: `ROADMAP.md` breaks the work into SemVer
-  milestones (`v0.1.0` → `v1.0.0`), prioritizing CLI/parser foundations & tests
-  first, then training/finder logic, and finally documentation + parity polish.
+- **Reference alignment**: `docs/migration/REFERENCE.md` records the Ruby repo
+  structure, dependencies, build/training surfaces, and validation steps we aim
+  to mirror.
+- **Implementation strategy**: `docs/cite-otter/ROADMAP.md` breaks the work into
+  SemVer milestones (`v0.1.0` → `v1.0.0`), prioritizing CLI/parser foundations &
+  tests first, then training/finder logic, and finally documentation + parity
+  polish.
 - **Docs layout**: `docs/reference/` for shared rules, `docs/migration/` for
   migration notes, and `docs/<project-name>/` for project-specific docs (here:
   `docs/cite-otter/`).
@@ -39,8 +41,8 @@ for parsing, modeling, and CLI tooling.
 
 1. Install Rust (2024 edition) per `rust-toolchain.toml`.
 2. Build/test via `cargo build` / `cargo test`.
-3. Use `ROADMAP.md` to decide which phase you are tackling and refer to
-   `REFERENCE.md` for Ruby behaviors to match.
+3. Use `docs/cite-otter/ROADMAP.md` to decide which phase you are tackling and
+   refer to `docs/migration/REFERENCE.md` for Ruby behaviors to match.
 4. The CLI `parse` command now accepts `--format json|bibtex|csl` so you can
    request multiple export styles from the same parsing pipeline.
 5. Run `cite-otter sample --format json|bibtex|csl` to see the richer metadata
@@ -69,6 +71,15 @@ cite-otter parse
   both as a CLI and as a library.
 - Keep documentation, tests, and release notes synchronized with the roadmap’s
   SemVer rhythm.
+
+## Verification Profiles
+
+- Fast local checks (default): `just verify-fast` or
+  `./scripts/post-change.sh fast`
+- Full checks (includes CI and Ruby format parity): `just verify-full` or
+  `./scripts/post-change.sh full`
+- Long benchmark suites (optional): `just verify-full-with-benchmarks` or
+  `./scripts/post-change.sh full-benchmarks`
 
 ## Release Readiness (candidate V0.5.0)
 
@@ -111,8 +122,8 @@ cite-otter parse
 
 - **Parser normalization coverage** – Extend `parser.rs`/ `normalizer.rs` so
   author/date heuristics can deterministically resolve multi-name strings and
-  varied year formats, matching the Ruby suite’s behavior (`docs/REFERENCE.md`
-  describes the target field set). A normalized field map plus expanded
+  varied year formats, matching the Ruby suite’s behavior documented in
+  `docs/migration/REFERENCE.md`. A normalized field map plus expanded
   `FieldTokens` help the parser emit the same metadata that AnyStyle isolates.
 - **Training/finder parity** – Round out the CLI’s training/check/delta flows so
   they mirror `rake train`, `rake check`, and `rake delta`. The roadmap’s
@@ -124,5 +135,5 @@ cite-otter parse
 ## References
 
 - `https://github.com/inukshuk/anystyle` – Ruby source and training data that inspired the Rust port.
-- `docs/migration/structure.md` – Migration template that guided `REFERENCE.md`
-  and overall planning.
+- `docs/migration/structure.md` – Migration template that guided
+  `docs/migration/REFERENCE.md` and overall planning.
