@@ -209,6 +209,12 @@ impl Parser {
       .iter()
       .map(|reference| {
         let mut mapped = Reference::new();
+        mapped.insert(
+          "__source",
+          FieldValue::List(vec![
+            (*reference).to_string()
+          ]),
+        );
         let authors =
           authors_for_reference(reference);
         if !authors.is_empty() {

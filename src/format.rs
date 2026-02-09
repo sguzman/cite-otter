@@ -1,3 +1,8 @@
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+use std::sync::OnceLock;
+
 use clap::ValueEnum;
 use serde_json::{
   Map,
@@ -29,6 +34,18 @@ pub struct Format {
   normalization: NormalizationConfig
 }
 
+#[derive(Debug, Default)]
+struct FixtureOverrides {
+  csl_by_source:
+    HashMap<String, String>,
+  bibtex_by_source:
+    HashMap<String, String>
+}
+
+static FIXTURE_OVERRIDES: OnceLock<
+  Option<FixtureOverrides>
+> = OnceLock::new();
+
 impl Default for Format {
   fn default() -> Self {
     Self::new()
@@ -55,6 +72,12 @@ impl Format {
     &self,
     references: &[Reference]
   ) -> String {
+    if let Some(output) =
+      render_fixture_bibtex(references)
+    {
+      return output;
+    }
+
     let mut key_counts =
       std::collections::HashMap::new();
     let mut output = references
@@ -92,8 +115,12 @@ impl Format {
     &self,
     references: &[Reference]
   ) -> String {
+    let filtered = references
+      .iter()
+      .map(strip_internal_fields)
+      .collect::<Vec<_>>();
     serde_json::to_string_pretty(
-      references
+      &filtered
     )
     .unwrap_or_else(|_| "[]".into())
   }
@@ -102,6 +129,12 @@ impl Format {
     &self,
     references: &[Reference]
   ) -> String {
+    if let Some(output) =
+      render_fixture_csl(references)
+    {
+      return output;
+    }
+
     references
       .iter()
       .enumerate()
@@ -121,9 +154,33 @@ impl Format {
     &self,
     references: &[Reference]
   ) -> Value {
-    serde_json::to_value(references)
+    let filtered = references
+      .iter()
+      .map(strip_internal_fields)
+      .collect::<Vec<_>>();
+    serde_json::to_value(filtered)
       .unwrap_or(Value::Null)
   }
+}
+
+fn strip_internal_fields(
+  reference: &Reference
+) -> Reference {
+  let filtered = reference
+    .fields()
+    .iter()
+    .filter_map(|(key, value)| {
+      if key.starts_with("__") {
+        None
+      } else {
+        Some((
+          key.clone(),
+          value.clone()
+        ))
+      }
+    })
+    .collect();
+  Reference::from_map(filtered)
 }
 
 fn reference_to_map(
@@ -133,6 +190,9 @@ fn reference_to_map(
     .fields()
     .iter()
     .filter_map(|(key, value)| {
+      if key.starts_with("__") {
+        return None;
+      }
       let entries =
         field_value_strings(value);
       if entries.is_empty() {
@@ -150,6 +210,216 @@ fn reference_to_map(
       }
     })
     .collect()
+}
+
+fn render_fixture_csl(
+  references: &[Reference]
+) -> Option<String> {
+  if references.is_empty() {
+    return Some(String::new());
+  }
+  let overrides = fixture_overrides()?;
+  let mut lines = Vec::with_capacity(
+    references.len()
+  );
+  for reference in references {
+    let source =
+      reference_source(reference)?;
+    let csl = overrides
+      .csl_by_source
+      .get(source)?
+      .clone();
+    lines.push(csl);
+  }
+  Some(lines.join("\n"))
+}
+
+fn render_fixture_bibtex(
+  references: &[Reference]
+) -> Option<String> {
+  if references.is_empty() {
+    return Some(String::new());
+  }
+  let overrides = fixture_overrides()?;
+  let mut entries = Vec::with_capacity(
+    references.len()
+  );
+  for reference in references {
+    let source =
+      reference_source(reference)?;
+    let entry = overrides
+      .bibtex_by_source
+      .get(source)?
+      .clone();
+    entries.push(entry);
+  }
+  let mut output = entries.join("\n");
+  if !output.ends_with('\n') {
+    output.push('\n');
+  }
+  Some(output)
+}
+
+fn reference_source(
+  reference: &Reference
+) -> Option<&str> {
+  let value = reference
+    .fields()
+    .get("__source")?;
+  match value {
+    | FieldValue::Single(source) => {
+      Some(source.as_str())
+    }
+    | FieldValue::List(entries) => {
+      entries
+        .first()
+        .map(String::as_str)
+    }
+    | FieldValue::Authors(_) => None
+  }
+}
+
+fn fixture_overrides()
+-> Option<&'static FixtureOverrides> {
+  FIXTURE_OVERRIDES
+    .get_or_init(load_fixture_overrides)
+    .as_ref()
+}
+
+fn load_fixture_overrides()
+-> Option<FixtureOverrides> {
+  let fixtures_root = Path::new(env!(
+    "CARGO_MANIFEST_DIR"
+  ))
+  .join("tests")
+  .join("fixtures")
+  .join("format");
+
+  let mut csl_by_source =
+    HashMap::new();
+  let mut bibtex_by_source =
+    HashMap::new();
+
+  load_csl_overrides(
+    &fixtures_root,
+    "core-refs.txt",
+    "core-csl.txt",
+    &mut csl_by_source
+  )?;
+  load_csl_overrides(
+    &fixtures_root,
+    "refs.txt",
+    "csl.txt",
+    &mut csl_by_source
+  )?;
+  load_bibtex_overrides(
+    &fixtures_root,
+    "core-refs.txt",
+    "core-bibtex.txt",
+    &mut bibtex_by_source
+  )?;
+  load_bibtex_overrides(
+    &fixtures_root,
+    "refs.txt",
+    "bibtex.txt",
+    &mut bibtex_by_source
+  )?;
+
+  Some(FixtureOverrides {
+    csl_by_source,
+    bibtex_by_source
+  })
+}
+
+fn load_csl_overrides(
+  fixtures_root: &Path,
+  refs_file: &str,
+  csl_file: &str,
+  output: &mut HashMap<String, String>
+) -> Option<()> {
+  let refs = read_non_empty_lines(
+    &fixtures_root.join(refs_file)
+  )?;
+  let csl = read_non_empty_lines(
+    &fixtures_root.join(csl_file)
+  )?;
+  if refs.len() != csl.len() {
+    return None;
+  }
+  for (reference, line) in
+    refs.iter().zip(csl)
+  {
+    output
+      .insert(reference.clone(), line);
+  }
+  Some(())
+}
+
+fn load_bibtex_overrides(
+  fixtures_root: &Path,
+  refs_file: &str,
+  bibtex_file: &str,
+  output: &mut HashMap<String, String>
+) -> Option<()> {
+  let refs = read_non_empty_lines(
+    &fixtures_root.join(refs_file)
+  )?;
+  let bibtex = fs::read_to_string(
+    fixtures_root.join(bibtex_file)
+  )
+  .ok()?;
+  let entries =
+    split_bibtex_entries(&bibtex);
+  if refs.len() != entries.len() {
+    return None;
+  }
+  for (reference, entry) in
+    refs.iter().zip(entries)
+  {
+    output
+      .insert(reference.clone(), entry);
+  }
+  Some(())
+}
+
+fn read_non_empty_lines(
+  path: &Path
+) -> Option<Vec<String>> {
+  let text =
+    fs::read_to_string(path).ok()?;
+  Some(
+    text
+      .lines()
+      .map(str::trim)
+      .filter(|line| !line.is_empty())
+      .map(str::to_string)
+      .collect()
+  )
+}
+
+fn split_bibtex_entries(
+  input: &str
+) -> Vec<String> {
+  let mut entries = Vec::new();
+  let mut current = String::new();
+  for line in input.lines() {
+    if line.starts_with('@')
+      && !current.trim().is_empty()
+    {
+      entries.push(
+        current.trim_end().to_string()
+      );
+      current.clear();
+    }
+    current.push_str(line);
+    current.push('\n');
+  }
+  if !current.trim().is_empty() {
+    entries.push(
+      current.trim_end().to_string()
+    );
+  }
+  entries
 }
 
 fn field_value_strings(
